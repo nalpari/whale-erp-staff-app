@@ -1,0 +1,608 @@
+@use '../abstracts' as *;
+
+.pop-frame {
+  padding: 28px 24px 24px;
+  border-radius: 32px;
+  background-color: #fff;
+  .pop-frame-tit {
+    @include fontDefinition(20px, 700, 150%);
+    color: #1a1a1a;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .pop-btn-wrap {
+    @include flex(8px);
+    align-items: center;
+    margin-top: 24px;
+  }
+}
+.qr-frame-header {
+  padding-bottom: 15px;
+  .qr-frame-tit {
+    @include fontDefinition(18px, 700, 150%);
+    color: #1a1a1a;
+  }
+  .qr-frame-txt {
+    @include fontDefinition(15px, 400, 150%);
+    color: #1a1a1a;
+    margin-top: 3px;
+  }
+}
+.qr-btn-wrap {
+  @include flex(6px);
+  margin-top: 18px;
+}
+
+.alert-wrap {
+  padding: 24px 20px;
+  border-radius: 24px;
+  background-color: #fff;
+  .alert-txt {
+    text-align: center;
+    span {
+      display: block;
+      @include fontDefinition(15px, 400, 150%);
+      color: #1a1a1a;
+    }
+  }
+  .alert-btn-wrap {
+    @include flex(8px);
+    justify-content: center;
+    margin-top: 18px;
+  }
+}
+
+// 비밀번호 변경
+.filed-wrap {
+  margin-top: 28px;
+  .filed-item {
+    margin-top: 18px;
+    &:first-child {
+      margin-top: 0;
+    }
+    .filed-item-tit {
+      @include fontDefinition(15px, 600, 150%);
+      color: #1a1a1a;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+// AI Chat
+.ai-chat-frame {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.ai-chat-body {
+  height: calc(100vh - 66px - 109px);
+  margin-bottom: 109px;
+  overflow-y: auto;
+  .ai-chat-inner {
+    @include flex(32px);
+    flex-direction: column;
+    padding: 0 24px 32px;
+  }
+}
+.ai-chat-footer {
+  @include flex(18px);
+  align-items: center;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 32px 24px;
+  border-top: 1px solid #f5f5f5;
+}
+.chat-input-wrap {
+  @include flex(0px);
+  align-items: center;
+  border: 2px solid #979c9e;
+  background-color: #fff;
+  width: 100%;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 48px;
+  transition: all 0.15s ease-in-out;
+  &:focus-within {
+    border-color: #1a1a1a;
+  }
+  input {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    @include fontDefinition(16px, 400, 140%);
+    color: #1a1a1a;
+    &::placeholder {
+      color: #72777a;
+    }
+  }
+  .chat-mick-btn {
+    display: block;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    background: url(/assets/images/popup/ai_mick_icon.svg) no-repeat center center;
+    background-size: cover;
+  }
+}
+.send-message-btn {
+  margin-left: auto;
+  display: block;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #1c1c1c url(/assets/images/popup/send_icon.svg) no-repeat center center;
+  background-size: 20px 20px;
+}
+.ai-chat {
+  .ai-chat-time {
+    @include fontDefinition(14px, 400, 140%);
+    color: #777;
+    margin-bottom: 5px;
+    padding-left: 40px;
+  }
+  .ai-chat-list {
+    position: relative;
+    @include flex(16px);
+    flex-direction: column;
+    padding-left: 40px;
+    .ai-chat-data {
+      padding: 16px;
+      background-color: #f2f4f5;
+      border-radius: 24px;
+      width: fit-content;
+      span {
+        display: block;
+        @include fontDefinition(16px, 400, 140%);
+        color: #303437;
+        word-break: keep-all;
+      }
+      &:first-child {
+        border-top-left-radius: 0;
+      }
+    }
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 32px;
+      height: 32px;
+      background: url(/assets/images/popup/AI_icon.svg) no-repeat center center;
+      background-size: cover;
+    }
+  }
+}
+
+.user-chat {
+  .user-chat-time {
+    @include fontDefinition(14px, 400, 140%);
+    color: #777;
+    margin-bottom: 5px;
+    text-align: right;
+  }
+  .user-chat-list {
+    position: relative;
+    @include flex(16px);
+    flex-direction: column;
+    align-items: flex-end;
+    .user-chat-data {
+      padding: 16px;
+      background-color: #5c5df8;
+      border-radius: 24px;
+      width: fit-content;
+      span {
+        @include fontDefinition(16px, 400, 140%);
+        color: #fff;
+      }
+      &:last-child {
+        border-bottom-right-radius: 0;
+      }
+    }
+  }
+}
+
+.ai-mick-wrap {
+  @include absoluteCenter;
+  @include flex(0px);
+  width: 150px;
+  height: 150px;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  background-color: rgba(48, 52, 55, 0.7);
+  backdrop-filter: blur(2px);
+  border-radius: 50%;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.15s ease-in-out;
+  &.act {
+    opacity: 1;
+    visibility: visible;
+  }
+  .ai-mick-icon {
+    width: 56px;
+  }
+  .ai-mick-text {
+    @include fontDefinition(16px, 500, 140%);
+    color: #fff;
+    margin-top: 5px;
+  }
+}
+
+// 직원초대팝업
+.pop-cont-wrap {
+  @include flex(12px);
+  flex-direction: column;
+  .pop-cont-item {
+    padding: 24px;
+    border-radius: 18px;
+    background-color: #fff;
+    .cont-item-tit {
+      @include fontDefinition(15px, 600, 140%);
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .cont-btn-wrap {
+      @include flex(8px);
+      justify-content: center;
+      margin-top: 18px;
+    }
+  }
+}
+
+// 근로계약서
+.employcont-wrap {
+  background-color: #fff;
+  border-radius: 18px;
+  border: 1px solid #eff0f1;
+  .employcont-item {
+    padding: 18px 20px 24px;
+    border-bottom: 1px solid #eff0f1;
+    &:last-child {
+      border-bottom: none;
+    }
+    .employcont-item-tit {
+      @include fontDefinition(15px, 600, 140%);
+      color: #1a1a1a;
+    }
+    .employcont-item-desc {
+      @include fontDefinition(14px, 400, 130%);
+      color: #1a1a1a;
+      margin-top: 8px;
+    }
+    .employcont-item-txt {
+      @include fontDefinition(15px, 400, 130%);
+      color: #1a1a1a;
+    }
+  }
+}
+.employcont-check-warp {
+  margin-top: 24px;
+}
+.employcont-btn-wrap {
+  @include flex(8px);
+  align-items: center;
+  margin-top: 24px;
+}
+.employ-success-btn-wrap {
+  @include flex(8px);
+  align-items: center;
+  margin-bottom: 24px;
+}
+.call-number {
+  @include flex(4px);
+  align-items: center;
+  @include fontDefinition(14px, 500, 130%);
+  color: #495aff;
+  .phone {
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: url('/assets/images/contents/phone_icon.svg') no-repeat center center;
+    background-size: cover;
+  }
+}
+
+.employcont-item-account-wrap {
+  @include flex(0px);
+  align-items: center;
+  .employcont-item-btn {
+    margin-left: auto;
+    .employcont-btn {
+      flex: none;
+      padding: 0 10px;
+      height: 32px;
+      border: 1px solid #abb7c2;
+      background-color: #fff;
+      border-radius: 100px;
+      @include fontDefinition(14px, 500, 130%);
+      color: #77828d;
+    }
+  }
+}
+
+.sign-frame-header {
+  @include flex(0px);
+  align-items: center;
+  margin-bottom: 18px;
+  .sign-frame-tit {
+    @include fontDefinition(16px, 600, 150%);
+    color: #1a1a1a;
+  }
+  .sign-reset {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    background: url('/assets/images/popup/reset_icon.svg') no-repeat center center;
+    background-size: cover;
+  }
+}
+
+// 계약 이력
+.contract-num {
+  @include flex(0px);
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #f4f5f6;
+  border-radius: 50%;
+  @include fontDefinition(15px, 600, 150%);
+  color: #1a1a1a;
+}
+.contract-info {
+  @include flex(12px);
+  flex-direction: column;
+  margin-top: 8px;
+  .contract-info-item {
+    @include flex(0px);
+    align-items: center;
+    .contract-info-item-tit {
+      @include fontDefinition(14px, 400, 130%);
+      color: #555;
+    }
+    .contract-info-item-desc {
+      margin-left: auto;
+      @include fontDefinition(14px, 400, 130%);
+      color: #1a1a1a;
+    }
+  }
+}
+
+.contract-history-btn-wrap {
+  margin-top: 24px;
+}
+
+// 급여명세서
+.pop-tit-cont-wrap {
+  @include flex(32px);
+  flex-direction: column;
+}
+.pop-tit-cont-header {
+  @include flex(0px);
+  align-items: center;
+  margin-bottom: 12px;
+  .pop-tit-cont-tit {
+    @include fontDefinition(20px, 700, 140%);
+    color: #1a1a1a;
+  }
+  .pop-tit-cont-btn-wrap {
+    margin-left: auto;
+    button {
+      height: 34px;
+      @include fontDefinition(14px, 600, 130%);
+      padding: 0 14px;
+    }
+  }
+}
+
+.pop-tit-cont-body-item {
+  padding: 24px 20px 28px 20px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow:
+    0 0 1px 0 rgba(0, 0, 0, 0),
+    0 0 1px 0 rgba(0, 0, 0, 0.01),
+    0 0 1px 0 rgba(0, 0, 0, 0.03),
+    0 0 1px 0 rgba(0, 0, 0, 0.04);
+  &.salary {
+    border-radius: 18px 18px 0 0;
+  }
+  &.black {
+    padding: 18px 20px;
+    background: #333;
+    box-shadow:
+      0 0 1px 0 rgba(0, 0, 0, 0),
+      0 0 1px 0 rgba(0, 0, 0, 0.01),
+      0 0 1px 0 rgba(0, 0, 0, 0.03),
+      0 0 1px 0 rgba(0, 0, 0, 0.04);
+  }
+}
+.pop-tit-cont-total-item {
+  padding: 18px 20px;
+  border-radius: 0 0 18px 18px;
+  border-top: 2px solid #444;
+  border-right: 1px solid #444;
+  border-bottom: 1px solid #444;
+  border-left: 1px solid #444;
+  background: #f5f5f5;
+  box-shadow:
+    0 0 1px 0 rgba(0, 0, 0, 0),
+    0 0 1px 0 rgba(0, 0, 0, 0.01),
+    0 0 1px 0 rgba(0, 0, 0, 0.03),
+    0 0 1px 0 rgba(0, 0, 0, 0.04);
+  .total-data-wrap {
+    @include flex(0px);
+    align-items: center;
+    .total-data-tit {
+      @include fontDefinition(18px, 700, 150%);
+      color: #1a1a1a;
+    }
+    .total-data-desc {
+      @include fontDefinition(18px, 700, 150%);
+      margin-left: auto;
+      color: #1a1a1a;
+    }
+  }
+}
+
+.salary-file-list {
+  @include flex(12px);
+  flex-direction: column;
+  .salary-file-item {
+    @include fontDefinition(15px, 400, 140%);
+    color: #2379e4;
+  }
+}
+
+.salary-data {
+  @include flex(10px);
+  flex-direction: column;
+  .salary-data-item {
+    @include flex(0px);
+    align-items: center;
+    &.red {
+      .salary-data-item-tit {
+        color: #ff5f20;
+        font-weight: 700;
+      }
+      .salary-data-item-desc {
+        color: #ff5f20;
+        font-weight: 700;
+      }
+    }
+    .salary-data-item-tit {
+      @include fontDefinition(15px, 500, 150%);
+      color: #555;
+    }
+    .salary-data-item-desc {
+      margin-left: auto;
+      @include fontDefinition(15px, 600, 150%);
+      color: #1a1a1a;
+    }
+  }
+}
+.actual-pay-wrap {
+  @include flex(0px);
+  align-items: center;
+  .actual-pay-tit {
+    @include fontDefinition(18px, 700, 150%);
+    color: #fff;
+  }
+  .actual-pay-desc {
+    @include fontDefinition(18px, 700, 150%);
+    margin-left: auto;
+    color: #fff;
+  }
+}
+
+.salary-detail-info-item {
+  padding: 24px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #eff0f1;
+  box-shadow:
+    0 0 1px 0 rgba(0, 0, 0, 0),
+    0 0 1px 0 rgba(0, 0, 0, 0.01),
+    0 0 1px 0 rgba(0, 0, 0, 0.03),
+    0 0 1px 0 rgba(0, 0, 0, 0.04);
+  &:first-child {
+    border-radius: 18px 18px 0 0;
+  }
+  &.last {
+    border-bottom: 2px solid #444;
+  }
+  &.data {
+    border-right: 1px solid #444;
+    border-bottom: 1px solid #444;
+    border-left: 1px solid #444;
+    background: #f5f5f5;
+  }
+  &.total {
+    background: #444;
+    border-bottom: 1px solid #606060;
+  }
+  &.actual {
+    border-radius: 0 0 18px 18px;
+    background: #333;
+  }
+}
+.salary-detail-info-item {
+  &.total {
+    .salary-detail-info-item-tit {
+      color: #fff;
+    }
+    .salary-detail-info-item-date {
+      color: #fff;
+    }
+    .salary-detail-info-item-pay {
+      color: #fff;
+    }
+    .salary-detail-info-table {
+      .salary-detail-info-table-item-tit {
+        color: #bbb;
+      }
+      .salary-detail-info-table-item-desc {
+        color: #bbb;
+      }
+      .salary-detail-info-table-item-txt {
+        color: #bbb;
+      }
+    }
+  }
+  &.actual {
+    .salary-detail-info-item-tit {
+      color: #fff;
+    }
+    .salary-detail-info-item-date {
+      color: #fff;
+    }
+    .salary-detail-info-item-pay {
+      color: #fff;
+    }
+  }
+}
+.salary-detail-info-item-header {
+  @include flex(0px);
+  align-items: center;
+  .salary-detail-info-item-tit {
+    @include fontDefinition(18px, 700, 150%);
+    color: #1a1a1a;
+  }
+  .salary-detail-info-item-date {
+    @include fontDefinition(15px, 500, 150%);
+    color: #1a1a1a;
+  }
+  .salary-detail-info-item-pay {
+    margin-left: auto;
+    @include fontDefinition(18px, 700, 150%);
+    color: #1a1a1a;
+  }
+}
+.salary-detail-info-item-content {
+  margin-top: 12px;
+}
+.salary-detail-info-table {
+  @include flex(3px);
+  justify-content: space-between;
+  .salary-detail-info-table-item {
+    .salary-detail-info-table-item-tit {
+      @include fontDefinition(15px, 400, 150%);
+      color: #333;
+      text-align: right;
+    }
+    .salary-detail-info-table-item-desc {
+      @include fontDefinition(15px, 600, 150%);
+      color: #333;
+      margin-left: auto;
+      text-align: right;
+    }
+    .salary-detail-info-table-item-txt {
+      @include fontDefinition(15px, 400, 150%);
+      color: #333;
+      text-align: right;
+    }
+  }
+}

@@ -1,0 +1,204 @@
+@use '../abstracts' as *;
+
+/******************** btn-color 모음 *****************/
+.black {
+  background-color: $normal-back-color;
+  color: $normal-font-color;
+  &.active {
+    background-color: $normal-a-back-color;
+  }
+}
+
+.login {
+  background-color: #77828d;
+  color: #fff;
+  border: 1px solid #77828d;
+}
+.outline {
+  background-color: $out-back-color;
+  color: $out-font-color;
+  border: 1px solid $out-border-color;
+  &.active {
+    background-color: #77828d;
+    color: #fff;
+    border: 1px solid #77828d;
+  }
+}
+.outline-g {
+  background-color: #fff;
+  color: #444;
+  border: 1px solid #ddd;
+  transition: all 0.15s ease-in-out;
+  &.act {
+    background-color: #505050;
+    border-color: #505050;
+    color: #fff;
+  }
+}
+.outline-r {
+  background-color: #fff;
+  color: #ff7474;
+  border: 1px solid #ff7474;
+  transition: all 0.15s ease-in-out;
+  &.act {
+    background-color: #ff7474;
+    border-color: #ff7474;
+    color: #fff;
+  }
+}
+/*************** icon *************/
+.camera {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: url('/assets/images/contents/camera_icon.svg') no-repeat center center;
+  background-size: cover;
+}
+.invite {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: url('/assets/images/contents/staff_invite.svg') no-repeat center center;
+  background-size: cover;
+}
+.add_team {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: url('/assets/images/contents/add_team.svg') no-repeat center center;
+  background-size: cover;
+}
+.plan-create {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: url('/assets/images/contents/plan_table_icon.svg') no-repeat center center;
+  background-size: cover;
+}
+.kakao {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: url('/assets/images/common/kakao_icon.svg') no-repeat center center;
+  background-size: cover;
+}
+.naver {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: url('/assets/images/common/naver_icon.svg') no-repeat center center;
+  background-size: cover;
+}
+.google {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: url('/assets/images/common/google_icon.svg') no-repeat center center;
+  background-size: cover;
+}
+.delete {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: url('/assets/images/contents/delete_icon.svg') no-repeat center center;
+  background-size: cover;
+}
+.download {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: url('/assets/images/contents/icon_down.svg') no-repeat center center;
+  background-size: cover;
+}
+.more {
+  display: block;
+  width: 10px;
+  height: 6px;
+  background: url('/assets/images/popup/more_arr.svg') no-repeat center center;
+  background-size: cover;
+}
+
+/******************** btn-type 모음 *****************/
+// btn-frame 공통
+@mixin btn-frame($height, $padding, $font-size, $i-size) {
+  @include flex(8px);
+  align-items: center;
+  justify-content: center;
+  height: $height;
+  padding: 0px $padding;
+  border-radius: 6px;
+  @include fontDefinition($font-size, $font-w-600, $line-h-120);
+  font-family: 'Pretendard', sans-serif;
+  letter-spacing: 0;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  &:disabled {
+    background-color: $disabled-back-color;
+    color: $disabled-font-color;
+    border-color: $disabled-border-color;
+    cursor: default;
+  }
+  &.ic-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// 데스크탑 small 버튼
+.btn-form {
+  @include btn-frame(48px, 20px, $font-ds-15, 20px);
+  &.min {
+    height: 42px;
+    padding: 0 16px;
+  }
+  &.xs {
+    height: 34px;
+    padding: 0 12px;
+  }
+  &.s {
+    height: 40px;
+    padding: 0 3px;
+  }
+}
+
+// radio button
+.radio-btn {
+  @include btn-frame(40px, 10px, $font-ds-15, 24px);
+  background-color: #fff;
+  border: 1px solid #abb7c2;
+  color: #77828d;
+  transition: all 0.15s ease-in-out;
+  &.act {
+    background-color: #77828d;
+    color: #fff;
+    border-color: #77828d;
+  }
+  &.blue {
+    border-color: #99c3ff;
+    color: #80b3ff;
+    &.act {
+      background-color: #e5efff;
+      color: #0168ff;
+      border-color: #0168ff;
+    }
+  }
+}
+
+// button small
+.btn-s {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 18px;
+  height: 40px;
+  border-radius: 100px;
+  @include fontDefinition(15px, $font-w-500, $line-h-120);
+}
+
+@media screen and (max-width: 321px) {
+  .btn-form {
+    font-size: 13px;
+    padding: 0 15px;
+  }
+}

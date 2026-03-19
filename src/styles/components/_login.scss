@@ -1,0 +1,204 @@
+@use '../abstracts' as *;
+
+.msg {
+  @include fontDefinition(15px, 400, 150%);
+  color: #505050;
+  &.success {
+    color: #2379e4;
+  }
+  &.error {
+    color: #ff3838;
+  }
+  &.txt {
+    color: #1a1a1a;
+  }
+}
+
+.login-contents {
+  padding: 32px 24px 22px;
+}
+.login-header {
+  text-align: center;
+  margin-bottom: 24px;
+  .logo {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .login-b-tit {
+    @include fontDefinition(28px, 700, 150%);
+    color: #444;
+  }
+  .login-s-tit {
+    @include fontDefinition(13px, 500, 150%);
+    color: #444;
+  }
+}
+
+.login-form {
+  padding: 28px 16px 32px;
+  background-color: #f5f5f5;
+  border-radius: 12px;
+  .login-form-tit {
+    @include fontDefinition(18px, 600, 150%);
+    color: #444;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+}
+.login-form-btn {
+  @include flex(8px);
+  button {
+    width: 100%;
+  }
+}
+
+.login-check-wrap {
+  @include flex(8px);
+  align-items: center;
+  margin-top: 18px;
+  .find-btn-wrap {
+    margin-left: auto;
+    .find-btn {
+      @include fontDefinition(14px, 400, 150%);
+      color: #777;
+    }
+  }
+}
+.login-signup-wrap {
+  @include flex(8px);
+  align-items: center;
+  margin-top: 32px;
+  border-top: 1px solid #ebebeb;
+  border-bottom: 1px solid #ebebeb;
+  padding: 18px 0;
+  .login-signup-tit {
+    @include fontDefinition(18px, 600, 150%);
+    color: #111;
+  }
+  button {
+    margin-left: auto;
+  }
+}
+.another-login-wrap {
+  margin-top: 24px;
+  .another-login-tit {
+    @include fontDefinition(20px, 700, 150%);
+    color: #1a1a1a;
+    margin-bottom: 14px;
+  }
+  .another-login-btn-wrap {
+    @include flex(10px);
+    flex-direction: column;
+  }
+}
+
+// 본인인증 요청
+.request-wrap {
+  min-height: calc(100vh - 68px - 68px);
+  @include flex(0px);
+  flex-direction: column;
+  padding: 32px 24px 22px;
+  .request-contents {
+    flex: 1;
+  }
+  .request-img {
+    position: relative;
+    text-align: center;
+  }
+}
+.request-comment {
+  margin-top: 38px;
+  text-align: center;
+  .request-comment-tit {
+    @include fontDefinition(22px, 600, 150%);
+    color: #2379e4;
+  }
+  .request-comment-desc {
+    margin-top: 12px;
+    @include fontDefinition(16px, 500, 150%);
+    color: #444;
+  }
+}
+
+// 회원가입
+.signup-filed-form {
+  margin-top: 32px;
+  &:first-child {
+    margin-top: 0;
+  }
+  .signup-filed-tit {
+    @include fontDefinition(20px, 700, 150%);
+    color: #1a1a1a;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+}
+.signup-filed-item {
+  margin-top: 24px;
+  .signup-filed-item-tit {
+    @include fontDefinition(15px, 600, 150%);
+    color: #1a1a1a;
+    margin-bottom: 10px;
+  }
+}
+.avatar-wrap {
+  @include flex(0px);
+  align-items: center;
+  justify-content: space-between;
+  .avatar-btn {
+    position: relative;
+    width: 62px;
+    height: 62px;
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 50%;
+    transition: all 0.15s ease-in-out;
+    &.act {
+      border-color: #ced2d6;
+      background-color: #ced2d6;
+    }
+  }
+}
+
+.id-number-wrap {
+  @include flex(10px);
+  flex-direction: column;
+  .back-input {
+    @include flex(10px);
+    align-items: center;
+    .input-frame {
+      min-width: 22px;
+      padding: 0 7px;
+      text-align: center;
+    }
+  }
+}
+
+.check-form-warp {
+  padding: 24px 20px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  .check-form-tit {
+    @include fontDefinition(15px, 600, 150%);
+    color: #444;
+  }
+}
+.check-form-list {
+  margin-top: 12px;
+  @include flex(12px);
+  flex-direction: column;
+  .check-form-item {
+    @include flex(0px);
+    align-items: center;
+    .check-form-btn {
+      margin-left: auto;
+      @include fontDefinition(14px, 400, 150%);
+      color: #2379e4;
+      text-decoration: underline;
+    }
+  }
+}
+.signup-filed-btn {
+  margin-top: 24px;
+}

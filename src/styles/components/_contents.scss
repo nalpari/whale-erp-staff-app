@@ -1,0 +1,1049 @@
+@use '../abstracts' as *;
+
+.sub-badge {
+  display: inline-block;
+  @include fontDefinition(14px, 600, 24px);
+  color: #1a1a1a;
+  height: 24px;
+  border-radius: 8px;
+  padding: 0px 8px;
+  &.green {
+    background-color: #ebf6f2;
+    color: #36886a;
+  }
+  &.red {
+    background-color: #fef0f0;
+    color: #d42626;
+  }
+  &.brown {
+    background-color: #f3f0eb;
+    color: #886436;
+  }
+}
+.data-list-arr {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: url(/assets/images/contents/data_list_arr.svg) no-repeat center center;
+  background-size: cover;
+}
+.sub-edit-btn {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: url(/assets/images/contents/edit_icon.svg) no-repeat center center;
+  background-size: cover;
+}
+.sub-delete-btn {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: url(/assets/images/contents/sub_delete_icon.svg) no-repeat center center;
+  background-size: cover;
+}
+.sub-add-btn {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: url(/assets/images/contents/sub_add_icon.svg) no-repeat center center;
+  background-size: cover;
+}
+.filed-flx {
+  @include flex(0px);
+  align-items: center;
+}
+.data-wrap {
+  padding: 32px 24px 0;
+  .data-tit {
+    @include fontDefinition(18px, 600, 150%);
+    color: #1a1a1a;
+    margin-bottom: 10px;
+  }
+}
+
+.data-delete-btn-wrap {
+  margin-bottom: 18px;
+}
+.sub-tit-wrap {
+  @include flex(0px);
+  align-items: center;
+  margin-bottom: 15px;
+  .sub-tit {
+    @include fontDefinition(18px, 600, 140%);
+    color: #1a1a1a;
+  }
+  .sub-tit-btn {
+    margin-left: auto;
+  }
+}
+.data-table-wrap {
+  margin-top: 18px;
+}
+.data-table {
+  width: 100%;
+  th {
+    @include fontDefinition(15px, 500, 140%);
+    color: #767676;
+    padding: 5px 0;
+    vertical-align: top;
+  }
+  td {
+    @include fontDefinition(15px, 400, 140%);
+    color: #1a1a1a;
+    padding: 5px 0 5px 24px;
+    vertical-align: top;
+  }
+  tr {
+    &:first-child {
+      th,
+      td {
+        padding-top: 0;
+      }
+    }
+    &:last-child {
+      th,
+      td {
+        padding-bottom: 0;
+      }
+    }
+  }
+}
+
+// 빈 매장 페이지
+.empty-store-contents {
+  @include flex(0px);
+  flex-direction: column;
+  min-height: calc(100vh - 140px - 68px);
+  padding: 32px 24px 18px;
+  .empty-store-img {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .empty-store-tit {
+    @include fontDefinition(22px, 700, 150%);
+    color: #2379e4;
+    text-align: center;
+    margin-top: 24px;
+  }
+  .empty-store-txt {
+    @include fontDefinition(16px, 500, 150%);
+    color: #444;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .empty-store-btn {
+    margin-top: auto;
+  }
+}
+
+// 할일 및 공휴일 리스트
+.date-list-wrap {
+  padding-top: 32px;
+}
+.date-list-header {
+  @include flex(0px);
+  align-items: center;
+  padding: 0 24px 18px;
+  border-bottom: 1px solid #ddd;
+  .date-list-tit {
+    @include fontDefinition(18px, 700, 150%);
+    color: #1a1a1a;
+  }
+  .data-jop-wrap {
+    @include flex(0px);
+    align-items: center;
+    margin-left: auto;
+    .data-jop {
+      position: relative;
+      padding-left: 22px;
+      @include fontDefinition(15px, 500, 100%);
+      color: #1a1a1a;
+      &.work {
+        padding-right: 6px;
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          left: 0;
+          width: 16px;
+          height: 16px;
+          background: url(/assets/images/contents/data_work_icon.svg) no-repeat center center;
+          background-size: cover;
+        }
+        &::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          right: 0;
+          width: 1px;
+          height: 8px;
+          background-color: #919191;
+        }
+      }
+      &.todo {
+        padding-left: 28px;
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          left: 6px;
+          width: 16px;
+          height: 16px;
+          background: url(/assets/images/contents/data_todo_icon.svg) no-repeat center center;
+          background-size: cover;
+        }
+      }
+    }
+  }
+}
+
+.date-cont-list {
+  @include flex(0px);
+  flex-direction: column;
+  padding: 0 24px;
+  .date-cont-item {
+    padding: 22px 0 0;
+  }
+}
+
+.date-cont-header {
+  position: relative;
+  padding-left: 20px;
+  .date-cont-ring {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+}
+.date-cont-info {
+  @include flex(0px);
+  align-items: center;
+  width: 100%;
+  .date-cont-info-name {
+    @include fontDefinition(16px, 700, 150%);
+    color: #1a1a1a;
+    margin-bottom: 0px;
+  }
+  .date-cont-info-time {
+    margin-left: auto;
+    @include fontDefinition(15px, 400, 150%);
+    color: #767676;
+  }
+}
+.date-cont-wrap {
+  @include flex(10px);
+  flex-direction: column;
+  margin-top: 15px;
+}
+.date-cont-data-item {
+  @include flex(0px);
+  align-items: center;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e9e9e9;
+  background-color: #f5f5f5;
+  .cont-item-tit {
+    position: relative;
+    padding-left: 22px;
+    @include fontDefinition(15px, 500, 150%);
+    color: #1a1a1a;
+    &.work {
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 0;
+        width: 16px;
+        height: 16px;
+        background: url(/assets/images/contents/data_work_icon.svg) no-repeat center center;
+        background-size: cover;
+      }
+    }
+    &.todo {
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 0px;
+        width: 16px;
+        height: 16px;
+        background: url(/assets/images/contents/data_todo_icon.svg) no-repeat center center;
+        background-size: cover;
+      }
+    }
+  }
+}
+.cont-item-data-wrap {
+  @include flex(12px);
+  align-items: center;
+  margin-left: auto;
+  .data-item-inner {
+    @include flex(0px);
+    .data-item-inner-item {
+      position: relative;
+      @include fontDefinition(15px, 600, 150%);
+      color: #1a1a1a;
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 0;
+        width: 1px;
+        height: 8px;
+        background-color: #919191;
+      }
+      &:first-child {
+        padding-right: 6px;
+      }
+      &:last-child {
+        padding-left: 6px;
+        &::before {
+          display: none;
+        }
+      }
+      span {
+        font-weight: 400;
+        color: #555;
+      }
+    }
+  }
+  .data-item-inner-arr {
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: url(/assets/images/contents/data_item_arr.svg) no-repeat center center;
+    background-size: cover;
+  }
+}
+.date-list-footer {
+  padding: 22px 24px 0;
+}
+
+// 근무처/급여계좌 설정
+.data-list {
+  @include flex(12px);
+  flex-direction: column;
+  .data-item {
+    text-align: left;
+    padding: 24px 20px;
+    border-radius: 18px;
+    background-color: #fff;
+  }
+}
+
+.workplace-item-inner {
+  @include flex(0px);
+  align-items: center;
+  .workplace-info {
+    .workplace-info-name {
+      @include fontDefinition(16px, 600, 140%);
+      color: #1a1a1a;
+      margin-top: 8px;
+    }
+    .workplace-info-desc {
+      @include fontDefinition(15px, 400, 150%);
+      color: #505050;
+      margin-top: 4px;
+    }
+  }
+  .workplace-arr {
+    margin-left: auto;
+  }
+}
+.data-btn-wrap {
+  margin-top: 24px;
+}
+.workplace-empty {
+  @include fontDefinition(16px, 500, 150%);
+  color: #767676;
+  text-align: center;
+}
+
+// 근로계약서
+.employment-item-inner {
+  @include flex(18px);
+  align-items: center;
+  .employment-stemp {
+    @include flex(0px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    span {
+      @include fontDefinition(13px, 700, 110%);
+    }
+    &.blue {
+      background-color: #eceeff;
+      color: #495aff;
+    }
+    &.grey {
+      background-color: #f6f7f8;
+      color: #abb7c2;
+    }
+    &.red {
+      background: rgba(255, 56, 56, 0.1);
+      color: #ff3838;
+    }
+  }
+  .employment-info {
+    .employment-info-name {
+      @include fontDefinition(16px, 600, 140%);
+      color: #1a1a1a;
+    }
+    .employment-info-desc {
+      @include fontDefinition(14px, 400, 150%);
+      color: #777;
+      margin-top: 8px;
+      span {
+        display: block;
+      }
+    }
+  }
+}
+
+// 급여명세서
+
+.salary-tit-wrap {
+  @include flex(0px);
+  align-items: center;
+  .salary-tit {
+    @include fontDefinition(18px, 600, 140%);
+    color: #1a1a1a;
+  }
+  .salary-btn-wrap {
+    margin-left: auto;
+  }
+}
+
+// 출퇴근 체크
+.commute-contents {
+  @include flex(0px);
+  flex-direction: column;
+  min-height: calc(100vh - 140px - 68px);
+  .commute-contents-header {
+    padding: 22px 24px;
+    background-color: #fff;
+  }
+  .commute-contents-body {
+    flex: 1;
+    background-color: #fff;
+  }
+}
+.commute-tab-wrap {
+  @include flex(8px);
+  align-items: center;
+}
+.badge-day {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 24px;
+  height: 32px;
+  padding: 0 8px;
+  background-color: #999;
+  border-radius: 100px;
+  @include fontDefinition(15px, 600, 32px);
+  color: #fff;
+}
+.commute-date-wrap {
+  position: relative;
+  padding: 14px 24px;
+  .commute-date {
+    text-align: center;
+    @include fontDefinition(18px, 600, 32px);
+    color: #1a1a1a;
+  }
+}
+.commute-guide-wrap {
+  padding: 18px 24px;
+  border-top: 1px solid #ededed;
+  border-bottom: 1px solid #ededed;
+  background: #f8f8f8;
+  span {
+    position: relative;
+    display: block;
+    padding-left: 28px;
+    @include fontDefinition(15px, 500, 150%);
+    color: #1a1a1a;
+    &::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background: url(/assets/images/contents/commute_guide_icon.svg) no-repeat center center;
+      background-size: cover;
+    }
+  }
+}
+
+.commute-store-list {
+  @include flex(28px);
+  flex-direction: column;
+  padding: 32px 24px 0;
+}
+
+.commute-store-header {
+  @include flex(0px);
+  .commute-store-header-tit {
+    @include fontDefinition(16px, 700, 140%);
+    color: #1a1a1a;
+  }
+  .commute-store-header-time {
+    flex: none;
+    position: relative;
+    margin-left: auto;
+    @include fontDefinition(15px, 500, 150%);
+    color: #767676;
+    padding-left: 22px;
+    &:before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      background: url(/assets/images/contents/commute_time.svg) no-repeat center center;
+      background-size: cover;
+    }
+  }
+}
+.commute-store-body {
+  @include flex(0px);
+  justify-content: space-between;
+  margin-top: 18px;
+  padding: 18px 16px;
+  border-radius: 6px;
+  border: 1px solid #e9e9e9;
+  background: #f5f5f5;
+  .commute-store-body-item {
+    text-align: center;
+    .commute-store-body-item-tit {
+      @include fontDefinition(15px, 400, 150%);
+      color: #555;
+    }
+    .commute-store-body-item-time {
+      @include fontDefinition(15px, 600, 150%);
+      color: #1a1a1a;
+      &.none {
+        color: #f29436;
+      }
+    }
+  }
+}
+.commute-btn-wrap {
+  padding: 24px 24px 22px;
+}
+
+.commute-work-date-wrap {
+  padding: 14px 24px;
+  @include flex(0px);
+  align-items: center;
+  border-top: 1px solid #ededed;
+  border-bottom: 1px solid #ededed;
+  .commute-work-date {
+    @include fontDefinition(18px, 600, 150%);
+    color: #1a1a1a;
+  }
+  .data-list-arr {
+    margin-left: auto;
+  }
+}
+
+.commute-work-list {
+  @include flex(12px);
+  flex-direction: column;
+  padding: 18px 24px 22px;
+}
+.commute-work-list-item {
+  @include flex(8px);
+  min-height: 130px;
+}
+.commute-work-list-item-date {
+  flex: none;
+  @include flex(0px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 18px;
+  border-radius: 6px;
+  border: 1px solid #e9e9e9;
+  background: #f5f5f5;
+  .badge-day {
+    position: relative;
+    top: 0;
+    transform: none;
+    left: 0;
+  }
+  span {
+    display: block;
+    @include fontDefinition(15px, 400, 150%);
+    color: #1a1a1a;
+    &.num {
+      @include fontDefinition(24px, 600, 150%);
+    }
+  }
+}
+.commute-work-list-item-cont {
+  width: 100%;
+  padding: 22px 20px;
+  border-radius: 6px;
+  border: 1px solid #e9e9e9;
+  background: #fff;
+  .work-store-tit {
+    @include fontDefinition(15px, 700, 140%);
+    color: #1a1a1a;
+  }
+  .work-commute-list {
+    @include flex(0px);
+    align-items: center;
+    margin-top: 10px;
+    .work-commute-list-item {
+      position: relative;
+      @include fontDefinition(15px, 400, 150%);
+      color: #1a1a1a;
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 0;
+        width: 1px;
+        height: 8px;
+        background-color: #919191;
+      }
+      &:first-child {
+        padding-right: 6px;
+      }
+      &:last-child {
+        padding-left: 6px;
+        &::before {
+          display: none;
+        }
+      }
+    }
+  }
+  .work-commute-time {
+    @include flex(8px);
+    align-items: center;
+    margin-top: 10px;
+    .work-badge {
+      padding: 0 8px;
+      height: 24px;
+      border-radius: 8px;
+      @include fontDefinition(14px, 600, 24px);
+      &.g {
+        background-color: #ebf6f2;
+        color: #36886a;
+      }
+      &.r {
+        background-color: #fef0f0;
+        color: #d42626;
+      }
+      &.o {
+        background-color: #fdefe1;
+        color: #f29436;
+      }
+    }
+    .work-time {
+      @include fontDefinition(15px, 700, 140%);
+      color: #1a1a1a;
+    }
+  }
+}
+
+.empty-work {
+  @include flex(0px);
+  align-items: center;
+  height: 100%;
+  @include fontDefinition(15px, 700, 150%);
+  color: #777;
+}
+
+// TO-DO 체크
+.todo-contents {
+  @include flex(0px);
+  flex-direction: column;
+  min-height: calc(100vh - 140px - 68px);
+  background-color: #fff;
+}
+.todo-content-tit {
+  padding: 24px 24px 0;
+  @include fontDefinition(20px, 700, 150%);
+  color: #1a1a1a;
+}
+.todo-list-wrap {
+  padding-top: 38px;
+  .todo-date {
+    padding: 0 24px 18px;
+    @include fontDefinition(18px, 700, 150%);
+    color: #1a1a1a;
+    border-bottom: 1px solid #ddd;
+  }
+}
+.todo-list-item {
+  padding: 32px 24px 22px;
+  .todo-list-item-tit {
+    @include fontDefinition(16px, 700, 140%);
+    color: #1a1a1a;
+  }
+  .todo-check-wrap {
+    @include flex(10px);
+    flex-direction: column;
+    margin-top: 12px;
+    .todo-check-item {
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #e9e9e9;
+      background: #f5f5f5;
+      .check-form-box {
+        input[type='checkbox']:checked + label {
+          text-decoration: line-through;
+        }
+      }
+    }
+  }
+}
+
+// 나의 정보관리
+.mypage-item-inner {
+  @include flex(50px);
+  align-items: center;
+  .mypage-item-info {
+    .mypage-item-info-name {
+      @include fontDefinition(16px, 600, 140%);
+      color: #1a1a1a;
+    }
+    .mypage-item-info-desc {
+      margin-top: 4px;
+      @include fontDefinition(15px, 400, 140%);
+      color: #505050;
+    }
+    &.red {
+      .mypage-item-info-name {
+        color: #ff3838;
+      }
+      .mypage-item-info-desc {
+        color: #ff4c4c;
+      }
+    }
+  }
+  .mypage-item-arr {
+    margin-left: auto;
+    flex: none;
+  }
+}
+
+.mypage-sub-wrap {
+  min-height: calc(100vh - 68px - 68px);
+  background-color: #ffff;
+  padding: 32px 24px 22px;
+}
+
+.profile-wrap {
+  @include flex(0px);
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  .profile-img {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background-color: #f5f5f5;
+    .img-edit-btn {
+      position: absolute;
+      bottom: -5px;
+      right: 15px;
+      width: 32px;
+      height: 32px;
+      background: url(/assets/images/contents/img_edit_icon.svg) no-repeat center center;
+      background-size: cover;
+    }
+  }
+  .profile-info {
+    margin-top: 18px;
+    text-align: center;
+    .profile-info-name {
+      @include fontDefinition(20px, 600, 120%);
+      color: #262422;
+    }
+    .profile-info-id {
+      @include fontDefinition(14px, 400, 120%);
+      color: #999;
+      margin-top: 8px;
+    }
+  }
+}
+.profile-form-wrap {
+  @include flex(24px);
+  flex-direction: column;
+}
+.profile-form-item {
+  .profile-form-item-tit {
+    @include fontDefinition(15px, 600, 140%);
+    color: #1a1a1a;
+    margin-bottom: 12px;
+  }
+}
+
+// 경력 관리
+.mypage-block-wrap {
+  padding: 32px 24px 22px;
+  .mypage-block-item {
+    padding: 24px 20px;
+    border-radius: 18px;
+    background-color: #fff;
+  }
+}
+
+.mypage-block-inner {
+  @include flex(12px);
+  flex-direction: column;
+}
+.mypage-block-item-header {
+  @include flex(0px);
+  align-items: center;
+  .mypage-block-item-header-tit {
+    @include flex(0px);
+    align-items: center;
+    @include fontDefinition(16px, 600, 140%);
+    color: #1a1a1a;
+    .badge {
+      display: inline-block;
+      @include fontDefinition(14px, 600, 24px);
+      color: #36886a;
+      height: 24px;
+      border-radius: 8px;
+      padding: 0px 8px;
+      background-color: #ebf6f2;
+      margin-left: 8px;
+    }
+  }
+  .mypage-block-item-header-btn {
+    margin-left: auto;
+    @include flex(8px);
+    align-items: center;
+  }
+}
+.mypage-block-item-body {
+  .mypage-block-item-data-list {
+    @include flex(0px);
+    align-items: center;
+    margin-top: 6px;
+    .mypage-block-item-data-list-item {
+      position: relative;
+      padding: 0 6px;
+      @include fontDefinition(15px, 400, 140%);
+      color: #505050;
+      &::before {
+        content: '';
+        position: absolute;
+        top: 49%;
+        transform: translateY(-50%);
+        right: 0;
+        width: 1px;
+        height: 11px;
+        background-color: #ccc;
+      }
+      &:first-child {
+        padding-left: 0;
+      }
+      &:last-child {
+        padding-right: 0;
+        &::before {
+          display: none;
+        }
+      }
+    }
+  }
+}
+.item-file-down {
+  @include fontDefinition(15px, 400, 140%);
+  color: #2379e4;
+  margin-top: 6px;
+}
+
+.mypage-block-item-empty {
+  text-align: center;
+  padding: 12px 0;
+  span {
+    display: block;
+    @include fontDefinition(15px, 500, 140%);
+    color: #505050;
+  }
+}
+
+.add-btn-wrap {
+  margin-top: 24px;
+  .add-btn {
+    @include fontDefinition(18px, 600, 140%);
+    color: #1a1a1a;
+    .add-icon {
+      display: block;
+      width: 32px;
+      height: 32px;
+      background: url(/assets/images/contents/add_btn_icon.svg) no-repeat center center;
+      background-size: cover;
+    }
+  }
+}
+
+.document-list-wrap {
+  @include flex(24px);
+  flex-direction: column;
+}
+
+.document-list-item-header {
+  @include flex(0px);
+  align-items: center;
+  margin-bottom: 12px;
+  .document-list-item-header-tit {
+    @include fontDefinition(18px, 700, 140%);
+    color: #1a1a1a;
+  }
+  .document-list-item-header-btn {
+    margin-left: auto;
+    @include flex(8px);
+    align-items: center;
+  }
+}
+
+.document-list-item-body {
+  padding: 24px 20px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow:
+    0 0 1px 0 rgba(0, 0, 0, 0),
+    0 0 1px 0 rgba(0, 0, 0, 0.01),
+    0 0 1px 0 rgba(0, 0, 0, 0.03),
+    0 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.file-list-wrap {
+  @include flex(8px);
+  flex-direction: column;
+  .file-list-item {
+    .file-item-wrap {
+      @include flex(8px);
+      align-items: center;
+    }
+    .file-name {
+      @include fontDefinition(15px, 400, 140%);
+      color: #2379e4;
+    }
+    .file-delete-btn {
+      display: block;
+      width: 24px;
+      height: 24px;
+      background: url(/assets/images/contents/file_delete.svg) no-repeat center center;
+      background-size: cover;
+    }
+    .file-end-date {
+      @include fontDefinition(14px, 400, 140%);
+      color: #505050;
+      margin-top: 2px;
+    }
+  }
+}
+
+// 회원 탈퇴
+.withdrawal-header {
+  h1 {
+    @include fontDefinition(20px, 700, 140%);
+    color: #1a1a1a;
+  }
+  .withdrawal-header-desc {
+    @include fontDefinition(15px, 400, 140%);
+    color: #666;
+    margin-top: 8px;
+  }
+}
+
+.withdrawal-check-list {
+  @include flex(12px);
+  flex-direction: column;
+  padding: 24px 0;
+  .withdrawal-check-item {
+    @include flex(0px);
+    align-items: center;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow:
+      0 0 1px 0 rgba(0, 0, 0, 0),
+      0 0 1px 0 rgba(0, 0, 0, 0.01),
+      0 0 1px 0 rgba(0, 0, 0, 0.03),
+      0 0 1px 0 rgba(0, 0, 0, 0.04);
+    padding: 16px 20px;
+    .withdrawal-check-item-label {
+      @include fontDefinition(15px, 500, 140%);
+      color: #1a1a1a;
+    }
+    .withdrawal-check-item-icon {
+      display: block;
+      width: 32px;
+      height: 32px;
+      background: url(/assets/images/contents/withdrawal_check.svg) no-repeat center center;
+      background-size: cover;
+      margin-left: auto;
+      visibility: hidden;
+      opacity: 0;
+    }
+    &.act {
+      .withdrawal-check-item-icon {
+        visibility: visible;
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.withdrawal-textarea-wrap {
+  padding-bottom: 24px;
+  .withdrawal-textarea-tit {
+    @include fontDefinition(15px, 400, 140%);
+    color: #1a1a1a;
+    margin-bottom: 12px;
+  }
+  .textarea-form {
+    min-height: 120px;
+  }
+}
+.withdrawal-warning-wrap {
+  padding: 24px 20px;
+  border-radius: 18px;
+  background: #f4ede6;
+  .withdrawal-warning-tit {
+    @include fontDefinition(15px, 700, 150%);
+    color: #cd7d2e;
+  }
+  .withdrawal-warning-desc {
+    @include fontDefinition(15px, 400, 140%);
+    color: #cd7d2e;
+  }
+}
+
+.withdrawal-check {
+  margin-top: 14px;
+}
+
+.withdrawal-btn-wrap {
+  margin-top: 24px;
+  .withdrawal {
+    background-color: #ee8924;
+    color: #fff;
+  }
+}
