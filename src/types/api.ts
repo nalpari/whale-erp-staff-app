@@ -59,7 +59,7 @@ export interface FindPasswordResponse {
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
-  confirmPassword: string
+  newPasswordConfirm: string
 }
 
 export interface CheckAvailabilityResponse {
