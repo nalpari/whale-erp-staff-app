@@ -5,11 +5,14 @@ import { useState } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
+import { useAuthStore } from '@/store/useAuthStore'
 import { SubMenuData } from '@/data/SubMenuData'
 
 export default function Header() {
   const router = useRouter()
   const pathname = usePathname()
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
 
   // 서브 페이지 타이틀
   const title = SubMenuData.find((item: { path: string }) => {
@@ -63,9 +66,9 @@ export default function Header() {
             </div>
             <ul className="header-data-list">
               <li className="header-data-item">
-                <span>홍길동</span> 과장
+                <span>{user?.memberName ?? '사용자'}</span>{user?.rank ? ` ${user.rank}` : ''}
               </li>
-              <li className="header-data-item">매장 매니저</li>
+              {user?.position && <li className="header-data-item">{user.position}</li>}
             </ul>
           </div>
           <div className="header-menu-btn">
@@ -92,15 +95,15 @@ export default function Header() {
               </div>
               <div className="side-nav-header-info">
                 <div className="side-nav-header-name">
-                  <span>홍길동</span>님 환영 합니다.
+                  <span>{user?.memberName ?? '사용자'}</span>님 환영합니다.
                 </div>
-                <div className="side-nav-header-company">Interplug corp.</div>
+                {user?.loginId && <div className="side-nav-header-company">({user.loginId})</div>}
               </div>
             </div>
             <button className="side-close-btn" onClick={() => setIsSideNavOpen(false)}></button>
           </div>
           <div className="side-nav-logout-wrap">
-            <button className="btn-form black block" onClick={() => router.push('/login')}>
+            <button className="btn-form black block" onClick={() => { if (confirm('로그아웃 하시겠습니까?')) { setIsSideNavOpen(false); logout() } }}>
               로그아웃
             </button>
           </div>
@@ -127,11 +130,6 @@ export default function Header() {
               <li className="side-nav-body-item">
                 <Link href="/salary" onClick={() => setIsSideNavOpen(false)}>
                   급여명세서
-                </Link>
-              </li>
-              <li className="side-nav-body-item">
-                <Link href="/todo" onClick={() => setIsSideNavOpen(false)}>
-                  TO-DO 체크
                 </Link>
               </li>
               <li className="side-nav-body-item">

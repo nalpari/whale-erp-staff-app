@@ -41,7 +41,7 @@ const initialState: InitialStateType = {
   AlertPopup: false,
   PasswordChangePopup: false,
   AIChatPopup: false,
-  EmploymentNotificationPopup: true,
+  EmploymentNotificationPopup: false,
   EmploymentPopFrame: false,
   SignPopup: false,
   EmploymentStep: false,

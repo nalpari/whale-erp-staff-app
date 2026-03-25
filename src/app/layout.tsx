@@ -6,6 +6,7 @@ import BottomSheetController from '@/components/ui/BottomSheetController'
 import PopupController from '@/components/ui/PopupController'
 import Footer from '@/components/ui/Footer'
 import Header from '@/components/ui/Header'
+import AuthGuard from '@/components/auth/AuthGuard'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,11 +31,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="wrap">
-          <Header />
-          {children}
-          <Footer />
-        </div>
+        <AuthGuard>
+          <div className="wrap">
+            <Header />
+            {children}
+            <Footer />
+          </div>
+        </AuthGuard>
         <BottomSheetController />
         <PopupController />
       </body>
