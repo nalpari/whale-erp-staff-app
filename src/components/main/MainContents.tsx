@@ -1,10 +1,51 @@
 'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
+import { fetchMonthlyCalendar } from '@/lib/todoApi'
+import type { CalendarDayData, OrgGroup } from '@/types/todo'
+
+const WEEKDAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
+
+function formatDateKorean(date: Date): string {
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const weekday = WEEKDAYS[date.getDay()]
+  return `${month}월 ${day}일 ${weekday}`
+}
+
+function formatDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 export default function MainContents() {
-  // 함수만 구독 (함수 레퍼런스는 변하지 않음)
+  const router = useRouter()
   const setQrCodePopup = usePopupController((state) => state.setQrCodePopup)
   const setAIChatPopup = usePopupController((state) => state.setAIChatPopup)
+
+  const [todayData, setTodayData] = useState<CalendarDayData | null>(null)
+
+  const today = new Date()
+
+  useEffect(() => {
+    fetchMonthlyCalendar(today.getFullYear(), today.getMonth() + 1)
+      .then((data) => {
+        const dayData = data.find((d) => d.day === today.getDate())
+        setTodayData(dayData ?? null)
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const totalTodoCount = todayData?.totalCount ?? 0
+
+  const handleTodoClick = () => {
+    router.push(`/todo?date=${formatDate(today)}`)
+  }
 
   return (
     <div className="container main">
@@ -12,10 +53,10 @@ export default function MainContents() {
         <div className="dtae-calendar-wrap"></div>
         <div className="date-list-wrap">
           <div className="date-list-header">
-            <div className="date-list-tit">12월 7일 금요일</div>
+            <div className="date-list-tit">{formatDateKorean(today)}</div>
             <div className="data-jop-wrap">
               <div className="data-jop work">근무: 2일</div>
-              <div className="data-jop todo">TO-DO: 8개</div>
+              <div className="data-jop todo">TO-DO: {totalTodoCount}개</div>
             </div>
           </div>
           <ul className="date-cont-list">
@@ -42,20 +83,7 @@ export default function MainContents() {
                     <div className="data-item-inner-arr"></div>
                   </div>
                 </div>
-                <div className="date-cont-data-item">
-                  <div className="cont-item-tit todo">TO-DO 체크</div>
-                  <div className="cont-item-data-wrap">
-                    <div className="data-item-inner">
-                      <div className="data-item-inner-item">
-                        <span>미완료 </span>0
-                      </div>
-                      <div className="data-item-inner-item">
-                        <span>완료 </span>4
-                      </div>
-                    </div>
-                    <div className="data-item-inner-arr"></div>
-                  </div>
-                </div>
+                <TodoSection org={todayData?.organizations.find((o) => o.storeName === '힘이나는 커피생활 을지로 3가점') ?? null} onClick={handleTodoClick} />
               </div>
             </li>
             <li className="date-cont-item">
@@ -81,22 +109,27 @@ export default function MainContents() {
                     <div className="data-item-inner-arr"></div>
                   </div>
                 </div>
-                <div className="date-cont-data-item">
-                  <div className="cont-item-tit todo">TO-DO 체크</div>
-                  <div className="cont-item-data-wrap">
-                    <div className="data-item-inner">
-                      <div className="data-item-inner-item">
-                        <span>미완료 </span>0
-                      </div>
-                      <div className="data-item-inner-item">
-                        <span>완료 </span>4
-                      </div>
-                    </div>
-                    <div className="data-item-inner-arr"></div>
-                  </div>
-                </div>
+                <TodoSection org={todayData?.organizations.find((o) => o.storeName === '바나프레소 교대점') ?? null} onClick={handleTodoClick} />
               </div>
             </li>
+            {todayData?.organizations.map((org) => (
+              <li
+                key={`${org.headOfficeId}-${org.franchiseId}-${org.storeId}`}
+                className="date-cont-item"
+              >
+                <div className="date-cont-header">
+                  <div className="date-cont-ring" style={{ backgroundColor: '#88BDD4' }}></div>
+                  <div className="date-cont-info">
+                    <div className="date-cont-info-name">
+                      {org.storeName ?? org.franchiseName ?? org.headOfficeName}
+                    </div>
+                  </div>
+                </div>
+                <div className="date-cont-wrap">
+                  <TodoSection org={org} onClick={handleTodoClick} />
+                </div>
+              </li>
+            ))}
           </ul>
           <div className="date-list-footer">
             <button className="btn-form login block" onClick={() => setQrCodePopup(true)}>
@@ -106,6 +139,34 @@ export default function MainContents() {
         </div>
       </div>
       <button className="Ai" onClick={() => setAIChatPopup(true)}></button>
+    </div>
+  )
+}
+
+function TodoSection({
+  org,
+  onClick,
+}: {
+  org: OrgGroup | null
+  onClick: () => void
+}) {
+  const incomplete = org?.todos.filter((t) => !t.isCompleted).length ?? 0
+  const complete = org?.todos.filter((t) => t.isCompleted).length ?? 0
+
+  return (
+    <div className="date-cont-data-item" onClick={onClick} style={{ cursor: 'pointer' }}>
+      <div className="cont-item-tit todo">TO-DO 체크</div>
+      <div className="cont-item-data-wrap">
+        <div className="data-item-inner">
+          <div className="data-item-inner-item">
+            <span>미완료 </span>{incomplete}
+          </div>
+          <div className="data-item-inner-item">
+            <span>완료 </span>{complete}
+          </div>
+        </div>
+        <div className="data-item-inner-arr"></div>
+      </div>
     </div>
   )
 }
