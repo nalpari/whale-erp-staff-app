@@ -164,11 +164,11 @@ export const profileApi = {
 export const workplaceApi = {
   /** 내 사업장 목록 조회 */
   getWorkplaces: () =>
-    apiClient<ApiResponse<WorkplaceResponse[]>>('/api/mobile/workplaces'),
+    apiClient<ApiResponse<WorkplaceResponse[]>>('/api/mobile/employee/workplaces'),
 
   /** 사업장 추가 (등록 코드 입력) */
   addWorkplace: (data: AddWorkplaceRequest) =>
-    apiClient<ApiResponse<WorkplaceResponse>>('/api/mobile/workplaces', {
+    apiClient<ApiResponse<WorkplaceResponse>>('/api/mobile/employee/workplaces', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -343,29 +343,29 @@ export const attendanceApi = {
 export const contractApi = {
   /** 계약 목록 조회 (대기 중) */
   getContracts: () =>
-    apiClient<ApiResponse<ContractListResponse[]>>('/api/mobile/contracts'),
+    apiClient<ApiResponse<ContractListResponse[]>>('/api/mobile/employee/contracts'),
 
   /** 계약 상세 조회 */
   getContractDetail: (id: number) =>
-    apiClient<ApiResponse<ContractDetailResponse>>(`/api/mobile/contracts/${id}`),
+    apiClient<ApiResponse<ContractDetailResponse>>(`/api/mobile/employee/contracts/${id}`),
 
   /** 계약 서명 */
   signContract: (id: number, data: ContractSignRequest) =>
-    apiClient<ApiResponse<null>>(`/api/mobile/contracts/${id}/sign`, {
+    apiClient<ApiResponse<null>>(`/api/mobile/employee/contracts/${id}/sign`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   /** 계약 거부 */
   rejectContract: (id: number, data?: ContractRejectRequest) =>
-    apiClient<ApiResponse<null>>(`/api/mobile/contracts/${id}/reject`, {
+    apiClient<ApiResponse<null>>(`/api/mobile/employee/contracts/${id}/reject`, {
       method: 'POST',
       body: JSON.stringify(data ?? {}),
     }),
 
   /** 계약 히스토리 조회 (완료/거부된 계약) */
   getContractHistory: () =>
-    apiClient<ApiResponse<ContractListResponse[]>>('/api/mobile/contracts/history'),
+    apiClient<ApiResponse<ContractListResponse[]>>('/api/mobile/employee/contracts/history'),
 }
 
 // ============================================================

@@ -299,37 +299,53 @@ export interface ContractListResponse {
 export interface ContractDetailResponse {
   id: number
   status: string
-  storeName: string
-  companyInfo: {
-    companyName: string
-    representative: string
-    address: string
-    businessNumber: string
+  company: {
+    companyName: string | null
+    storeName: string | null
+    businessRegistrationNumber: string | null
+    companyAddress: string | null
   }
-  employeeInfo: {
-    name: string
-    birthDate: string
-    address: string
-    phone: string
+  employee: {
+    employeeName: string
+    employeeNumber: string
+    rank: string | null
+    position: string | null
+    employeeSsn: string | null
+    employeeAddress: string | null
   }
-  contractInfo: {
-    contractType: string
-    startDate: string
-    endDate?: string
-    position: string
+  contract: {
+    contractClassification: string
+    contractStartDate: string
+    contractEndDate: string
+    jobDescription: string | null
+    salaryDay: number
   }
-  workHourInfo: {
-    workDays: string
-    startTime: string
-    endTime: string
-    breakTime: string
-  }
-  salaryInfo: {
-    salaryType: string
-    amount: number
-    paymentDate: string
-    items?: { name: string; amount: number }[]
-  }
+  workHours: {
+    dayType: string
+    isWork: boolean
+    workStartTime: string | null
+    workEndTime: string | null
+    breakStartTime: string | null
+    breakEndTime: string | null
+  }[]
+  salary: {
+    annualAmount: number
+    monthlyTotalAmount: number
+    timelyAmount: number
+    monthlyBaseAmount: number
+  } | null
+  terms: {
+    workPlace: string | null
+    holidayDefault: string
+    holidayAdditional: string | null
+    annualLeaveDefault: string
+    annualLeaveAdditional: string | null
+    resignationDefault: string
+    resignationAdditional: string | null
+    otherItems: string[]
+    otherItem1: string
+    otherItem2: string
+  } | null
 }
 
 export interface ContractSignRequest {

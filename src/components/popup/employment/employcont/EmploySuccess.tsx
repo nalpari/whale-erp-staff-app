@@ -1,10 +1,111 @@
 'use client'
+
+import { useEffect, useState } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { usePopupController } from '@/store/usePopupController'
+import { contractApi } from '@/lib/api-endpoints'
+import type { ContractDetailResponse } from '@/types/api'
+
+/**
+ * 근무 시간 포맷 (HH:MM:SS → HH:MM)
+ */
+function formatTime(time: string | null | undefined): string {
+  if (!time) return '-'
+  return time.substring(0, 5)
+}
+
+/**
+ * 날짜 포맷 (YYYY-MM-DD)
+ */
+function formatDate(date: string | null | undefined): string {
+  if (!date) return '-'
+  return date
+}
+
+/**
+ * 근무 시간 항목 컴포넌트
+ */
+function WorkHourItem({
+  title,
+  workHour,
+}: {
+  title: string
+  workHour: ContractDetailResponse['workHours'][0] | undefined
+}) {
+  if (!workHour) return null
+  if (!workHour.isWork) {
+    return (
+      <div className="employcont-item">
+        <div className="employcont-item-tit">{title}</div>
+        <div className="employcont-item-desc">
+          <span>근무 없음</span>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="employcont-item">
+      <div className="employcont-item-tit">{title}</div>
+      <div className="employcont-item-desc">
+        <span>근무시간 : {formatTime(workHour.workStartTime)} ~ {formatTime(workHour.workEndTime)}</span>
+        {workHour.breakStartTime && workHour.breakEndTime && (
+          <span>휴게시간 : {formatTime(workHour.breakStartTime)} ~ {formatTime(workHour.breakEndTime)}</span>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function EmploySuccess() {
   const setAccountSelectSheet = useBottomSheetController((state) => state.setAccountSelectSheet)
   const setContractHistoryPopup = usePopupController((state) => state.setContractHistoryPopup)
+  const selectedContractId = usePopupController((state) => state.selectedContractId)
+  const [detail, setDetail] = useState<ContractDetailResponse | null>(null)
+  // hasLoaded: API 호출 완료 여부
+  const [hasLoaded, setHasLoaded] = useState(!selectedContractId)
+
+  useEffect(() => {
+    if (!selectedContractId) return
+    contractApi.getContractDetail(selectedContractId)
+      .then((res) => {
+        setDetail(res.data ?? null)
+      })
+      .catch((err) => {
+        console.error('계약 상세 조회 실패:', err)
+      })
+      .finally(() => setHasLoaded(true))
+  }, [selectedContractId])
+
+  if (!hasLoaded) {
+    return (
+      <div className="employcont-container">
+        <div className="employcont-wrap">
+          <div className="employcont-item">
+            <div className="employcont-item-desc" style={{ color: '#999' }}>불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!detail) {
+    return (
+      <div className="employcont-container">
+        <div className="employcont-wrap">
+          <div className="employcont-item">
+            <div className="employcont-item-desc" style={{ color: '#999' }}>계약 정보를 불러올 수 없습니다.</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 요일별 근무시간 추출
+  const weekdayHour = detail.workHours.find((wh) =>
+    ['WEEKDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'].includes(wh.dayType)
+  )
+  const saturdayHour = detail.workHours.find((wh) => wh.dayType === 'SATURDAY')
+  const sundayHour = detail.workHours.find((wh) => wh.dayType === 'SUNDAY')
 
   return (
     <div className="employcont-container">
@@ -17,113 +118,144 @@ export default function EmploySuccess() {
         </button>
       </div>
       <div className="employcont-wrap">
+        {/* 1. 회사명 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">점포명</div>
+          <div className="employcont-item-tit">회사명</div>
           <div className="employcont-item-desc">
-            <span>힘이나는커피생활 을지로3가점</span>
+            <span>{detail.company.companyName ?? '-'}</span>
           </div>
         </div>
+        {/* 2. 사업자등록번호 */}
         <div className="employcont-item">
           <div className="employcont-item-tit">사업자등록번호</div>
           <div className="employcont-item-desc">
-            <span>105-88-88888</span>
+            <span>{detail.company.businessRegistrationNumber ?? '-'}</span>
           </div>
         </div>
+        {/* 3. 회사 주소 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">점포 주소</div>
+          <div className="employcont-item-tit">회사 주소</div>
           <div className="employcont-item-desc">
-            <span>서울시 서대문구 연세로5다길 22-3, 1층</span>
+            <span>{detail.company.companyAddress ?? '-'}</span>
           </div>
         </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">대표자명</div>
-          <div className="employcont-item-desc">
-            <span>홍길동</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">대표자 연락처</div>
-          <div className="employcont-item-desc">
-            <span>
-              <div className="call-number">
-                <i className="phone"></i>010-2222-3333
-              </div>
-            </span>
-          </div>
-        </div>
+        {/* 4. 취업자명 */}
         <div className="employcont-item">
           <div className="employcont-item-tit">취업자명</div>
           <div className="employcont-item-desc">
-            <span>김길수</span>
+            <span>{detail.employee.employeeName}</span>
           </div>
         </div>
+        {/* 5. 주민등록번호 */}
         <div className="employcont-item">
           <div className="employcont-item-tit">주민등록번호</div>
           <div className="employcont-item-desc">
-            <span>050101-2******</span>
+            <span>{detail.employee.employeeSsn ?? '-'}</span>
           </div>
         </div>
+        {/* 6. 주소 */}
         <div className="employcont-item">
           <div className="employcont-item-tit">주소</div>
           <div className="employcont-item-desc">
-            <span>서울시 서대문구 연세로5다길 22-3, 1층</span>
+            <span>{detail.employee.employeeAddress ?? '-'}</span>
           </div>
         </div>
+        {/* 7. 근로 장소 */}
+        <div className="employcont-item">
+          <div className="employcont-item-tit">근로 장소</div>
+          <div className="employcont-item-desc">
+            <span>
+              {detail.terms?.workPlace ?? '회사 및 기타 업무상 필요가 있을 경우 \'사원\'의 근무장소 또는 업무내용을 변경할 수 있으며, 이 경우 \'사원\'은 특별한 사정이 없는 한 이에 따라야 한다.'}
+            </span>
+          </div>
+        </div>
+        {/* 8. 근로계약기간 */}
         <div className="employcont-item">
           <div className="employcont-item-tit">근로계약기간</div>
           <div className="employcont-item-desc">
-            <span>2025-01-01 ~ 2025-12-31  (종료기간 없음)</span>
+            <span>{formatDate(detail.contract.contractStartDate)} ~ {formatDate(detail.contract.contractEndDate)}</span>
           </div>
         </div>
+        {/* 9. 계약 분류 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">취업장소</div>
+          <div className="employcont-item-tit">계약 분류</div>
           <div className="employcont-item-desc">
-            <span>힘이나는커피생활 을지로3가점</span>
+            <span>{detail.contract.contractClassification}</span>
           </div>
         </div>
+        {/* 10. 평일 근무시간 */}
+        <WorkHourItem title="평일 근무시간" workHour={weekdayHour} />
+        {/* 11. 토요일 근무시간 */}
+        <WorkHourItem title="토요일 근무시간" workHour={saturdayHour} />
+        {/* 12. 일요일 근무시간 */}
+        <WorkHourItem title="일요일 근무시간" workHour={sundayHour} />
+        {/* 13. 근로시간 기타 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">업무 내용</div>
+          <div className="employcont-item-tit">근로시간 기타</div>
           <div className="employcont-item-desc">
-            <span>매장관리 및 메뉴제조, 고객응대</span>
+            <span>{'\'사원\'은 업무상 필요한 경우 연장근로시간, 휴일근로, 야간근로를 실시하는데 동의한다.'}</span>
           </div>
         </div>
+        {/* 14. 휴일 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">평일근무/시급</div>
+          <div className="employcont-item-tit">휴일</div>
           <div className="employcont-item-desc">
-            <span>평일(월,화,수,목,금) 11,000원/시간</span>
+            <span>{detail.terms?.holidayDefault ?? '-'}</span>
+            {detail.terms?.holidayAdditional && (
+              <span style={{ display: 'block', marginTop: '4px' }}>{detail.terms.holidayAdditional}</span>
+            )}
           </div>
         </div>
+        {/* 15. 연차 휴가 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">토요일근무/시급</div>
+          <div className="employcont-item-tit">연차 휴가</div>
           <div className="employcont-item-desc">
-            <span>토요일 근무 없음</span>
+            <span>{detail.terms?.annualLeaveDefault ?? '-'}</span>
+            {detail.terms?.annualLeaveAdditional && (
+              <span style={{ display: 'block', marginTop: '4px' }}>{detail.terms.annualLeaveAdditional}</span>
+            )}
           </div>
         </div>
+        {/* 16. 퇴사 시 업무 인수인계 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">일요일근무/시급</div>
+          <div className="employcont-item-tit">퇴사 시 업무인수인계</div>
           <div className="employcont-item-desc">
-            <span>일요일(일요일전체) 15,000원/시간</span>
+            <span>{detail.terms?.resignationDefault ?? '-'}</span>
+            {detail.terms?.resignationAdditional && (
+              <span style={{ display: 'block', marginTop: '4px' }}>{detail.terms.resignationAdditional}</span>
+            )}
           </div>
         </div>
+        {/* 기타 항목 (code-memo otherItems) */}
+        {detail.terms?.otherItems.map((item, idx) => (
+          <div className="employcont-item" key={idx}>
+            <div className="employcont-item-tit">기타 항목 {idx + 1}</div>
+            <div className="employcont-item-desc">
+              <span>{item}</span>
+            </div>
+          </div>
+        ))}
+        {/* 17. 기타 #1 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">임금지급일</div>
+          <div className="employcont-item-tit">기타1</div>
           <div className="employcont-item-desc">
-            <span>매달 익월 05일</span>
-            <span>※ 다만, 임금지급일이 공휴일인 경우에는 전일에 지급</span>
+            <span>{detail.terms?.otherItem1}</span>
           </div>
         </div>
+        {/* 18. 기타 #2 */}
         <div className="employcont-item">
-          <div className="employcont-item-tit">지급방법</div>
+          <div className="employcont-item-tit">기타2</div>
           <div className="employcont-item-desc">
-            <span>예금통장에 입금</span>
+            <span>{detail.terms?.otherItem2}</span>
           </div>
         </div>
+        {/* 급여 계좌 변경 섹션 */}
         <div className="employcont-item">
           <div className="employcont-item-account-wrap">
             <div className="employcont-item-tit-wrap">
-              <div className="employcont-item-tit">급여 계좌 은행명</div>
+              <div className="employcont-item-tit">급여 계좌</div>
               <div className="employcont-item-desc">
-                <span>한국은행</span>
+                <span>급여 지급일: 매달 {detail.contract.salaryDay}일</span>
               </div>
             </div>
             <div className="employcont-item-btn">
@@ -132,54 +264,6 @@ export default function EmploySuccess() {
               </button>
             </div>
           </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">급여 계좌 번호</div>
-          <div className="employcont-item-desc">
-            <span>22222222-3333333</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">급여 계좌 예금주</div>
-          <div className="employcont-item-desc">
-            <span>김길수</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">연차휴가</div>
-          <div className="employcont-item-desc">
-            <span>
-              근로기준법 제 60조의 연차유급휴가는 하계 및 동계휴가, 관공서 휴일에 관한 규정에 따른 공휴일에 갈음하여
-              사용함
-            </span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">퇴직금</div>
-          <div className="employcont-item-desc">
-            <span>계속근로기간 1년에 대하여 30일분의 퇴직금을 지급함</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">기타1</div>
-          <div className="employcont-item-desc">
-            <span>‘사원’은 ‘회사‘가 정한 취업규칙을 성실히 준수할 의무를 부담한다.</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">계약일</div>
-          <div className="employcont-item-desc">
-            <span>2025-01-01</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-tit">날인일시</div>
-          <div className="employcont-item-desc">
-            <span>2025-01-01  02:28:42</span>
-          </div>
-        </div>
-        <div className="employcont-item">
-          <div className="employcont-item-txt">이 계약이 정함이 없는 사항은 근로기준법이 정하는 바에 의한다.</div>
         </div>
       </div>
     </div>

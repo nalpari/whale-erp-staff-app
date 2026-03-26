@@ -6,6 +6,7 @@ import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { SubMenuData } from '@/data/SubMenuData'
 
 export default function Header() {
@@ -25,7 +26,14 @@ export default function Header() {
   // 필요한 함수만 선택적으로 구독 (함수는 변하지 않으므로 재렌더링 방지)
   const setPasswordChangePopup = usePopupController((state) => state.setPasswordChangePopup)
   const setStoreSheet = useBottomSheetController((state) => state.setStoreSheet)
+  const workplaces = useWorkplaceStore((s) => s.workplaces)
+  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
   const [isSideNavOpen, setIsSideNavOpen] = useState(false)
+
+  // 선택된 근무처명 (null이면 전체)
+  const selectedWorkplaceName = selectedWorkplaceId
+    ? workplaces.find((w) => w.id === selectedWorkplaceId)?.workplaceName ?? '전체'
+    : '전체'
 
   const segments = pathname.split('/').filter(Boolean)
   const isSubPage = segments.length >= 2
@@ -80,7 +88,7 @@ export default function Header() {
           <div className="header-body">
             <div className="header-store-btn">
               <button className="select-btn" onClick={() => setStoreSheet(true)}>
-                <span>힘이 나는 커피생활 을지로3가점</span>
+                <span>{selectedWorkplaceName}</span>
               </button>
             </div>
           </div>
