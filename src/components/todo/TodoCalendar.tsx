@@ -71,17 +71,10 @@ export default function TodoCalendar({
   }, [isGridOpen])
 
   const handleMonthChange = (year: number, month: number) => {
-    setViewYear(year)
-    setViewMonth(month)
-
-    if (year === selectedYear && month === selectedMonth) {
-      setBrowseData(null)
-    } else {
-      setBrowseData([])
-      fetchMonthlyCalendar(year, month)
-        .then(setBrowseData)
-        .catch(() => {})
-    }
+    setViewYear(null)
+    setViewMonth(null)
+    setBrowseData(null)
+    onDateSelect(new Date(year, month - 1, 1))
   }
 
   const handleDayClick = (date: Date) => {
