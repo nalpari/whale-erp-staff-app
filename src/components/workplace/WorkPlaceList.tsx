@@ -1,52 +1,87 @@
 'use client'
+import { useState, useEffect, useCallback } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { useRouter } from 'next/navigation'
+import { workplaceApi } from '@/lib/api-endpoints'
+import type { WorkplaceResponse } from '@/types/api'
+
+const STATUS_BADGE: Record<string, { className: string; label: string }> = {
+  EMPWK_001: { className: 'green', label: '근무' },
+  EMPWK_002: { className: 'brown', label: '휴직' },
+  EMPWK_003: { className: 'red', label: '퇴사' },
+}
+
 export default function WorkPlaceList() {
   const router = useRouter()
   const setWorkPlaceAddSheet = useBottomSheetController((state) => state.setWorkPlaceAddSheet)
+  const [workplaces, setWorkplaces] = useState<WorkplaceResponse[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchWorkplaces = useCallback(async () => {
+    try {
+      setLoading(true)
+      const res = await workplaceApi.getWorkplaces()
+      setWorkplaces(res.data ?? [])
+    } catch {
+      setWorkplaces([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchWorkplaces()
+  }, [fetchWorkplaces])
+
+  if (loading) {
+    return (
+      <div className="data-wrap">
+        <div className="data-tit">근무처/급여계좌 설정</div>
+        <div className="data-list">
+          <div className="data-item">
+            <div className="workplace-empty">불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="data-wrap">
       <div className="data-tit">근무처/급여계좌 설정</div>
       <div className="data-list">
-        <button className="data-item" onClick={() => router.push('/workplace/1')}>
-          <div className="workplace-item-inner">
-            <div className="workplace-info">
-              <div className="sub-badge green">근무</div>
-              <div className="workplace-info-name">힘이나는커피생활 을지로3가점</div>
-              <div className="workplace-info-desc">급여계좌 : 한국은행</div>
-            </div>
-            <div className="workplace-arr">
-              <div className="data-list-arr"></div>
-            </div>
+        {workplaces.length === 0 ? (
+          <div className="data-item">
+            <div className="workplace-empty">등록된 근무처가 없습니다.</div>
           </div>
-        </button>
-        <button className="data-item" onClick={() => router.push('/workplace/1')}>
-          <div className="workplace-item-inner">
-            <div className="workplace-info">
-              <div className="sub-badge brown">휴직</div>
-              <div className="workplace-info-name">힘이나는커피생활 종로3가점</div>
-              <div className="workplace-info-desc">급여계좌 : 한국은행</div>
-            </div>
-            <div className="workplace-arr">
-              <div className="data-list-arr"></div>
-            </div>
-          </div>
-        </button>
-        <button className="data-item" onClick={() => router.push('/workplace/1')}>
-          <div className="workplace-item-inner">
-            <div className="workplace-info">
-              <div className="sub-badge red">퇴사</div>
-              <div className="workplace-info-name">힘이나는커피생활 을지로3가점</div>
-              <div className="workplace-info-desc">급여계좌 : 한국은행</div>
-            </div>
-            <div className="workplace-arr">
-              <div className="data-list-arr"></div>
-            </div>
-          </div>
-        </button>
-        <div className="data-item">
-          <div className="workplace-empty">등록된 매장정보가 없습니다.</div>
-        </div>
+        ) : (
+          workplaces.map((wp) => {
+            const badge = wp.workStatus ? STATUS_BADGE[wp.workStatus] : null
+            const displayName = wp.storeName
+              ? `${wp.workplaceName} ${wp.storeName}`
+              : wp.workplaceName
+
+            return (
+              <button
+                className="data-item"
+                key={wp.id}
+                onClick={() => router.push(`/workplace/${wp.id}`)}
+              >
+                <div className="workplace-item-inner">
+                  <div className="workplace-info">
+                    {badge && (
+                      <div className={`sub-badge ${badge.className}`}>{badge.label}</div>
+                    )}
+                    <div className="workplace-info-name">{displayName}</div>
+                  </div>
+                  <div className="workplace-arr">
+                    <div className="data-list-arr"></div>
+                  </div>
+                </div>
+              </button>
+            )
+          })
+        )}
       </div>
       <div className="data-btn-wrap">
         <button className="btn-form login block" onClick={() => setWorkPlaceAddSheet(true)}>

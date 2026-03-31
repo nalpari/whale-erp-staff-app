@@ -27,7 +27,10 @@ export default function SignUpLayout() {
   const openBankSelect = useBottomSheetController((state) => state.openBankSelect)
 
   // 급여계좌
+  const [bankCode, setBankCode] = useState('')
   const [bankName, setBankName] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountHolder, setAccountHolder] = useState('')
 
   // 로그인 정보
   const [loginId, setLoginId] = useState('')
@@ -219,6 +222,17 @@ export default function SignUpLayout() {
       if (res.data.available) {
         setInviteCodeMsg({ type: 'success', text: res.data.message })
         setInviteCodeVerified(true)
+        // 직원 정보 자동 채움 (비어있는 필드만)
+        if (res.data.employeeName && !name) {
+          setName(res.data.employeeName)
+        }
+        if (res.data.email && !email) {
+          setEmail(res.data.email)
+          setEmailMsg({ type: 'success', text: '초대코드에 등록된 이메일이 자동 입력되었습니다.' })
+        }
+        if (res.data.mobilePhone && !phone) {
+          setPhone(res.data.mobilePhone)
+        }
       } else {
         setInviteCodeMsg({ type: 'error', text: res.data.message })
         setInviteCodeVerified(false)
@@ -272,9 +286,10 @@ export default function SignUpLayout() {
         address: address || undefined,
         addressDetail: addressDetail || undefined,
         inviteCode: inviteCodeVerified ? inviteCode : undefined,
+        bankCode: bankCode || undefined,
         bankName: bankName || undefined,
-        accountNumber: (document.querySelector<HTMLInputElement>('input[placeholder*="계좌번호"]')?.value) || undefined,
-        accountHolder: (document.querySelector<HTMLInputElement>('input[placeholder*="예금주"]')?.value) || undefined,
+        accountNumber: accountNumber || undefined,
+        accountHolder: accountHolder || undefined,
       }
       console.log('[회원가입] 전송 데이터:', JSON.stringify(signupData, null, 2))
       await authApi.signup(signupData)
@@ -289,7 +304,7 @@ export default function SignUpLayout() {
   }
 
   return (
-    <div className="login-contents">
+    <form className="login-contents" autoComplete="off" onSubmit={(e) => e.preventDefault()}>
       <div className="signup-filed-wrap">
         {/* 로그인 정보 */}
         <div className="signup-filed-form">
@@ -303,6 +318,7 @@ export default function SignUpLayout() {
                 type="text"
                 className={`input-frame ${loginIdMsg.type === 'error' ? 'error' : ''}`}
                 placeholder="영문/숫자 조합 6~20자"
+                autoComplete="off"
                 value={loginId}
                 onChange={(e) => handleLoginIdChange(e.target.value)}
                 maxLength={20}
@@ -321,6 +337,7 @@ export default function SignUpLayout() {
                 <input
                   type={showPw ? 'text' : 'password'}
                   placeholder="영문, 숫자, 특수문자 포함 8~20자"
+                  autoComplete="new-password"
                   value={pw}
                   onChange={(e) => {
                     setPw(e.target.value)
@@ -351,6 +368,7 @@ export default function SignUpLayout() {
                 <input
                   type={showPwConfirm ? 'text' : 'password'}
                   placeholder="비밀번호 재입력"
+                  autoComplete="new-password"
                   value={pwConfirm}
                   onChange={(e) => {
                     setPwConfirm(e.target.value)
@@ -380,6 +398,7 @@ export default function SignUpLayout() {
                 type="text"
                 className={`input-frame${inviteCodeMsg.type === 'error' ? ' error' : ''}`}
                 placeholder="직원 초대 코드 12자리 입력"
+                autoComplete="off"
                 value={inviteCode}
                 onChange={(e) => {
                   setInviteCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12))
@@ -436,6 +455,7 @@ export default function SignUpLayout() {
                 type="text"
                 className="input-frame"
                 placeholder="이름을 입력해주세요"
+                autoComplete="off"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -451,6 +471,7 @@ export default function SignUpLayout() {
                   type="text"
                   className="input-frame"
                   placeholder="생년월일 6자리"
+                  autoComplete="off"
                   value={ssnFront}
                   onChange={(e) => setSsnFront(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
                   maxLength={6}
@@ -462,6 +483,7 @@ export default function SignUpLayout() {
                     type="text"
                     className="input-frame num"
                     placeholder="●"
+                    autoComplete="off"
                     value={ssnGender}
                     onChange={(e) => setSsnGender(e.target.value.replace(/[^0-9]/g, '').slice(0, 1))}
                     maxLength={1}
@@ -486,6 +508,7 @@ export default function SignUpLayout() {
                 type="text"
                 className="input-frame"
                 placeholder="휴대폰 번호 입력 (숫자만)"
+                autoComplete="off"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
                 maxLength={11}
@@ -515,6 +538,7 @@ export default function SignUpLayout() {
                 type="text"
                 className="input-frame"
                 placeholder="상세주소를 입력해주세요 (예: 101동 1205호)"
+                autoComplete="off"
                 value={addressDetail}
                 onChange={(e) => setAddressDetail(e.target.value)}
               />
@@ -529,6 +553,7 @@ export default function SignUpLayout() {
                 type="text"
                 className={`input-frame ${emailMsg.type === 'error' ? 'error' : ''}`}
                 placeholder="이메일 입력 (예: user@email.com)"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
               />
@@ -547,7 +572,7 @@ export default function SignUpLayout() {
             <div className="block">
               <button
                 className="select-form al-l"
-                onClick={() => openBankSelect((selected) => setBankName(selected))}
+                onClick={() => openBankSelect((code, name) => { setBankCode(code); setBankName(name) })}
               >
                 {bankName || '선택'}
               </button>
@@ -556,13 +581,27 @@ export default function SignUpLayout() {
           <div className="signup-filed-item">
             <div className="signup-filed-item-tit">계좌번호 입력</div>
             <div className="block">
-              <input type="text" className="input-frame" placeholder="하이픈(-) 없이 숫자만 입력" />
+              <input
+                type="text"
+                className="input-frame"
+                placeholder="하이픈(-) 없이 숫자만 입력"
+                autoComplete="off"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9]/g, ''))}
+              />
             </div>
           </div>
           <div className="signup-filed-item">
             <div className="signup-filed-item-tit">예금주</div>
             <div className="block">
-              <input type="text" className="input-frame" placeholder="예금주 입력" />
+              <input
+                type="text"
+                className="input-frame"
+                placeholder="예금주 입력"
+                autoComplete="off"
+                value={accountHolder}
+                onChange={(e) => setAccountHolder(e.target.value)}
+              />
             </div>
             <div className="msg mt10">급여계좌 정보를 모두 입력하거나, 모두 지워주세요.</div>
           </div>
@@ -637,6 +676,6 @@ export default function SignUpLayout() {
           </button>
         </div>
       </div>
-    </div>
+    </form>
   )
 }

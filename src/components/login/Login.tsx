@@ -1,9 +1,11 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { authApi } from "@/lib/api-endpoints"
 import { useAuthStore } from "@/store/useAuthStore"
+
+const SAVED_ID_KEY = "whale_saved_login_id"
 
 export default function Login() {
   const router = useRouter()
@@ -14,6 +16,15 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [saveId, setSaveId] = useState(false)
+
+  useEffect(() => {
+    const savedId = localStorage.getItem(SAVED_ID_KEY)
+    if (savedId) {
+      setLoginId(savedId)
+      setSaveId(true)
+    }
+  }, [])
 
   const handleLogin = async () => {
     if (!loginId || !password) {
@@ -26,6 +37,11 @@ export default function Login() {
 
     try {
       const res = await authApi.login({ loginId, password })
+      if (saveId) {
+        localStorage.setItem(SAVED_ID_KEY, loginId)
+      } else {
+        localStorage.removeItem(SAVED_ID_KEY)
+      }
       login(res.data)
       router.push("/")
     } catch (err: unknown) {
@@ -86,11 +102,23 @@ export default function Login() {
       </div>
       <div className="login-check-wrap">
         <div className="check-form-box">
-          <input type="checkbox" id="login-check" />
+          <input
+            type="checkbox"
+            id="login-check"
+            checked={saveId}
+            onChange={(e) => {
+              setSaveId(e.target.checked)
+              if (!e.target.checked) {
+                localStorage.removeItem(SAVED_ID_KEY)
+              }
+            }}
+          />
           <label htmlFor="login-check">ID 저장</label>
         </div>
         <div className="find-btn-wrap">
-          <button className="find-btn">ID 찿기 / 비밀번호 찿기</button>
+          <button className="find-btn" onClick={() => router.push("/login/find?tab=findId")}>ID 찾기</button>
+          <span className="find-btn"> / </span>
+          <button className="find-btn" onClick={() => router.push("/login/find?tab=findPw")}>비밀번호 찾기</button>
         </div>
       </div>
       <div className="login-signup-wrap">

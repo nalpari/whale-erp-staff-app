@@ -1,25 +1,39 @@
 'use client'
 
 import { usePopupController } from '@/store/usePopupController'
+import { contractApi } from '@/lib/api-endpoints'
 import { useEffect, useState, useRef } from 'react'
 import BeforeEmployment from '@/components/popup/employment/employcont/BeforeEmployment'
 import EmploySuccess from '@/components/popup/employment/employcont/EmploySuccess'
 
 export default function EmploymentPopFrame() {
   const [active, setActive] = useState(false)
-  const popupRef = useRef<HTMLDivElement>(null) // 팝업 내부 스크롤을 상단으로 이동하기 위한 ref
+  const [storeName, setStoreName] = useState('')
+  const popupRef = useRef<HTMLDivElement>(null)
 
   const EmploymentPopFrame = usePopupController((state) => state.EmploymentPopFrame)
   const setEmploymentPopFrame = usePopupController((state) => state.setEmploymentPopFrame)
-  const step = usePopupController((state) => state.EmploymentStep) // 전역 상태에서 step 가져오기
+  const selectedContractId = usePopupController((state) => state.selectedContractId)
+  const step = usePopupController((state) => state.EmploymentStep)
   const setEmploymentStep = usePopupController((state) => state.setEmploymentStep)
 
   useEffect(() => {
-    // step이 변경될 때 popup 내부 스크롤을 상단으로 이동
     if (popupRef.current) {
       popupRef.current.scrollTo(0, 0)
     }
   }, [step])
+
+  useEffect(() => {
+    if (!selectedContractId || !EmploymentPopFrame) return
+    contractApi.getContractDetail(selectedContractId)
+      .then((res) => {
+        const data = res.data
+        if (data) {
+          setStoreName(data.company.storeName ?? data.company.companyName ?? '')
+        }
+      })
+      .catch(() => {})
+  }, [selectedContractId, EmploymentPopFrame])
 
   useEffect(() => {
     // 팝업 열기 시간 필요
@@ -51,12 +65,12 @@ export default function EmploymentPopFrame() {
             <h3>
               {step ? (
                 <>
-                  <span>힘이나는커피생활 을지로3가점</span>
+                  <span>{storeName}</span>
                   과<br /> 근로계약 체결을 완료 하였습니다.
                 </>
               ) : (
                 <>
-                  <span>힘이나는커피생활 을지로3가점</span>
+                  <span>{storeName}</span>
                   과<br /> 근로계약을 체결합니다.
                 </>
               )}

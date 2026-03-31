@@ -65,6 +65,12 @@ export interface ChangePasswordRequest {
 export interface CheckAvailabilityResponse {
   available: boolean
   message: string
+  email?: string
+  employeeName?: string
+  mobilePhone?: string
+  zipCode?: string
+  address?: string
+  addressDetail?: string
 }
 
 export interface SignupRequest {
@@ -78,6 +84,7 @@ export interface SignupRequest {
   address?: string
   addressDetail?: string
   inviteCode?: string
+  bankCode?: string
   bankName?: string
   accountNumber?: string
   accountHolder?: string
@@ -135,12 +142,40 @@ export interface CodeOptions {
 export interface WorkplaceResponse {
   id: number
   workplaceName: string
-  workplaceColor: string
-  contractStatus: string
+  storeName: string | null
+  workplaceType: string
+  workStatus: string | null
+  workStatusName: string | null
+  colorIndex: number
 }
 
 export interface AddWorkplaceRequest {
   registrationCode: string
+}
+
+export interface WorkplaceDetailResponse {
+  id: number
+  workplace: {
+    name: string
+    address: string | null
+    representativeName: string | null
+    storePhone: string | null
+  }
+  employee: {
+    name: string
+    employeeNumber: string
+    contractClassification: string | null
+    rank: string | null
+    position: string | null
+    workStatusName: string | null
+    hireDate: string | null
+    resignationDate: string | null
+  }
+  salaryAccount: {
+    bankName: string | null
+    accountNumber: string | null
+    accountHolder: string | null
+  } | null
 }
 
 // ============================================================
@@ -149,14 +184,17 @@ export interface AddWorkplaceRequest {
 
 export interface SalaryAccountResponse {
   id: number
+  bankCode: string | null
   bankName: string
-  maskedAccountNumber: string
-  maskedAccountHolder: string
+  accountNumber: string
+  accountHolder: string
+  memo: string | null
+  sortOrder: number
   isPrimary: boolean
-  memo?: string
 }
 
 export interface CreateSalaryAccountRequest {
+  bankCode?: string
   bankName: string
   accountNumber: string
   accountHolder: string
@@ -165,6 +203,7 @@ export interface CreateSalaryAccountRequest {
 }
 
 export interface UpdateSalaryAccountRequest {
+  bankCode?: string
   bankName?: string
   accountNumber?: string
   accountHolder?: string
@@ -296,14 +335,36 @@ export interface ContractListResponse {
   completedDate?: string
 }
 
+export interface ContractHistoryItem {
+  contractId: number
+  status: string
+  storeName: string | null
+  contractClassification: string | null
+  contractStartDate: string | null
+  contractEndDate: string | null
+  signedDocumentFileId: number | null
+  contractSendDate: string | null
+  contractViewDate: string | null
+  signedDate: string | null
+  signerName: string | null
+  rejectedDate: string | null
+}
+
+export interface ContractHistoryResponse {
+  items: ContractHistoryItem[]
+}
+
 export interface ContractDetailResponse {
   id: number
   status: string
+  signedDocumentFileId: number | null
   company: {
     companyName: string | null
     storeName: string | null
     businessRegistrationNumber: string | null
     companyAddress: string | null
+    representativeName: string | null
+    representativePhone: string | null
   }
   employee: {
     employeeName: string
@@ -314,15 +375,22 @@ export interface ContractDetailResponse {
     employeeAddress: string | null
   }
   contract: {
+    contractClassificationCode: string
     contractClassification: string
     contractStartDate: string
     contractEndDate: string
     jobDescription: string | null
     salaryDay: number
+    nationalPensionEnrolled: boolean | null
+    healthInsuranceEnrolled: boolean | null
+    employmentInsuranceEnrolled: boolean | null
+    workersCompensationEnrolled: boolean | null
   }
   workHours: {
     dayType: string
     isWork: boolean
+    everySaturdayWork: boolean | null
+    everySundayWork: boolean | null
     workStartTime: string | null
     workEndTime: string | null
     breakStartTime: string | null
@@ -332,7 +400,25 @@ export interface ContractDetailResponse {
     annualAmount: number
     monthlyTotalAmount: number
     timelyAmount: number
+    monthlyTime: number
     monthlyBaseAmount: number
+    monthlyOvertimeAllowanceTime: number | null
+    monthlyOvertimeAllowanceAmount: number | null
+    monthlyNightAllowanceTime: number | null
+    monthlyNightAllowanceAmount: number | null
+    monthlyHolidayAllowanceTime: number | null
+    monthlyHolidayAllowanceAmount: number | null
+    monthlyAddHolidayAllowanceTime: number | null
+    monthlyAddHolidayAllowanceAmount: number | null
+    mealAllowanceAmount: number | null
+    vehicleAllowanceAmount: number | null
+    childcareAllowanceAmount: number | null
+    // 파트타이머 시급 필드
+    weekDayAllowanceAmount: number | null
+    overtimeDayAllowanceAmount: number | null
+    nightDayAllowanceAmount: number | null
+    holidayAllowanceTimeAmount: number | null
+    bonuses: { bonusType: string; amount: number; memo: string | null }[]
   } | null
   terms: {
     workPlace: string | null
@@ -340,20 +426,114 @@ export interface ContractDetailResponse {
     holidayAdditional: string | null
     annualLeaveDefault: string
     annualLeaveAdditional: string | null
-    resignationDefault: string
+    resignationDefault: string | null
     resignationAdditional: string | null
+    severancePayDefault: string | null
+    severancePayAdditional: string | null
     otherItems: string[]
     otherItem1: string
     otherItem2: string
+  } | null
+  salaryAccount: {
+    bankName: string
+    accountNumber: string
+    accountHolder: string
   } | null
 }
 
 export interface ContractSignRequest {
   signatureData: string
+  salaryAccountId?: number
 }
 
 export interface ContractRejectRequest {
   reason?: string
+}
+
+export interface ContractSnapshotData {
+  company: {
+    companyName: string | null
+    storeName: string | null
+    businessRegistrationNumber: string | null
+    companyAddress: string | null
+    representativeName: string | null
+    representativePhone: string | null
+  }
+  employee: {
+    employeeName: string
+    employeeNumber: string
+    rank: string | null
+    position: string | null
+    employeeSsn: string | null
+    employeeAddress: string | null
+  }
+  contract: {
+    contractClassificationCode: string
+    contractClassification: string
+    contractStartDate: string
+    contractEndDate: string
+    jobDescription: string | null
+    salaryDay: number
+    nationalPensionEnrolled: boolean | null
+    healthInsuranceEnrolled: boolean | null
+    employmentInsuranceEnrolled: boolean | null
+    workersCompensationEnrolled: boolean | null
+  }
+  salary: {
+    annualAmount: number
+    monthlyTotalAmount: number
+    timelyAmount: number
+    monthlyTime: number
+    monthlyBaseAmount: number
+    monthlyOvertimeAllowanceTime: number | null
+    monthlyOvertimeAllowanceAmount: number | null
+    monthlyNightAllowanceTime: number | null
+    monthlyNightAllowanceAmount: number | null
+    monthlyHolidayAllowanceTime: number | null
+    monthlyHolidayAllowanceAmount: number | null
+    monthlyAddHolidayAllowanceTime: number | null
+    monthlyAddHolidayAllowanceAmount: number | null
+    mealAllowanceAmount: number | null
+    vehicleAllowanceAmount: number | null
+    childcareAllowanceAmount: number | null
+    weekDayAllowanceAmount: number | null
+    overtimeDayAllowanceAmount: number | null
+    nightDayAllowanceAmount: number | null
+    holidayAllowanceTimeAmount: number | null
+    bonuses: { bonusType: string; amount: number; memo: string | null }[]
+  } | null
+  workHours: {
+    dayType: string
+    isWork: boolean
+    everySaturdayWork: boolean | null
+    everySundayWork: boolean | null
+    workStartTime: string | null
+    workEndTime: string | null
+    breakStartTime: string | null
+    breakEndTime: string | null
+  }[]
+  salaryAccount: {
+    bankCode: string | null
+    bankName: string
+    accountNumber: string
+    accountHolder: string
+  } | null
+  terms: {
+    workPlace: string | null
+    holidayDefault: string | null
+    holidayAdditional: string | null
+    annualLeaveDefault: string
+    annualLeaveAdditional: string | null
+    resignationDefault: string | null
+    resignationAdditional: string | null
+    severancePayDefault: string | null
+    severancePayAdditional: string | null
+    otherItems: string[]
+    otherItem1: string
+    otherItem2: string
+  } | null
+  signedDate: string | null
+  rejectedDate: string | null
 }
 
 // ============================================================
@@ -362,11 +542,11 @@ export interface ContractRejectRequest {
 
 export interface PayrollListResponse {
   id: number
-  yearMonth: string
-  storeName: string
+  payrollType: string
+  payrollMonth: string
   paymentDate: string
-  totalAmount: number
-  contractType: string
+  settlementPeriod: string
+  workplaceName: string
 }
 
 export interface PayrollDetailResponse {

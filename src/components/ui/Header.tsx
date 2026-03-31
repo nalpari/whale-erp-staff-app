@@ -87,8 +87,13 @@ export default function Header() {
         {pathname !== '/mypage' && (
           <div className="header-body">
             <div className="header-store-btn">
-              <button className="select-btn" onClick={() => setStoreSheet(true)}>
-                <span>{selectedWorkplaceName}</span>
+              <button
+                className="select-btn"
+                onClick={() => workplaces.length > 0 && setStoreSheet(true)}
+                disabled={workplaces.length === 0}
+                style={workplaces.length === 0 ? { opacity: 0.5, cursor: 'default' } : undefined}
+              >
+                <span>{workplaces.length === 0 ? '근무처 없음' : selectedWorkplaceName}</span>
               </button>
             </div>
           </div>
@@ -138,6 +143,11 @@ export default function Header() {
               <li className="side-nav-body-item">
                 <Link href="/salary" onClick={() => setIsSideNavOpen(false)}>
                   급여명세서
+                </Link>
+              </li>
+              <li className="side-nav-body-item">
+                <Link href="/mypage/account" onClick={() => setIsSideNavOpen(false)}>
+                  급여 계좌 관리
                 </Link>
               </li>
               <li className="side-nav-body-item">

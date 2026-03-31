@@ -6,12 +6,14 @@ type BottomSheetControllerState = {
   setStoreSheet: (isOpen: boolean) => void
   bankSelectSheet: boolean
   setBankSelectSheet: (isOpen: boolean) => void
-  onBankSelect: ((bankName: string) => void) | null
-  openBankSelect: (callback: (bankName: string) => void) => void
+  onBankSelect: ((bankCode: string, bankName: string) => void) | null
+  openBankSelect: (callback: (bankCode: string, bankName: string) => void) => void
   workPlaceAddSheet: boolean
   setWorkPlaceAddSheet: (isOpen: boolean) => void
   accountSelectSheet: boolean
   setAccountSelectSheet: (isOpen: boolean) => void
+  selectedWorkplaceForAccount: number | null
+  setSelectedWorkplaceForAccount: (id: number | null) => void
   employmentNotificationSheet: boolean
   setEmploymentNotificationSheet: (isOpen: boolean) => void
   commuteDaySelectSheet: boolean
@@ -30,6 +32,9 @@ type BottomSheetControllerState = {
   setCertificateAddSheet: (isOpen: boolean) => void
   accountAddSheet: boolean
   setAccountAddSheet: (isOpen: boolean) => void
+  editingAccount: { id: number; bankCode: string | null; bankName: string; accountNumber: string; accountHolder: string; memo: string | null; isPrimary: boolean } | null
+  onAccountSaved: (() => void) | null
+  openAccountSheet: (account?: { id: number; bankCode: string | null; bankName: string; accountNumber: string; accountHolder: string; memo: string | null; isPrimary: boolean }, onSaved?: () => void) => void
   documentAddSheet: boolean
   setDocumentAddSheet: (isOpen: boolean) => void
   // 서류 업로드용: type, label, 저장 후 콜백
@@ -44,6 +49,7 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   bankSelectSheet: false,
   workPlaceAddSheet: false,
   accountSelectSheet: false,
+  selectedWorkplaceForAccount: null,
   employmentNotificationSheet: false,
   commuteDaySelectSheet: false,
   avatarSelectSheet: false,
@@ -53,6 +59,8 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   onCareerSaved: null,
   certificateAddSheet: false,
   accountAddSheet: false,
+  editingAccount: null,
+  onAccountSaved: null,
   documentAddSheet: false,
   documentType: null,
   documentLabel: null,
@@ -60,9 +68,10 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   onBankSelect: null,
   setStoreSheet: (isOpen: boolean) => set((state) => ({ ...state, storeSheet: isOpen })),
   setBankSelectSheet: (isOpen: boolean) => set((state) => ({ ...state, bankSelectSheet: isOpen })),
-  openBankSelect: (callback: (bankName: string) => void) => set((state) => ({ ...state, bankSelectSheet: true, onBankSelect: callback })),
+  openBankSelect: (callback: (bankCode: string, bankName: string) => void) => set((state) => ({ ...state, bankSelectSheet: true, onBankSelect: callback })),
   setWorkPlaceAddSheet: (isOpen: boolean) => set((state) => ({ ...state, workPlaceAddSheet: isOpen })),
-  setAccountSelectSheet: (isOpen: boolean) => set((state) => ({ ...state, accountSelectSheet: isOpen })),
+  setAccountSelectSheet: (isOpen: boolean) => set((state) => ({ ...state, accountSelectSheet: isOpen, ...(isOpen ? {} : { selectedWorkplaceForAccount: null }) })),
+  setSelectedWorkplaceForAccount: (id: number | null) => set((state) => ({ ...state, selectedWorkplaceForAccount: id })),
   setEmploymentNotificationSheet: (isOpen: boolean) => set((state) => ({ ...state, employmentNotificationSheet: isOpen })),
   setCommuteDaySelectSheet: (isOpen: boolean) => set((state) => ({ ...state, commuteDaySelectSheet: isOpen })),
   setAvatarSelectSheet: (isOpen: boolean) => set((state) => ({ ...state, avatarSelectSheet: isOpen })),
@@ -79,7 +88,17 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
     onCareerSaved: onSaved ?? null,
   })),
   setCertificateAddSheet: (isOpen: boolean) => set((state) => ({ ...state, certificateAddSheet: isOpen })),
-  setAccountAddSheet: (isOpen: boolean) => set((state) => ({ ...state, accountAddSheet: isOpen })),
+  setAccountAddSheet: (isOpen: boolean) => set((state) => ({
+    ...state,
+    accountAddSheet: isOpen,
+    ...(isOpen ? {} : { editingAccount: null, onAccountSaved: null }),
+  })),
+  openAccountSheet: (account, onSaved) => set((state) => ({
+    ...state,
+    accountAddSheet: true,
+    editingAccount: account ?? null,
+    onAccountSaved: onSaved ?? null,
+  })),
   setDocumentAddSheet: (isOpen: boolean) => set((state) => ({
     ...state,
     documentAddSheet: isOpen,

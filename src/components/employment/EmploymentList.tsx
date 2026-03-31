@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { usePopupController } from '@/store/usePopupController'
 import { contractApi } from '@/lib/api-endpoints'
 import type { ContractListResponse } from '@/types/api'
@@ -16,11 +16,11 @@ function formatDate(dateStr?: string | null): string {
 
 function getStampStyle(status: string): { className: string; label: string[] } {
   switch (status) {
-    case 'PENDING':
+    case 'PROGRESS':
       return { className: 'blue', label: ['계약', '하기'] }
-    case 'COMPLETED':
+    case 'COMPLETE':
       return { className: 'grey', label: ['계약', '완료'] }
-    case 'REJECTED':
+    case 'REFUSAL':
       return { className: 'red', label: ['거절'] }
     default:
       return { className: 'grey', label: [status] }
@@ -36,7 +36,12 @@ export default function EmploymentList() {
   // 팝업 스토어에 선택된 계약 ID 저장용
   const setContractHistoryPopup = usePopupController((s) => s.setContractHistoryPopup)
 
-  useEffect(() => {
+  // 팝업 상태 감시 (닫힐 때 목록 갱신)
+  const isEmploymentPopFrameOpen = usePopupController((s) => s.EmploymentPopFrame)
+  const isContractHistoryPopupOpen = usePopupController((s) => s.ContractHistoryPopup)
+
+  const fetchContracts = useCallback(() => {
+    setLoading(true)
     contractApi.getContracts()
       .then((res) => {
         setContracts(res.data ?? [])
@@ -47,10 +52,23 @@ export default function EmploymentList() {
       .finally(() => setLoading(false))
   }, [])
 
+  // 최초 마운트 시 조회
+  useEffect(() => {
+    fetchContracts()
+  }, [fetchContracts])
+
+  // 팝업이 닫힐 때 목록 갱신 (서명/거절 후)
+  useEffect(() => {
+    if (!isEmploymentPopFrameOpen && !isContractHistoryPopupOpen) {
+      const timer = setTimeout(() => fetchContracts(), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [isEmploymentPopFrameOpen, isContractHistoryPopupOpen, fetchContracts])
+
   const handleContractClick = (contract: ContractListResponse) => {
     // 전역 스토어에 선택된 계약 ID 저장 (팝업 컴포넌트에서 상세 조회 시 사용)
     setSelectedContractId(contract.id)
-    if (contract.status === 'PENDING') {
+    if (contract.status === 'PROGRESS') {
       // 계약 체결 팝업 열기
       setEmploymentPopFrame(true)
     } else {

@@ -28,6 +28,14 @@ type PopupControllerState = {
   // 계약 팝업 열기 시 선택된 계약 ID
   selectedContractId: number | null
   setSelectedContractId: (id: number | null) => void
+  // 계약 서명 시 선택된 급여 계좌 ID
+  selectedSalaryAccountId: number | null
+  setSelectedSalaryAccountId: (id: number | null) => void
+  // 급여명세서 상세 팝업 시 선택된 급여 ID와 타입
+  selectedPayrollId: number | null
+  setSelectedPayrollId: (id: number | null) => void
+  selectedPayrollType: string | null
+  setSelectedPayrollType: (type: string | null) => void
 }
 
 export const usePopupController = create<PopupControllerState>((set) => ({
@@ -43,6 +51,9 @@ export const usePopupController = create<PopupControllerState>((set) => ({
   SalaryDetailFullTimePopup: false,
   pendingContracts: [],
   selectedContractId: null,
+  selectedSalaryAccountId: null,
+  selectedPayrollId: null,
+  selectedPayrollType: null,
   setQrCodePopup: (isOpen: boolean) => set((state) => ({ ...state, QrCodePopup: isOpen })),
   setAlertPopup: (isOpen: boolean) => set((state) => ({ ...state, AlertPopup: isOpen })),
   setPasswordChangePopup: (isOpen: boolean) => set((state) => ({ ...state, PasswordChangePopup: isOpen })),
@@ -55,4 +66,7 @@ export const usePopupController = create<PopupControllerState>((set) => ({
   setSalaryDetailFullTimePopup: (isOpen: boolean) => set((state) => ({ ...state, SalaryDetailFullTimePopup: isOpen })),
   setPendingContracts: (contracts: ContractListResponse[]) => set((state) => ({ ...state, pendingContracts: contracts })),
   setSelectedContractId: (id: number | null) => set((state) => ({ ...state, selectedContractId: id })),
+  setSelectedSalaryAccountId: (id: number | null) => set((state) => ({ ...state, selectedSalaryAccountId: id })),
+  setSelectedPayrollId: (id: number | null) => set((state) => ({ ...state, selectedPayrollId: id })),
+  setSelectedPayrollType: (type: string | null) => set((state) => ({ ...state, selectedPayrollType: type })),
 }))

@@ -24,6 +24,7 @@ import type {
   CodeOptions,
   // Workplace
   WorkplaceResponse,
+  WorkplaceDetailResponse,
   AddWorkplaceRequest,
   // Salary Account
   SalaryAccountResponse,
@@ -46,8 +47,10 @@ import type {
   // Contract
   ContractListResponse,
   ContractDetailResponse,
+  ContractHistoryResponse,
   ContractSignRequest,
   ContractRejectRequest,
+  ContractSnapshotData,
   // Payroll
   PayrollListResponse,
   PayrollDetailResponse,
@@ -172,6 +175,17 @@ export const workplaceApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  /** 근무처 상세 조회 */
+  getWorkplaceDetail: (id: number) =>
+    apiClient<ApiResponse<WorkplaceDetailResponse>>(`/api/v1/mobile/employee/workplaces/${id}`),
+
+  /** 근무처 급여계좌 변경 */
+  changeSalaryAccount: (id: number, salaryAccountId: number) =>
+    apiClient<ApiResponse<null>>(`/api/v1/mobile/employee/workplaces/${id}/salary-account`, {
+      method: 'PUT',
+      body: JSON.stringify({ salaryAccountId }),
+    }),
 }
 
 // ============================================================
@@ -181,31 +195,35 @@ export const workplaceApi = {
 export const salaryAccountApi = {
   /** 급여 계좌 목록 조회 */
   getAccounts: () =>
-    apiClient<ApiResponse<SalaryAccountResponse[]>>('/api/v1/mobile/salary-accounts'),
+    apiClient<ApiResponse<SalaryAccountResponse[]>>('/api/v1/mobile/employee/salary-accounts'),
+
+  /** 급여 계좌 상세 조회 (마스킹 없는 원본 - 수정용) */
+  getAccountDetail: (id: number) =>
+    apiClient<ApiResponse<SalaryAccountResponse>>(`/api/v1/mobile/employee/salary-accounts/${id}`),
 
   /** 급여 계좌 추가 */
   createAccount: (data: CreateSalaryAccountRequest) =>
-    apiClient<ApiResponse<SalaryAccountResponse>>('/api/v1/mobile/salary-accounts', {
+    apiClient<ApiResponse<SalaryAccountResponse>>('/api/v1/mobile/employee/salary-accounts', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   /** 급여 계좌 수정 */
   updateAccount: (id: number, data: UpdateSalaryAccountRequest) =>
-    apiClient<ApiResponse<SalaryAccountResponse>>(`/api/v1/mobile/salary-accounts/${id}`, {
+    apiClient<ApiResponse<SalaryAccountResponse>>(`/api/v1/mobile/employee/salary-accounts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   /** 급여 계좌 삭제 */
   deleteAccount: (id: number) =>
-    apiClient<ApiResponse<null>>(`/api/v1/mobile/salary-accounts/${id}`, {
+    apiClient<ApiResponse<null>>(`/api/v1/mobile/employee/salary-accounts/${id}`, {
       method: 'DELETE',
     }),
 
   /** 주 계좌 설정 */
   setPrimary: (id: number) =>
-    apiClient<ApiResponse<SalaryAccountResponse>>(`/api/v1/mobile/salary-accounts/${id}/primary`, {
+    apiClient<ApiResponse<null>>(`/api/v1/mobile/employee/salary-accounts/${id}/primary`, {
       method: 'PUT',
     }),
 }
@@ -363,9 +381,24 @@ export const contractApi = {
       body: JSON.stringify(data ?? {}),
     }),
 
+  /** 계약 스냅샷 조회 (서명/거절 시점 데이터) */
+  getContractSnapshot: (id: number) =>
+    apiClient<ApiResponse<ContractSnapshotData>>(`/api/v1/mobile/employee/contracts/${id}/snapshot`),
+
   /** 계약 히스토리 조회 (완료/거부된 계약) */
   getContractHistory: () =>
-    apiClient<ApiResponse<ContractListResponse[]>>('/api/v1/mobile/employee/contracts/history'),
+    apiClient<ApiResponse<ContractHistoryResponse>>('/api/v1/mobile/employee/contracts/history'),
+
+  /** 계약서 다운로드 (미날인 원본 docx) */
+  downloadContractDocx: async (id: number) => {
+    const { getAccessToken } = await import('@/lib/api')
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+    const res = await fetch(`${baseUrl}/api/v1/mobile/employee/contracts/${id}/download-docx`, {
+      headers: { 'Authorization': `Bearer ${getAccessToken() ?? ''}` },
+    })
+    if (!res.ok) throw new Error('계약서 다운로드 실패')
+    return res
+  },
 }
 
 // ============================================================
@@ -373,19 +406,20 @@ export const contractApi = {
 // ============================================================
 
 export const payrollApi = {
-  /** 급여명세 목록 조회 */
-  getPayrolls: (params?: { workplaceId?: number }) => {
+  /** 급여명세 목록 조회 (페이징) */
+  getPayrolls: (params?: { page?: number; size?: number }) => {
     const query = new URLSearchParams()
-    if (params?.workplaceId != null) query.append('workplaceId', String(params.workplaceId))
+    if (params?.page != null) query.append('page', String(params.page))
+    if (params?.size != null) query.append('size', String(params.size))
     const qs = query.toString()
-    return apiClient<ApiResponse<PayrollListResponse[]>>(
-      `/api/v1/mobile/payrolls${qs ? `?${qs}` : ''}`,
+    return apiClient<ApiResponse<PageResponse<PayrollListResponse>>>(
+      `/api/v1/mobile/employee/payrolls${qs ? `?${qs}` : ''}`,
     )
   },
 
   /** 급여명세 상세 조회 */
   getPayrollDetail: (id: number) =>
-    apiClient<ApiResponse<PayrollDetailResponse>>(`/api/v1/mobile/payrolls/${id}`),
+    apiClient<ApiResponse<PayrollDetailResponse>>(`/api/v1/mobile/employee/payrolls/${id}`),
 }
 
 // ============================================================
