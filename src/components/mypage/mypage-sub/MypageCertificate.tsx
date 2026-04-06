@@ -60,7 +60,7 @@ export default function MypageCertificate() {
                   </ul>
                 )}
                 <ul className="mypage-block-item-data-list">
-                  <li className="mypage-block-item-data-list-item">취득일 : {cert.acquisitionDate}</li>
+                  <li className="mypage-block-item-data-list-item">취득일 : {cert.acquisitionDate ?? '-'}</li>
                 </ul>
                 {cert.issuingOrganization && (
                   <ul className="mypage-block-item-data-list">

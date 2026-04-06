@@ -398,6 +398,11 @@ export const contractApi = {
     const res = await fetch(`${baseUrl}/api/v1/mobile/employee/contracts/${id}/download-docx`, {
       headers: { 'Authorization': `Bearer ${token}` },
     })
+    if (res.status === 401) {
+      clearTokens()
+      if (typeof window !== 'undefined') window.location.href = '/login'
+      throw new Error('인증이 만료되었습니다.')
+    }
     if (!res.ok) throw new Error('계약서 다운로드 실패')
     return res
   },
@@ -443,9 +448,12 @@ export const payrollApi = {
     // Content-Disposition 헤더에서 파일명 추출
     const disposition = res.headers.get('content-disposition') ?? ''
     const match = disposition.match(/filename[^;=\n]*=(?:UTF-8''([^;\n]+)|['"]?([^'"\n;]+)['"]?)/)
-    const filename = match
-      ? decodeURIComponent(match[1] ?? match[2] ?? `payroll-statement-${id}.xlsx`)
-      : `payroll-statement-${id}.xlsx`
+    let filename = `payroll-statement-${id}.xlsx`
+    if (match) {
+      try {
+        filename = decodeURIComponent(match[1] ?? match[2] ?? filename)
+      } catch { /* malformed percent-encoding 시 기본 파일명 사용 */ }
+    }
 
     const blob = await res.blob()
     return { blob, filename }

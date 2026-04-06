@@ -32,11 +32,9 @@ export default function Home() {
       if (!checkedRef.current) {
         checkedRef.current = true
         contractApi.getContracts().then((res) => {
-          console.log('[Home] 계약 조회 응답:', res)
           const progressContracts = (res.data ?? []).filter(
             (c) => c.status === 'PROGRESS'
           )
-          console.log('[Home] PROGRESS 계약:', progressContracts.length, '건')
           if (progressContracts.length > 0) {
             setPendingContracts(progressContracts)
             setEmploymentNotificationPopup(true)

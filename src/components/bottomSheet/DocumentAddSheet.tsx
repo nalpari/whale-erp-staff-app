@@ -46,12 +46,13 @@ export default function DocumentAddSheet() {
       return
     }
     if (!documentType) return
+    if (!user) return
 
     setSaving(true)
     setError('')
     try {
       // 1. 파일을 upload_files에 업로드
-      const memberId = user?.memberId ?? 0
+      const memberId = user.memberId
       const uploadRes = await documentApi.uploadFile(file, documentType, 'MEMBER_DOCUMENT', memberId)
       const uploadFileId = uploadRes.data.id
 

@@ -332,7 +332,7 @@ export default function BeforeEmployment() {
           <div className="employcont-item-tit">기타2</div>
           <div className="employcont-item-desc"><span>{detail.terms?.otherItem2}</span></div>
         </div>
-        {detail.terms?.otherItems.map((item, idx) => (
+        {detail.terms?.otherItems?.map((item, idx) => (
           <div className="employcont-item" key={idx}>
             <div className="employcont-item-tit">기타{idx + 3}</div>
             <div className="employcont-item-desc"><span>{item}</span></div>

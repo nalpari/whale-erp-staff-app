@@ -62,18 +62,21 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   checkAuth: () => {
     const token = getAccessToken()
-    if (token) {
-      let user: AuthUser | null = null
-      if (typeof window !== 'undefined') {
-        try {
-          const stored = localStorage.getItem('user_info')
-          if (stored) user = JSON.parse(stored)
-        } catch { /* 파싱 실패 무시 */ }
+    if (!token) { set({ isAuthenticated: false, user: null }); return false }
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        clearTokens(); set({ isAuthenticated: false, user: null }); return false
       }
-      set({ isAuthenticated: true, user })
-      return true
+    } catch { /* 파싱 실패 시 서버 검증에 위임 */ }
+    let user: AuthUser | null = null
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('user_info')
+        if (stored) user = JSON.parse(stored)
+      } catch { /* 파싱 실패 무시 */ }
     }
-    set({ isAuthenticated: false, user: null })
-    return false
+    if (!user) { clearTokens(); set({ isAuthenticated: false, user: null }); return false }
+    set({ isAuthenticated: true, user }); return true
   },
 }))
