@@ -1,9 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { workplaceApi } from '@/lib/api-endpoints'
-import type { WorkplaceDetailResponse } from '@/types/api'
+import { useWorkplaceDetail } from '@/hooks/queries/use-workplace-queries'
 
 export default function WorkPlaceDetail() {
   const params = useParams()
@@ -12,34 +11,20 @@ export default function WorkPlaceDetail() {
   const setAccountSelectSheet = useBottomSheetController((state) => state.setAccountSelectSheet)
   const setSelectedWorkplaceForAccount = useBottomSheetController((state) => state.setSelectedWorkplaceForAccount)
 
-  const [detail, setDetail] = useState<WorkplaceDetailResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchDetail = useCallback(async () => {
-    if (!employeeInfoId) return
-    try {
-      setLoading(true)
-      const res = await workplaceApi.getWorkplaceDetail(employeeInfoId)
-      setDetail(res.data)
-    } catch {
-      setDetail(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [employeeInfoId])
-
-  useEffect(() => {
-    fetchDetail()
-  }, [fetchDetail])
+  const { data, isPending: loading, refetch } = useWorkplaceDetail(
+    employeeInfoId || null,
+    !!employeeInfoId,
+  )
+  const detail = data?.data ?? null
 
   // AccountSelect 닫힐 때 새로고침
   const accountSelectSheet = useBottomSheetController((state) => state.accountSelectSheet)
   useEffect(() => {
     if (!accountSelectSheet) {
-      const timer = setTimeout(() => fetchDetail(), 300)
+      const timer = setTimeout(() => refetch(), 300)
       return () => clearTimeout(timer)
     }
-  }, [accountSelectSheet, fetchDetail])
+  }, [accountSelectSheet, refetch])
 
   const handleChangeSalaryAccount = () => {
     setSelectedWorkplaceForAccount(employeeInfoId)

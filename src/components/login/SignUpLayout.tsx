@@ -291,7 +291,6 @@ export default function SignUpLayout() {
         accountNumber: accountNumber || undefined,
         accountHolder: accountHolder || undefined,
       }
-      console.log('[회원가입] 전송 데이터:', JSON.stringify(signupData, null, 2))
       await authApi.signup(signupData)
       alert('환영합니다! 회원가입이 완료되었습니다.')
       router.push('/login')

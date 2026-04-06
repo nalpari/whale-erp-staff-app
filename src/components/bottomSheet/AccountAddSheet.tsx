@@ -1,8 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sheet } from 'react-modal-sheet'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { salaryAccountApi } from '@/lib/api-endpoints'
+import {
+  useAccountDetail,
+  useCreateAccount,
+  useUpdateAccount,
+} from '@/hooks/queries/use-account-queries'
 
 export default function AccountAddSheet() {
   const accountAddSheet = useBottomSheetController((state) => state.accountAddSheet)
@@ -19,31 +23,34 @@ export default function AccountAddSheet() {
   const [accountHolder, setAccountHolder] = useState('')
   const [memo, setMemo] = useState('')
   const [isPrimary, setIsPrimary] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<{ bank?: string; number?: string; holder?: string }>({})
 
-  // 수정 모드일 때 상세 API로 원본 데이터 조회
-  useEffect(() => {
-    if (editingAccount && accountAddSheet) {
-      salaryAccountApi.getAccountDetail(editingAccount.id).then((res) => {
-        const raw = res.data
-        setBankCode(raw.bankCode ?? '')
-        setBankName(raw.bankName)
-        setAccountNumber(raw.accountNumber)
-        setAccountHolder(raw.accountHolder)
-        setMemo(raw.memo ?? '')
-        setIsPrimary(raw.isPrimary)
-      }).catch(() => {
-        // fallback: 목록 데이터 사용
-        setBankCode(editingAccount.bankCode ?? '')
-        setBankName(editingAccount.bankName)
-        setAccountNumber(editingAccount.accountNumber)
-        setAccountHolder(editingAccount.accountHolder)
-        setMemo(editingAccount.memo ?? '')
-        setIsPrimary(editingAccount.isPrimary)
-      })
+  const { data: accountDetailData } = useAccountDetail(
+    editingAccount?.id ?? null,
+    !!editingAccount && accountAddSheet,
+  )
+  const { mutateAsync: createAccount, isPending: creating } = useCreateAccount()
+  const { mutateAsync: updateAccount, isPending: updating } = useUpdateAccount()
+  const saving = creating || updating
+
+  // 수정 모드일 때 상세 API로 원본 데이터 조회 후 폼 채우기
+  // 시트가 열리거나 상세 데이터가 새로 로드되면 폼 state를 동기화한다
+  const sourceKey = editingAccount && accountAddSheet
+    ? `${editingAccount.id}-${accountDetailData?.data?.id ?? 'pending'}`
+    : null
+  const [syncedKey, setSyncedKey] = useState<string | null>(null)
+  if (sourceKey && sourceKey !== syncedKey) {
+    const raw = accountDetailData?.data ?? editingAccount
+    if (raw) {
+      setBankCode(raw.bankCode ?? '')
+      setBankName(raw.bankName)
+      setAccountNumber(raw.accountNumber)
+      setAccountHolder(raw.accountHolder)
+      setMemo(raw.memo ?? '')
+      setIsPrimary(raw.isPrimary)
+      setSyncedKey(sourceKey)
     }
-  }, [editingAccount, accountAddSheet])
+  }
 
   const resetForm = () => {
     setBankCode('')
@@ -72,18 +79,20 @@ export default function AccountAddSheet() {
   const handleSave = async () => {
     if (!validate()) return
     try {
-      setSaving(true)
-
-      if (isEditMode) {
-        await salaryAccountApi.updateAccount(editingAccount.id, {
-          bankCode: bankCode || undefined,
-          bankName,
-          accountNumber: accountNumber.replace(/-/g, ''),
-          accountHolder,
-          memo: memo.trim() || undefined,
+      if (isEditMode && editingAccount) {
+        await updateAccount({
+          id: editingAccount.id,
+          data: {
+            bankCode: bankCode || undefined,
+            bankName,
+            accountNumber: accountNumber.replace(/-/g, ''),
+            accountHolder,
+            memo: memo.trim() || undefined,
+            isPrimary,
+          },
         })
       } else {
-        await salaryAccountApi.createAccount({
+        await createAccount({
           bankCode: bankCode || undefined,
           bankName,
           accountNumber: accountNumber.replace(/-/g, ''),
@@ -97,8 +106,6 @@ export default function AccountAddSheet() {
       handleClose()
     } catch (err) {
       alert(err instanceof Error ? err.message : (isEditMode ? '계좌 수정에 실패했습니다.' : '계좌 등록에 실패했습니다.'))
-    } finally {
-      setSaving(false)
     }
   }
 

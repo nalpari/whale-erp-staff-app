@@ -17,11 +17,18 @@ export default function Home() {
   const setPendingContracts = usePopupController((s) => s.setPendingContracts)
   const checkedRef = useRef(false)
 
+  // 인증 상태 변경 시 체크 플래그 리셋 (재로그인 시 다시 확인)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      checkedRef.current = false
+    }
+  }, [isAuthenticated])
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchWorkplaces()
 
-      // PROGRESS 상태 근로계약서 확인 (최초 1회만)
+      // PROGRESS 상태 근로계약서 확인 (세션당 1회)
       if (!checkedRef.current) {
         checkedRef.current = true
         contractApi.getContracts().then((res) => {

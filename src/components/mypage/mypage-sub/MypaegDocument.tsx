@@ -1,8 +1,6 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { documentApi } from '@/lib/api-endpoints'
-import type { DocumentResponse } from '@/types/api'
+import { useDocumentList, useDeleteDocument } from '@/hooks/queries/use-document-queries'
 
 const DOCUMENT_TYPES = [
   { type: 'RESIDENT_REGISTRATION', label: '주민등록 등본' },
@@ -13,29 +11,18 @@ const DOCUMENT_TYPES = [
 
 export default function MypageDocument() {
   const openDocumentSheet = useBottomSheetController((state) => state.openDocumentSheet)
-  const [documents, setDocuments] = useState<DocumentResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isPending: loading, refetch } = useDocumentList()
+  const documents = data?.data ?? []
+  const { mutateAsync: deleteDocumentMutation } = useDeleteDocument()
 
-  const fetchDocuments = useCallback(async () => {
-    try {
-      const res = await documentApi.getDocuments()
-      setDocuments(res.data)
-    } catch {
-      // 조회 실패 시 빈 배열 유지
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchDocuments()
-  }, [fetchDocuments])
+  const fetchDocuments = () => {
+    void refetch()
+  }
 
   const handleDelete = async (type: string) => {
     if (!confirm('서류를 삭제하시겠습니까?')) return
     try {
-      await documentApi.deleteDocument(type)
-      fetchDocuments()
+      await deleteDocumentMutation(type)
     } catch {
       alert('삭제에 실패했습니다.')
     }

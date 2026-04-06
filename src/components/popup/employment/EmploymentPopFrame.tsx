@@ -1,14 +1,13 @@
 'use client'
 
 import { usePopupController } from '@/store/usePopupController'
-import { contractApi } from '@/lib/api-endpoints'
+import { useContractDetail } from '@/hooks/queries/use-contract-queries'
 import { useEffect, useState, useRef } from 'react'
 import BeforeEmployment from '@/components/popup/employment/employcont/BeforeEmployment'
 import EmploySuccess from '@/components/popup/employment/employcont/EmploySuccess'
 
 export default function EmploymentPopFrame() {
   const [active, setActive] = useState(false)
-  const [storeName, setStoreName] = useState('')
   const popupRef = useRef<HTMLDivElement>(null)
 
   const EmploymentPopFrame = usePopupController((state) => state.EmploymentPopFrame)
@@ -23,17 +22,14 @@ export default function EmploymentPopFrame() {
     }
   }, [step])
 
-  useEffect(() => {
-    if (!selectedContractId || !EmploymentPopFrame) return
-    contractApi.getContractDetail(selectedContractId)
-      .then((res) => {
-        const data = res.data
-        if (data) {
-          setStoreName(data.company.storeName ?? data.company.companyName ?? '')
-        }
-      })
-      .catch(() => {})
-  }, [selectedContractId, EmploymentPopFrame])
+  const { data: contractDetailData } = useContractDetail(
+    selectedContractId,
+    !!selectedContractId && EmploymentPopFrame,
+  )
+  const storeName =
+    contractDetailData?.data?.company?.storeName ??
+    contractDetailData?.data?.company?.companyName ??
+    ''
 
   useEffect(() => {
     // 팝업 열기 시간 필요

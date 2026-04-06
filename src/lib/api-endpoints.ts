@@ -2,7 +2,7 @@
 // API 엔드포인트 함수 모음 - 도메인별로 그룹화
 // ============================================================
 
-import { apiClient, apiUpload } from '@/lib/api'
+import { apiClient, apiUpload, getAccessToken, clearTokens } from '@/lib/api'
 import type {
   ApiResponse,
   PageResponse,
@@ -53,7 +53,8 @@ import type {
   ContractSnapshotData,
   // Payroll
   PayrollListResponse,
-  PayrollDetailResponse,
+  FullTimePayrollDetailResponse,
+  PartTimePayrollDetailResponse,
   // Home
   CalendarResponse,
   DailySummaryResponse,
@@ -391,10 +392,11 @@ export const contractApi = {
 
   /** 계약서 다운로드 (미날인 원본 docx) */
   downloadContractDocx: async (id: number) => {
-    const { getAccessToken } = await import('@/lib/api')
+    const token = getAccessToken()
+    if (!token) throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.')
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
     const res = await fetch(`${baseUrl}/api/v1/mobile/employee/contracts/${id}/download-docx`, {
-      headers: { 'Authorization': `Bearer ${getAccessToken() ?? ''}` },
+      headers: { 'Authorization': `Bearer ${token}` },
     })
     if (!res.ok) throw new Error('계약서 다운로드 실패')
     return res
@@ -417,9 +419,37 @@ export const payrollApi = {
     )
   },
 
-  /** 급여명세 상세 조회 */
+  /** 급여명세 상세 조회 (REGULAR: 정직원, PART_TIME: 파트타이머) */
   getPayrollDetail: (id: number) =>
-    apiClient<ApiResponse<PayrollDetailResponse>>(`/api/v1/mobile/employee/payrolls/${id}`),
+    apiClient<ApiResponse<FullTimePayrollDetailResponse | PartTimePayrollDetailResponse>>(
+      `/api/v1/mobile/employee/payrolls/${id}`,
+    ),
+
+  /** 급여명세서 엑셀 다운로드 (정직원) - blob과 서버 파일명 반환 */
+  downloadPayrollExcel: async (id: number): Promise<{ blob: Blob; filename: string }> => {
+    const token = getAccessToken()
+    if (!token) throw new Error('인증 토큰이 없습니다.')
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+    const res = await fetch(`${baseUrl}/api/v1/mobile/employee/payrolls/${id}/download-excel`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.status === 401) {
+      clearTokens()
+      if (typeof window !== 'undefined') window.location.href = '/login'
+      throw new Error('인증이 만료되었습니다.')
+    }
+    if (!res.ok) throw new Error('엑셀 다운로드에 실패했습니다.')
+
+    // Content-Disposition 헤더에서 파일명 추출
+    const disposition = res.headers.get('content-disposition') ?? ''
+    const match = disposition.match(/filename[^;=\n]*=(?:UTF-8''([^;\n]+)|['"]?([^'"\n;]+)['"]?)/)
+    const filename = match
+      ? decodeURIComponent(match[1] ?? match[2] ?? `payroll-statement-${id}.xlsx`)
+      : `payroll-statement-${id}.xlsx`
+
+    const blob = await res.blob()
+    return { blob, filename }
+  },
 }
 
 // ============================================================

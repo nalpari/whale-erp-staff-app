@@ -1,9 +1,7 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { useRouter } from 'next/navigation'
-import { workplaceApi } from '@/lib/api-endpoints'
-import type { WorkplaceResponse } from '@/types/api'
+import { useWorkplaceList } from '@/hooks/queries/use-workplace-queries'
 
 const STATUS_BADGE: Record<string, { className: string; label: string }> = {
   EMPWK_001: { className: 'green', label: '근무' },
@@ -14,24 +12,8 @@ const STATUS_BADGE: Record<string, { className: string; label: string }> = {
 export default function WorkPlaceList() {
   const router = useRouter()
   const setWorkPlaceAddSheet = useBottomSheetController((state) => state.setWorkPlaceAddSheet)
-  const [workplaces, setWorkplaces] = useState<WorkplaceResponse[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const fetchWorkplaces = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await workplaceApi.getWorkplaces()
-      setWorkplaces(res.data ?? [])
-    } catch {
-      setWorkplaces([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchWorkplaces()
-  }, [fetchWorkplaces])
+  const { data, isPending: loading } = useWorkplaceList()
+  const workplaces = data?.data ?? []
 
   if (loading) {
     return (

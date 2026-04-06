@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { usePopupController } from '@/store/usePopupController'
-import { contractApi } from '@/lib/api-endpoints'
-import type { ContractSnapshotData } from '@/types/api'
+import { useContractSnapshot, useDownloadContractDocx } from '@/hooks/queries/use-contract-queries'
 
 /**
  * 근무 시간 포맷 (HH:MM:SS → HH:MM)
@@ -20,40 +19,6 @@ function formatTime(time: string | null | undefined): string {
 function formatDate(date: string | null | undefined): string {
   if (!date) return '-'
   return date
-}
-
-/**
- * 근무 시간 항목 컴포넌트
- */
-function WorkHourItem({
-  title,
-  workHour,
-}: {
-  title: string
-  workHour: ContractSnapshotData['workHours'][0] | undefined
-}) {
-  if (!workHour) return null
-  if (!workHour.isWork) {
-    return (
-      <div className="employcont-item">
-        <div className="employcont-item-tit">{title}</div>
-        <div className="employcont-item-desc">
-          <span>근무 없음</span>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className="employcont-item">
-      <div className="employcont-item-tit">{title}</div>
-      <div className="employcont-item-desc">
-        <span style={{ display: 'block' }}>근무시간 : {formatTime(workHour.workStartTime)} ~ {formatTime(workHour.workEndTime)}</span>
-        {workHour.breakStartTime && workHour.breakEndTime && (
-          <span style={{ display: 'block' }}>휴게시간 : {formatTime(workHour.breakStartTime)} ~ {formatTime(workHour.breakEndTime)}</span>
-        )}
-      </div>
-    </div>
-  )
 }
 
 /**
@@ -76,21 +41,10 @@ export default function EmploySuccess() {
   const setEmploymentStep = usePopupController((state) => state.setEmploymentStep)
   const selectedContractId = usePopupController((state) => state.selectedContractId)
   const [downloading, setDownloading] = useState(false)
-  const [detail, setDetail] = useState<ContractSnapshotData | null>(null)
-  // hasLoaded: API 호출 완료 여부
-  const [hasLoaded, setHasLoaded] = useState(!selectedContractId)
-
-  useEffect(() => {
-    if (!selectedContractId) return
-    contractApi.getContractSnapshot(selectedContractId)
-      .then((res) => {
-        setDetail(res.data ?? null)
-      })
-      .catch((err) => {
-        console.error('계약 스냅샷 조회 실패:', err)
-      })
-      .finally(() => setHasLoaded(true))
-  }, [selectedContractId])
+  const { data, isPending } = useContractSnapshot(selectedContractId, !!selectedContractId)
+  const detail = data?.data ?? null
+  const hasLoaded = !selectedContractId || !isPending
+  const { mutateAsync: downloadDocx } = useDownloadContractDocx()
 
   if (!hasLoaded) {
     return (
@@ -128,7 +82,7 @@ export default function EmploySuccess() {
     if (!selectedContractId) return
     try {
       setDownloading(true)
-      const res = await contractApi.downloadContractDocx(selectedContractId)
+      const res = await downloadDocx(selectedContractId)
       const blob = await res.blob()
 
       const disposition = res.headers.get('content-disposition')

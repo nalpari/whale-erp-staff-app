@@ -1,45 +1,37 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sheet } from 'react-modal-sheet'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { salaryAccountApi, workplaceApi } from '@/lib/api-endpoints'
-import type { SalaryAccountResponse } from '@/types/api'
+import { useAccountList } from '@/hooks/queries/use-account-queries'
+import { useChangeSalaryAccount } from '@/hooks/queries/use-workplace-queries'
 
 export default function AccountSelect() {
   const accountSelectSheet = useBottomSheetController((state) => state.accountSelectSheet)
   const setAccountSelectSheet = useBottomSheetController((state) => state.setAccountSelectSheet)
   const selectedWorkplaceForAccount = useBottomSheetController((state) => state.selectedWorkplaceForAccount)
 
-  const [accounts, setAccounts] = useState<SalaryAccountResponse[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (accountSelectSheet) {
-      setLoading(true)
-      salaryAccountApi.getAccounts()
-        .then((res) => {
-          setAccounts(res.data ?? [])
-          // 대표 계좌를 기본 선택
-          const primary = (res.data ?? []).find((a) => a.isPrimary)
-          setSelectedId(primary?.id ?? null)
-        })
-        .catch(() => setAccounts([]))
-        .finally(() => setLoading(false))
-    }
-  }, [accountSelectSheet])
+  const { data, isPending } = useAccountList(accountSelectSheet)
+  const accounts = data?.data ?? []
+  const loading = accountSelectSheet && isPending
+
+  // 대표 계좌 자동 선택 (파생값)
+  const primaryAccount = accounts.find((a) => a.isPrimary)
+  const effectiveSelectedId = selectedId ?? primaryAccount?.id ?? null
+
+  const { mutateAsync: changeSalaryAccount, isPending: saving } = useChangeSalaryAccount()
 
   const handleSave = async () => {
-    if (!selectedId || !selectedWorkplaceForAccount) return
+    if (!effectiveSelectedId || !selectedWorkplaceForAccount) return
     try {
-      setSaving(true)
-      await workplaceApi.changeSalaryAccount(selectedWorkplaceForAccount, selectedId)
+      await changeSalaryAccount({
+        workplaceId: selectedWorkplaceForAccount,
+        salaryAccountId: effectiveSelectedId,
+      })
       setAccountSelectSheet(false)
     } catch (err) {
       alert(err instanceof Error ? err.message : '급여계좌 변경에 실패했습니다.')
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -70,7 +62,7 @@ export default function AccountSelect() {
                     ) : (
                       <select
                         className="select-form"
-                        value={selectedId ?? ''}
+                        value={effectiveSelectedId ?? ''}
                         onChange={(e) => setSelectedId(Number(e.target.value))}
                       >
                         <option value="" disabled>계좌를 선택하세요</option>
@@ -90,7 +82,7 @@ export default function AccountSelect() {
               <button
                 className="btn-form login block"
                 onClick={handleSave}
-                disabled={saving || !selectedId || accounts.length === 0}
+                disabled={saving || loading || !effectiveSelectedId || !selectedWorkplaceForAccount || accounts.length === 0}
               >
                 {saving ? '변경 중...' : '저장'}
               </button>

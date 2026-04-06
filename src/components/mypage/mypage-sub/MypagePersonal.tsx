@@ -1,36 +1,24 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { careerApi } from '@/lib/api-endpoints'
+import { useCareerList, useDeleteCareer } from '@/hooks/queries/use-career-queries'
 import type { CareerResponse } from '@/types/api'
 
 export default function MypagePersonal() {
   const openPersonalSheet = useBottomSheetController((s) => s.openPersonalSheet)
 
-  const [careers, setCareers] = useState<CareerResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isPending: loading, refetch } = useCareerList()
+  const careers = data?.data ?? []
+  const { mutateAsync: deleteCareerMutation } = useDeleteCareer()
 
-  const fetchCareers = useCallback(async () => {
-    try {
-      const res = await careerApi.getCareers()
-      setCareers(res.data)
-    } catch (err) {
-      console.error('경력 조회 실패:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCareers()
-  }, [fetchCareers])
+  const fetchCareers = () => {
+    void refetch()
+  }
 
   const handleDelete = async (id: number) => {
     if (!confirm('해당 경력 정보를 삭제하시겠습니까?')) return
     try {
-      await careerApi.deleteCareer(id)
-      setCareers((prev) => prev.filter((c) => c.id !== id))
+      await deleteCareerMutation(id)
     } catch (err) {
       const message = err instanceof Error ? err.message : '삭제에 실패했습니다.'
       alert(message)

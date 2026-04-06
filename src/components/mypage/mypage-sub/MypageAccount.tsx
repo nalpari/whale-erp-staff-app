@@ -1,49 +1,23 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { salaryAccountApi } from '@/lib/api-endpoints'
-import type { SalaryAccountResponse } from '@/types/api'
+import { useAccountList, useDeleteAccount } from '@/hooks/queries/use-account-queries'
 
 export default function MypageAccount() {
-  const setAccountAddSheet = useBottomSheetController((state) => state.setAccountAddSheet)
   const openAccountSheet = useBottomSheetController((state) => state.openAccountSheet)
-  const [accounts, setAccounts] = useState<SalaryAccountResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isPending: loading, refetch } = useAccountList()
+  const accounts = data?.data ?? []
+  const { mutateAsync: deleteAccount } = useDeleteAccount()
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await salaryAccountApi.getAccounts()
-      setAccounts(res.data ?? [])
-    } catch {
-      setAccounts([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchAccounts()
-  }, [fetchAccounts])
+  const fetchAccounts = () => {
+    void refetch()
+  }
 
   const handleDelete = async (id: number, bankName: string) => {
     if (!confirm(`${bankName} 계좌를 삭제하시겠습니까?`)) return
     try {
-      await salaryAccountApi.deleteAccount(id)
-      setAccounts((prev) => prev.filter((a) => a.id !== id))
+      await deleteAccount(id)
     } catch (err) {
       alert(err instanceof Error ? err.message : '계좌 삭제에 실패했습니다.')
-    }
-  }
-
-  const handleSetPrimary = async (id: number) => {
-    try {
-      await salaryAccountApi.setPrimary(id)
-      setAccounts((prev) =>
-        prev.map((a) => ({ ...a, isPrimary: a.id === id }))
-      )
-    } catch (err) {
-      alert(err instanceof Error ? err.message : '대표 계좌 설정에 실패했습니다.')
     }
   }
 

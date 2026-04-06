@@ -2,7 +2,7 @@
 
 import { usePopupController } from '@/store/usePopupController'
 import { useEffect, useState } from 'react'
-import { contractApi } from '@/lib/api-endpoints'
+import { useContractHistory } from '@/hooks/queries/use-contract-queries'
 import type { ContractHistoryItem } from '@/types/api'
 
 function formatDateTime(dateStr: string | null): string {
@@ -25,8 +25,9 @@ export default function ContractHistoryPop() {
   const [active, setActive] = useState(false)
   const ContractHistoryPopup = usePopupController((state) => state.ContractHistoryPopup)
   const setContractHistoryPopup = usePopupController((state) => state.setContractHistoryPopup)
-  const [historyItems, setHistoryItems] = useState<ContractHistoryItem[]>([])
-  const [loading, setLoading] = useState(false)
+  const { data, isPending } = useContractHistory(ContractHistoryPopup)
+  const historyItems: ContractHistoryItem[] = data?.data?.items ?? []
+  const loading = ContractHistoryPopup && isPending
 
   // 계약 상세 팝업 열기
   const setEmploymentPopFrame = usePopupController((state) => state.setEmploymentPopFrame)
@@ -34,26 +35,11 @@ export default function ContractHistoryPop() {
   const setEmploymentStep = usePopupController((state) => state.setEmploymentStep)
 
   useEffect(() => {
-    setTimeout(() => {
+    const t = setTimeout(() => {
       setActive(ContractHistoryPopup)
     }, 100)
-
-    if (ContractHistoryPopup) {
-      fetchHistory()
-    }
+    return () => clearTimeout(t)
   }, [ContractHistoryPopup])
-
-  const fetchHistory = async () => {
-    setLoading(true)
-    try {
-      const res = await contractApi.getContractHistory()
-      setHistoryItems(res.data?.items ?? [])
-    } catch {
-      setHistoryItems([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleClose = () => {
     setActive(false)

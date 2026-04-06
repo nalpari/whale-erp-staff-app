@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { profileApi } from '@/lib/api-endpoints'
-import type { ProfileResponse } from '@/types/api'
+import { useProfile, useUpdateProfile } from '@/hooks/queries/use-profile-queries'
 
 // 다음 주소찾기 스크립트 동적 로드
 function loadDaumPostcode() {
@@ -22,35 +21,29 @@ export default function MypageProfile() {
   const setAvatarSelectSheet = useBottomSheetController((s) => s.setAvatarSelectSheet)
   const setPhoneChangeSheet = useBottomSheetController((s) => s.setPhoneChangeSheet)
 
-  const [profile, setProfile] = useState<ProfileResponse | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data, isPending: loading } = useProfile()
+  const profile = data?.data ?? null
+  const { mutateAsync: updateProfile, isPending: saving } = useUpdateProfile()
 
   // 수정 가능한 필드
   const [email, setEmail] = useState('')
   const [zipCode, setZipCode] = useState('')
   const [address, setAddress] = useState('')
   const [addressDetail, setAddressDetail] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [syncedProfileId, setSyncedProfileId] = useState<number | null>(null)
 
   useEffect(() => {
     loadDaumPostcode()
-    const fetchProfile = async () => {
-      try {
-        const res = await profileApi.getProfile()
-        const data = res.data
-        setProfile(data)
-        setEmail(data.email ?? '')
-        setZipCode(data.zipCode ?? '')
-        setAddress(data.address ?? '')
-        setAddressDetail(data.addressDetail ?? '')
-      } catch (err) {
-        console.error('프로필 조회 실패:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProfile()
   }, [])
+
+  // 프로필이 새로 로드되면 폼 state를 한번만 초기화 (set-state-in-render 패턴)
+  if (profile && profile.id !== syncedProfileId) {
+    setEmail(profile.email ?? '')
+    setZipCode(profile.zipCode ?? '')
+    setAddress(profile.address ?? '')
+    setAddressDetail(profile.addressDetail ?? '')
+    setSyncedProfileId(profile.id)
+  }
 
   // 다음 주소찾기
   const handleAddressSearch = () => {
@@ -73,22 +66,18 @@ export default function MypageProfile() {
 
   const handleSave = async () => {
     if (!hasChanges || saving) return
-    setSaving(true)
     try {
-      const res = await profileApi.updateProfile({
+      await updateProfile({
         email: email || undefined,
         zipCode: zipCode || undefined,
         address: address || undefined,
         addressDetail: addressDetail || undefined,
       })
-      setProfile(res.data)
       alert('회원정보가 수정되었습니다.')
       router.push('/mypage')
     } catch (err) {
       const message = err instanceof Error ? err.message : '저장에 실패했습니다.'
       alert(message)
-    } finally {
-      setSaving(false)
     }
   }
 

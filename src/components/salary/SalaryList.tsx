@@ -1,7 +1,6 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
 import { usePopupController } from '@/store/usePopupController'
-import { payrollApi } from '@/lib/api-endpoints'
+import { useInfinitePayrollList } from '@/hooks/queries/use-payroll-queries'
 import type { PayrollListResponse } from '@/types/api'
 
 export default function SalaryList() {
@@ -9,43 +8,21 @@ export default function SalaryList() {
   const setSelectedPayrollId = usePopupController((state) => state.setSelectedPayrollId)
   const setSelectedPayrollType = usePopupController((state) => state.setSelectedPayrollType)
 
-  const [payrolls, setPayrolls] = useState<PayrollListResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const {
+    data,
+    isPending: loading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage: loadingMore,
+  } = useInfinitePayrollList(20)
 
-  const fetchPayrolls = useCallback(async (pageNum: number, append = false) => {
-    try {
-      if (pageNum === 0) setLoading(true)
-      else setLoadingMore(true)
-
-      const res = await payrollApi.getPayrolls({ page: pageNum, size: 20 })
-      const data = res.data
-
-      if (data.content.length === 0) {
-        setHasMore(false)
-      } else {
-        setPayrolls(prev => append ? [...prev, ...data.content] : data.content)
-        setHasMore(pageNum < data.totalPages - 1)
-      }
-    } catch {
-      if (!append) setPayrolls([])
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchPayrolls(0)
-  }, [fetchPayrolls])
+  const payrolls: PayrollListResponse[] =
+    data?.pages.flatMap((p) => p.data?.content ?? []) ?? []
+  const hasMore = !!hasNextPage
 
   const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
-      const nextPage = page + 1
-      setPage(nextPage)
-      fetchPayrolls(nextPage, true)
+    if (!loadingMore && hasNextPage) {
+      fetchNextPage()
     }
   }
 

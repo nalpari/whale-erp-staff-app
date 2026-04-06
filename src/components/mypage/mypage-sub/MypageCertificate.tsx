@@ -1,36 +1,19 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { certificateApi } from '@/lib/api-endpoints'
-import type { CertificateResponse } from '@/types/api'
+import { useCertificateList, useDeleteCertificate } from '@/hooks/queries/use-certificate-queries'
 
 export default function MypageCertificate() {
   const setCertificateAddSheet = useBottomSheetController((s) => s.setCertificateAddSheet)
 
-  const [certificates, setCertificates] = useState<CertificateResponse[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const fetchCertificates = useCallback(async () => {
-    try {
-      const res = await certificateApi.getCertificates()
-      setCertificates(res.data)
-    } catch (err) {
-      console.error('자격증 조회 실패:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCertificates()
-  }, [fetchCertificates])
+  const { data, isPending: loading } = useCertificateList()
+  const certificates = data?.data ?? []
+  const { mutateAsync: deleteCertificateMutation } = useDeleteCertificate()
 
   const handleDelete = async (id: number) => {
     if (!confirm('해당 자격증 정보를 삭제하시겠습니까?')) return
     try {
-      await certificateApi.deleteCertificate(id)
-      setCertificates((prev) => prev.filter((c) => c.id !== id))
+      await deleteCertificateMutation(id)
     } catch (err) {
       const message = err instanceof Error ? err.message : '삭제에 실패했습니다.'
       alert(message)

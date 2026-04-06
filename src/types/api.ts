@@ -208,6 +208,7 @@ export interface UpdateSalaryAccountRequest {
   accountNumber?: string
   accountHolder?: string
   memo?: string
+  isPrimary?: boolean
 }
 
 // ============================================================
@@ -549,17 +550,98 @@ export interface PayrollListResponse {
   workplaceName: string
 }
 
-export interface PayrollDetailResponse {
-  id: number
-  yearMonth: string
-  storeName: string
+// 급여 항목 (지급/공제 공통)
+export interface PayrollItemResponse {
+  name: string
+  amount: number
+}
+
+// 정직원 급여명세서 상세
+export interface FullTimePayrollDetailResponse {
+  payrollMonth: string
+  workplaceName: string
   employeeName: string
   paymentDate: string
-  items: { name: string; amount: number; type: string }[]
+  settlementPeriod: string
+  payrollFileUrl: string | null
+  actualPayment: number
   totalPayment: number
   totalDeduction: number
+  paymentItems: PayrollItemResponse[]
+  deductionItems: PayrollItemResponse[]
+}
+
+// 파트타이머 - 일별 근무 기록
+export interface DailyRecord {
+  date: string
+  dayOfWeek: string
+  workHours: number
+  hourlyRate: number
+  dailyPay: number
+  tax: number
+}
+
+// 파트타이머 - 주간 요약
+export interface WeeklySummary {
+  hours: number
+  pay: number
+  tax: number
+}
+
+// 파트타이머 - 주휴수당
+export interface WeeklyPaidHolidayAllowanceResponse {
+  hours: number
+  hourlyRate: number
+  amount: number
+  tax: number
+}
+
+// 파트타이머 - 주별 상세
+export interface WeekDetail {
+  weekNumber: number
+  dailyRecords: DailyRecord[]
+  weeklySubtotal: WeeklySummary
+  weeklyPaidHolidayAllowance: WeeklyPaidHolidayAllowanceResponse | null
+  weeklyTotal: WeeklySummary
+}
+
+// 파트타이머 - 급여 소계
+export interface PayrollSubtotal {
+  hours: number
+  totalPay: number
+  totalTax: number
+}
+
+// 파트타이머 - 상여금 항목
+export interface BonusItemResponse {
+  name: string
+  amount: number
+  tax: number
   netAmount: number
 }
+
+// 파트타이머 - 총 합계
+export interface GrandTotal {
+  totalPayment: number
+  totalDeduction: number
+  actualPayment: number
+}
+
+// 파트타이머 급여명세서 상세
+export interface PartTimePayrollDetailResponse {
+  payrollMonth: string
+  workplaceName: string
+  employeeName: string
+  paymentDate: string
+  settlementPeriod: string
+  weeklyDetails: WeekDetail[]
+  payrollSubtotal: PayrollSubtotal
+  deductions: PayrollItemResponse[]
+  bonuses: BonusItemResponse[]
+  grandTotal: GrandTotal
+}
+
+export type PayrollDetailResponse = FullTimePayrollDetailResponse | PartTimePayrollDetailResponse
 
 // ============================================================
 // 홈 (Home)

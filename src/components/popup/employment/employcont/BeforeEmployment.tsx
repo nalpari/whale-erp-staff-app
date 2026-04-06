@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
 import { usePopupController } from '@/store/usePopupController'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
-import { contractApi, salaryAccountApi } from '@/lib/api-endpoints'
-import type { ContractDetailResponse, SalaryAccountResponse } from '@/types/api'
+import { useContractDetail, useRejectContract } from '@/hooks/queries/use-contract-queries'
+import { useAccountList } from '@/hooks/queries/use-account-queries'
 
 /**
  * 근무 시간 포맷 (HH:MM:SS → HH:MM)
@@ -22,40 +22,6 @@ function formatDate(date: string | null | undefined): string {
   return date
 }
 
-
-/**
- * 근무 시간 항목 컴포넌트
- */
-function WorkHourItem({
-  title,
-  workHour,
-}: {
-  title: string
-  workHour: ContractDetailResponse['workHours'][0] | undefined
-}) {
-  if (!workHour) return null
-  if (!workHour.isWork) {
-    return (
-      <div className="employcont-item">
-        <div className="employcont-item-tit">{title}</div>
-        <div className="employcont-item-desc">
-          <span>근무 없음</span>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className="employcont-item">
-      <div className="employcont-item-tit">{title}</div>
-      <div className="employcont-item-desc">
-        <span>근무시간 : {formatTime(workHour.workStartTime)} ~ {formatTime(workHour.workEndTime)}</span>
-        {workHour.breakStartTime && workHour.breakEndTime && (
-          <span>휴게시간 : {formatTime(workHour.breakStartTime)} ~ {formatTime(workHour.breakEndTime)}</span>
-        )}
-      </div>
-    </div>
-  )
-}
 
 /**
  * 급여 항목 컴포넌트
@@ -76,58 +42,29 @@ export default function BeforeEmployment() {
   const setEmploymentPopFrame = usePopupController((state) => state.setEmploymentPopFrame)
   const selectedContractId = usePopupController((state) => state.selectedContractId)
   const setSelectedSalaryAccountId = usePopupController((state) => state.setSelectedSalaryAccountId)
-  const [detail, setDetail] = useState<ContractDetailResponse | null>(null)
-  // hasLoaded: API 호출 완료 여부 (null=미완료, false=오류/계약없음, true=성공)
-  const [hasLoaded, setHasLoaded] = useState(!selectedContractId)
   const [agreed, setAgreed] = useState(false)
   const [agreeError, setAgreeError] = useState(false)
-  const [rejecting, setRejecting] = useState(false)
 
   // 급여 계좌 선택
-  const [accounts, setAccounts] = useState<SalaryAccountResponse[]>([])
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null)
   const [accountError, setAccountError] = useState(false)
   const openAccountSheet = useBottomSheetController((state) => state.openAccountSheet)
-  const accountAddSheet = useBottomSheetController((state) => state.accountAddSheet)
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const res = await salaryAccountApi.getAccounts()
-      const list = res.data ?? []
-      setAccounts(list)
-      // 대표 계좌 자동 선택
-      if (list.length > 0 && !selectedAccountId) {
-        const primary = list.find(a => a.isPrimary)
-        setSelectedAccountId(primary?.id ?? list[0].id)
-      }
-    } catch {
-      setAccounts([])
-    }
-  }, [selectedAccountId])
+  const { data: contractDetailData, isPending: detailPending } =
+    useContractDetail(selectedContractId, !!selectedContractId)
+  const detail = contractDetailData?.data ?? null
+  const hasLoaded = !selectedContractId || !detailPending
 
-  useEffect(() => {
-    fetchAccounts()
-  }, [fetchAccounts])
+  const { data: accountsData, refetch: refetchAccounts } = useAccountList()
+  const accounts = accountsData?.data ?? []
+  const primaryAccount = accounts.find((a) => a.isPrimary)
+  const effectiveAccountId = selectedAccountId ?? primaryAccount?.id ?? accounts[0]?.id ?? null
 
-  // 계좌 등록 바텀시트 닫힐 때 목록 새로고침
-  useEffect(() => {
-    if (!accountAddSheet) {
-      const timer = setTimeout(() => fetchAccounts(), 300)
-      return () => clearTimeout(timer)
-    }
-  }, [accountAddSheet, fetchAccounts])
+  const fetchAccounts = () => {
+    void refetchAccounts()
+  }
 
-  useEffect(() => {
-    if (!selectedContractId) return
-    contractApi.getContractDetail(selectedContractId)
-      .then((res) => {
-        setDetail(res.data ?? null)
-      })
-      .catch((err) => {
-        console.error('계약 상세 조회 실패:', err)
-      })
-      .finally(() => setHasLoaded(true))
-  }, [selectedContractId])
+  const { mutateAsync: rejectContractMutation, isPending: rejecting } = useRejectContract()
 
   if (!hasLoaded) {
     return (
@@ -154,7 +91,7 @@ export default function BeforeEmployment() {
   }
 
   const handleAgree = () => {
-    if (!selectedAccountId) {
+    if (!effectiveAccountId) {
       setAccountError(true)
       alert('급여 계좌를 선택해 주세요.')
       return
@@ -165,23 +102,20 @@ export default function BeforeEmployment() {
     }
     setAgreeError(false)
     setAccountError(false)
-    setSelectedSalaryAccountId(selectedAccountId)
+    setSelectedSalaryAccountId(effectiveAccountId)
     setSignPopup(true)
   }
 
   const handleReject = async () => {
     if (!selectedContractId) return
     if (!confirm('계약을 거절하시겠습니까?')) return
-    setRejecting(true)
     try {
-      await contractApi.rejectContract(selectedContractId)
+      await rejectContractMutation({ id: selectedContractId })
       alert('계약이 거절되었습니다.')
       setEmploymentPopFrame(false)
     } catch (err) {
       console.error('계약 거절 실패:', err)
       alert('계약 거절에 실패했습니다.')
-    } finally {
-      setRejecting(false)
     }
   }
 
@@ -467,15 +401,15 @@ export default function BeforeEmployment() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
                     padding: '10px 12px', marginBottom: '6px', cursor: 'pointer',
-                    backgroundColor: selectedAccountId === account.id ? '#eff6ff' : '#f9fafb',
-                    border: selectedAccountId === account.id ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                    backgroundColor: effectiveAccountId === account.id ? '#eff6ff' : '#f9fafb',
+                    border: effectiveAccountId === account.id ? '2px solid #2563eb' : '1px solid #e5e7eb',
                     borderRadius: '8px', transition: 'all 0.15s'
                   }}
                 >
                   <input
                     type="radio"
                     name="salary-account"
-                    checked={selectedAccountId === account.id}
+                    checked={effectiveAccountId === account.id}
                     onChange={() => { setSelectedAccountId(account.id); setAccountError(false) }}
                     style={{ accentColor: '#2563eb' }}
                   />

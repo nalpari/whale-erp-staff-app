@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
-import { contractApi } from '@/lib/api-endpoints'
+import { useContractList } from '@/hooks/queries/use-contract-queries'
 import type { ContractListResponse } from '@/types/api'
 
 function formatDate(dateStr?: string | null): string {
@@ -28,10 +29,11 @@ function getStampStyle(status: string): { className: string; label: string[] } {
 }
 
 export default function EmploymentList() {
+  const searchParams = useSearchParams()
   const setEmploymentPopFrame = usePopupController((state) => state.setEmploymentPopFrame)
   const setSelectedContractId = usePopupController((state) => state.setSelectedContractId)
-  const [contracts, setContracts] = useState<ContractListResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isPending: loading, refetch } = useContractList()
+  const contracts: ContractListResponse[] = data?.data ?? []
 
   // 팝업 스토어에 선택된 계약 ID 저장용
   const setContractHistoryPopup = usePopupController((s) => s.setContractHistoryPopup)
@@ -40,30 +42,23 @@ export default function EmploymentList() {
   const isEmploymentPopFrameOpen = usePopupController((s) => s.EmploymentPopFrame)
   const isContractHistoryPopupOpen = usePopupController((s) => s.ContractHistoryPopup)
 
-  const fetchContracts = useCallback(() => {
-    setLoading(true)
-    contractApi.getContracts()
-      .then((res) => {
-        setContracts(res.data ?? [])
-      })
-      .catch((err) => {
-        console.error('계약 목록 조회 실패:', err)
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  // 최초 마운트 시 조회
+  // URL search params에서 contractId가 있으면 자동으로 계약 팝업 열기
   useEffect(() => {
-    fetchContracts()
-  }, [fetchContracts])
+    const contractIdParam = searchParams.get('contractId')
+    if (!contractIdParam) return
+    const contractId = Number(contractIdParam)
+    if (Number.isNaN(contractId)) return
+    setSelectedContractId(contractId)
+    setEmploymentPopFrame(true)
+  }, [searchParams, setSelectedContractId, setEmploymentPopFrame])
 
   // 팝업이 닫힐 때 목록 갱신 (서명/거절 후)
   useEffect(() => {
     if (!isEmploymentPopFrameOpen && !isContractHistoryPopupOpen) {
-      const timer = setTimeout(() => fetchContracts(), 300)
+      const timer = setTimeout(() => refetch(), 300)
       return () => clearTimeout(timer)
     }
-  }, [isEmploymentPopFrameOpen, isContractHistoryPopupOpen, fetchContracts])
+  }, [isEmploymentPopFrameOpen, isContractHistoryPopupOpen, refetch])
 
   const handleContractClick = (contract: ContractListResponse) => {
     // 전역 스토어에 선택된 계약 ID 저장 (팝업 컴포넌트에서 상세 조회 시 사용)
