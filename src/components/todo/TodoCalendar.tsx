@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { WhaleCalendar } from 'whale-calendar'
 import type { CalendarData } from 'whale-calendar'
-import { fetchMonthlyCalendar } from '@/lib/todoApi'
 import type { CalendarDayData } from '@/types/todo'
 import 'whale-calendar/styles.css'
 
