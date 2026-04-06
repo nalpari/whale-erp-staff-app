@@ -131,16 +131,6 @@ export default function PublishPage() {
                     <td className="c red">2026-02-25</td>
                   </tr>
                   <tr>
-                    <td>TO-DO 체크</td>
-                    <td></td>
-                    <td>
-                      <Link href={'/todo'}>TodoList.tsx</Link>
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td className="c red">2026-02-25</td>
-                  </tr>
-                  <tr>
                     <td rowSpan={7}>마이페이지</td>
                     <td>마이페이지 메인</td>
                     <td>

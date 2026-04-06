@@ -42,7 +42,7 @@ export default function MypageList() {
         <button className="data-item" onClick={() => router.push('/mypage/certificate')}>
           <div className="mypage-item-inner">
             <div className="mypage-item-info">
-              <div className="mypage-item-info-name">자격증  관리</div>
+              <div className="mypage-item-info-name">자격증  관리</div>
               <div className="mypage-item-info-desc">보유 자격증 정보를 등록하고 관리할 수 있습니다.</div>
             </div>
             <div className="mypage-item-arr">

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ContractListResponse } from '@/types/api'
 
 type PopupControllerState = {
   QrCodePopup: boolean
@@ -21,36 +22,38 @@ type PopupControllerState = {
   setContractHistoryPopup: (isOpen: boolean) => void
   SalaryDetailFullTimePopup: boolean
   setSalaryDetailFullTimePopup: (isOpen: boolean) => void
+  // PROGRESS 상태 근로계약서 목록
+  pendingContracts: ContractListResponse[]
+  setPendingContracts: (contracts: ContractListResponse[]) => void
+  // 계약 팝업 열기 시 선택된 계약 ID
+  selectedContractId: number | null
+  setSelectedContractId: (id: number | null) => void
+  // 계약 서명 시 선택된 급여 계좌 ID
+  selectedSalaryAccountId: number | null
+  setSelectedSalaryAccountId: (id: number | null) => void
+  // 급여명세서 상세 팝업 시 선택된 급여 ID와 타입
+  selectedPayrollId: number | null
+  setSelectedPayrollId: (id: number | null) => void
+  selectedPayrollType: string | null
+  setSelectedPayrollType: (type: string | null) => void
 }
 
-type InitialStateType = {
-  QrCodePopup: boolean
-  AlertPopup: boolean
-  PasswordChangePopup: boolean
-  AIChatPopup: boolean
-  EmploymentNotificationPopup: boolean
-  EmploymentPopFrame: boolean
-  SignPopup: boolean
-  EmploymentStep: boolean
-  ContractHistoryPopup: boolean
-  SalaryDetailFullTimePopup: boolean
-}
-
-const initialState: InitialStateType = {
+export const usePopupController = create<PopupControllerState>((set) => ({
   QrCodePopup: false,
   AlertPopup: false,
   PasswordChangePopup: false,
   AIChatPopup: false,
-  EmploymentNotificationPopup: true,
+  EmploymentNotificationPopup: false,
   EmploymentPopFrame: false,
   SignPopup: false,
   EmploymentStep: false,
   ContractHistoryPopup: false,
   SalaryDetailFullTimePopup: false,
-}
-
-export const usePopupController = create<PopupControllerState>((set) => ({
-  ...initialState,
+  pendingContracts: [],
+  selectedContractId: null,
+  selectedSalaryAccountId: null,
+  selectedPayrollId: null,
+  selectedPayrollType: null,
   setQrCodePopup: (isOpen: boolean) => set((state) => ({ ...state, QrCodePopup: isOpen })),
   setAlertPopup: (isOpen: boolean) => set((state) => ({ ...state, AlertPopup: isOpen })),
   setPasswordChangePopup: (isOpen: boolean) => set((state) => ({ ...state, PasswordChangePopup: isOpen })),
@@ -61,4 +64,9 @@ export const usePopupController = create<PopupControllerState>((set) => ({
   setEmploymentStep: (step: boolean) => set((state) => ({ ...state, EmploymentStep: step })),
   setContractHistoryPopup: (isOpen: boolean) => set((state) => ({ ...state, ContractHistoryPopup: isOpen })),
   setSalaryDetailFullTimePopup: (isOpen: boolean) => set((state) => ({ ...state, SalaryDetailFullTimePopup: isOpen })),
+  setPendingContracts: (contracts: ContractListResponse[]) => set((state) => ({ ...state, pendingContracts: contracts })),
+  setSelectedContractId: (id: number | null) => set((state) => ({ ...state, selectedContractId: id })),
+  setSelectedSalaryAccountId: (id: number | null) => set((state) => ({ ...state, selectedSalaryAccountId: id })),
+  setSelectedPayrollId: (id: number | null) => set((state) => ({ ...state, selectedPayrollId: id })),
+  setSelectedPayrollType: (type: string | null) => set((state) => ({ ...state, selectedPayrollType: type })),
 }))
