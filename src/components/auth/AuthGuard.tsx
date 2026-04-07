@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 
 // 로그인 없이 접근 가능한 경로
 const PUBLIC_PATHS = ['/login', '/signup', '/request', '/list']
@@ -11,6 +12,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const checkAuth = useAuthStore((s) => s.checkAuth)
+  const fetchWorkplaces = useWorkplaceStore((s) => s.fetchWorkplaces)
   const [checked, setChecked] = useState(false)
 
   const isPublic = PUBLIC_PATHS.some(
@@ -24,8 +26,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     setChecked(false)
     const isAuth = checkAuth()
     if (!isAuth) { router.replace('/login'); return }
+    fetchWorkplaces()
     setChecked(true)
-  }, [pathname, isPublic, router, checkAuth])
+  }, [pathname, isPublic, router, checkAuth, fetchWorkplaces])
 
   if (isPublic) return <>{children}</>
   if (!checked) return null

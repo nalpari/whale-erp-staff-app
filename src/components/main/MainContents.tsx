@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar } from '@/hooks/queries'
 import type { OrgGroup } from '@/types/todo'
 
@@ -27,6 +28,7 @@ export default function MainContents() {
   const setQrCodePopup = usePopupController((state) => state.setQrCodePopup)
   const setAIChatPopup = usePopupController((state) => state.setAIChatPopup)
   const memberId = useAuthStore((s) => s.user?.memberId)
+  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
 
   const today = new Date()
   const { data: calendarResponse } = useTodoMonthlyCalendar(
@@ -35,7 +37,15 @@ export default function MainContents() {
     today.getMonth() + 1,
   )
 
-  const todayData = calendarResponse?.data.find((d) => d.day === today.getDate()) ?? null
+  const rawTodayData = calendarResponse?.data.find((d) => d.day === today.getDate()) ?? null
+  const filteredOrganizations = rawTodayData?.organizations.filter(
+    (org) =>
+      selectedWorkplaceId === null ||
+      org.headOfficeId === selectedWorkplaceId ||
+      org.franchiseId === selectedWorkplaceId ||
+      org.storeId === selectedWorkplaceId,
+  ) ?? []
+  const todayData = rawTodayData ? { ...rawTodayData, organizations: filteredOrganizations } : null
   const totalTodoCount = todayData?.totalCount ?? 0
 
   const handleTodoClick = () => {

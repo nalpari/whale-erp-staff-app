@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar, useToggleTodoStatus } from '@/hooks/queries'
 import TodoCalendar from './TodoCalendar'
 import type { OrgGroup, TodoItem } from '@/types/todo'
@@ -38,6 +39,16 @@ function getOrgGroupsForDay(
   return data?.data.find((d) => d.day === day)?.organizations ?? []
 }
 
+function filterByWorkplace(orgs: OrgGroup[], selectedWorkplaceId: number | null): OrgGroup[] {
+  if (selectedWorkplaceId === null) return orgs
+  return orgs.filter(
+    (org) =>
+      org.headOfficeId === selectedWorkplaceId ||
+      org.franchiseId === selectedWorkplaceId ||
+      org.storeId === selectedWorkplaceId,
+  )
+}
+
 function getOrgDisplayName(org: OrgGroup): string {
   if (org.storeName) return org.storeName
   if (org.franchiseName) return org.franchiseName
@@ -53,6 +64,7 @@ function parseInitialDate(dateParam: string | null): Date {
 export default function TodoContents() {
   const searchParams = useSearchParams()
   const memberId = useAuthStore((s) => s.user?.memberId)
+  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
 
   const [selectedDate, setSelectedDate] = useState(() =>
     parseInitialDate(searchParams.get('date')),
@@ -69,7 +81,10 @@ export default function TodoContents() {
   const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month)
 
   const isToday = isSameDay(selectedDate, new Date())
-  const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
+  const orgGroups = filterByWorkplace(
+    getOrgGroupsForDay(calendarData, selectedDate.getDate()),
+    selectedWorkplaceId,
+  )
 
   const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
   const goToToday = () => setSelectedDate(new Date())
