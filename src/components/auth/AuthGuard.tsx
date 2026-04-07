@@ -19,6 +19,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 경로 변경마다 초기화하여 만료된 토큰으로 보호 UI가 노출되지 않도록 방지
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isPublic) { setChecked(true); return }
     setChecked(false)
     const isAuth = checkAuth()

@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
-import { fetchMonthlyCalendar } from '@/lib/todoApi'
-import type { CalendarDayData, OrgGroup } from '@/types/todo'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useTodoMonthlyCalendar } from '@/hooks/queries'
+import type { OrgGroup } from '@/types/todo'
 
 const WEEKDAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
 
@@ -26,21 +26,16 @@ export default function MainContents() {
   const router = useRouter()
   const setQrCodePopup = usePopupController((state) => state.setQrCodePopup)
   const setAIChatPopup = usePopupController((state) => state.setAIChatPopup)
-
-  const [todayData, setTodayData] = useState<CalendarDayData | null>(null)
+  const memberId = useAuthStore((s) => s.user?.memberId)
 
   const today = new Date()
+  const { data: calendarResponse } = useTodoMonthlyCalendar(
+    memberId,
+    today.getFullYear(),
+    today.getMonth() + 1,
+  )
 
-  useEffect(() => {
-    fetchMonthlyCalendar(today.getFullYear(), today.getMonth() + 1)
-      .then((data) => {
-        const dayData = data.find((d) => d.day === today.getDate())
-        setTodayData(dayData ?? null)
-      })
-      .catch(() => {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
+  const todayData = calendarResponse?.data.find((d) => d.day === today.getDate()) ?? null
   const totalTodoCount = todayData?.totalCount ?? 0
 
   const handleTodoClick = () => {
@@ -83,7 +78,7 @@ export default function MainContents() {
                     <div className="data-item-inner-arr"></div>
                   </div>
                 </div>
-                <TodoSection org={todayData?.organizations.find((o) => o.storeName === '힘이나는 커피생활 을지로 3가점') ?? null} onClick={handleTodoClick} />
+                <TodoSection org={null} />
               </div>
             </li>
             <li className="date-cont-item">
@@ -109,7 +104,7 @@ export default function MainContents() {
                     <div className="data-item-inner-arr"></div>
                   </div>
                 </div>
-                <TodoSection org={todayData?.organizations.find((o) => o.storeName === '바나프레소 교대점') ?? null} onClick={handleTodoClick} />
+                <TodoSection org={null} />
               </div>
             </li>
             {todayData?.organizations.map((org) => (
@@ -148,13 +143,13 @@ function TodoSection({
   onClick,
 }: {
   org: OrgGroup | null
-  onClick: () => void
+  onClick?: () => void
 }) {
   const incomplete = org?.todos.filter((t) => !t.isCompleted).length ?? 0
   const complete = org?.todos.filter((t) => t.isCompleted).length ?? 0
 
   return (
-    <div className="date-cont-data-item" onClick={onClick} style={{ cursor: 'pointer' }}>
+    <div className="date-cont-data-item" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
       <div className="cont-item-tit todo">TO-DO 체크</div>
       <div className="cont-item-data-wrap">
         <div className="data-item-inner">

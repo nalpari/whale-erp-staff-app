@@ -3,6 +3,7 @@
 // ============================================================
 
 import { apiClient, apiUpload, getAccessToken, clearTokens } from '@/lib/api'
+import type { CalendarDayData } from '@/types/todo'
 import type {
   ApiResponse,
   PageResponse,
@@ -476,5 +477,24 @@ export const homeApi = {
     apiClient<ApiResponse<DailySummaryResponse>>(
       `/api/v1/mobile/home/daily-summary?date=${encodeURIComponent(date)}`,
     ),
+}
+
+// ============================================================
+// TODO API
+// ============================================================
+
+export const todoApi = {
+  /** 회원별 월별 캘린더 조회 */
+  getMonthlyCalendar: (memberId: number, year: number, month: number) =>
+    apiClient<ApiResponse<CalendarDayData[]>>(
+      `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${memberId}&year=${year}&month=${month}`,
+    ),
+
+  /** TODO 상태 변경 */
+  toggleStatus: (id: number, isCompleted: boolean) =>
+    apiClient<ApiResponse<null>>(`/api/v1/employee-todos/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isCompleted }),
+    }),
 }
 
