@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
@@ -13,25 +13,21 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const checkAuth = useAuthStore((s) => s.checkAuth)
   const fetchWorkplaces = useWorkplaceStore((s) => s.fetchWorkplaces)
-  const [checked, setChecked] = useState(false)
 
   const isPublic = PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
   )
 
+  const isAuth = isPublic || checkAuth()
+
   useEffect(() => {
-    // 경로 변경마다 초기화하여 만료된 토큰으로 보호 UI가 노출되지 않도록 방지
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (isPublic) { setChecked(true); return }
-    setChecked(false)
-    const isAuth = checkAuth()
+    if (isPublic) return
     if (!isAuth) { router.replace('/login'); return }
     fetchWorkplaces()
-    setChecked(true)
-  }, [pathname, isPublic, router, checkAuth, fetchWorkplaces])
+  }, [pathname, isPublic, isAuth, router, fetchWorkplaces])
 
   if (isPublic) return <>{children}</>
-  if (!checked) return null
+  if (!isAuth) return null
 
   return <>{children}</>
 }
