@@ -4,8 +4,24 @@ import type { ContractListResponse } from '@/types/api'
 type PopupControllerState = {
   QrCodePopup: boolean
   setQrCodePopup: (isOpen: boolean) => void
+  /** QR팝업 오픈 시 컨텍스트 */
+  qrCodeWorkplaceId: number | null
+  qrCodeStoreId: number | null
+  qrCodeStoreName: string | null
+  openQrCodePopup: (workplaceId: number, storeName: string, storeId?: number | null) => void
   AlertPopup: boolean
   setAlertPopup: (isOpen: boolean) => void
+  /** Alert 팝업 동적 콘텐츠 */
+  alertMessage: string
+  alertConfirmLabel: string
+  alertCancelLabel: string | null
+  alertOnConfirm: (() => void) | null
+  openAlertPopup: (options: {
+    message: string
+    confirmLabel?: string
+    cancelLabel?: string | null
+    onConfirm?: () => void
+  }) => void
   PasswordChangePopup: boolean
   setPasswordChangePopup: (isOpen: boolean) => void
   AIChatPopup: boolean
@@ -40,7 +56,14 @@ type PopupControllerState = {
 
 export const usePopupController = create<PopupControllerState>((set) => ({
   QrCodePopup: false,
+  qrCodeWorkplaceId: null,
+  qrCodeStoreId: null,
+  qrCodeStoreName: null,
   AlertPopup: false,
+  alertMessage: '',
+  alertConfirmLabel: '확인',
+  alertCancelLabel: null,
+  alertOnConfirm: null,
   PasswordChangePopup: false,
   AIChatPopup: false,
   EmploymentNotificationPopup: false,
@@ -55,7 +78,18 @@ export const usePopupController = create<PopupControllerState>((set) => ({
   selectedPayrollId: null,
   selectedPayrollType: null,
   setQrCodePopup: (isOpen: boolean) => set((state) => ({ ...state, QrCodePopup: isOpen })),
+  openQrCodePopup: (workplaceId: number, storeName: string, storeId?: number | null) =>
+    set((state) => ({ ...state, QrCodePopup: true, qrCodeWorkplaceId: workplaceId, qrCodeStoreId: storeId ?? null, qrCodeStoreName: storeName })),
   setAlertPopup: (isOpen: boolean) => set((state) => ({ ...state, AlertPopup: isOpen })),
+  openAlertPopup: ({ message, confirmLabel = '확인', cancelLabel = null, onConfirm }) =>
+    set((state) => ({
+      ...state,
+      AlertPopup: true,
+      alertMessage: message,
+      alertConfirmLabel: confirmLabel,
+      alertCancelLabel: cancelLabel,
+      alertOnConfirm: onConfirm ?? null,
+    })),
   setPasswordChangePopup: (isOpen: boolean) => set((state) => ({ ...state, PasswordChangePopup: isOpen })),
   setAIChatPopup: (isOpen: boolean) => set((state) => ({ ...state, AIChatPopup: isOpen })),
   setEmploymentNotificationPopup: (isOpen: boolean) => set((state) => ({ ...state, EmploymentNotificationPopup: isOpen })),

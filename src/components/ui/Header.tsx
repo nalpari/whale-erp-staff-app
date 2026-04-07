@@ -30,10 +30,17 @@ export default function Header() {
   const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
   const [isSideNavOpen, setIsSideNavOpen] = useState(false)
 
-  // 선택된 근무처명 (null이면 전체)
-  const selectedWorkplaceName = selectedWorkplaceId
-    ? workplaces.find((w) => w.id === selectedWorkplaceId)?.workplaceName ?? '전체'
+  // 선택된 근무처 (null이면 전체)
+  const selectedWorkplace = selectedWorkplaceId
+    ? workplaces.find((w) => w.id === selectedWorkplaceId)
+    : null
+  const selectedWorkplaceName = selectedWorkplace
+    ? (selectedWorkplace.storeName ?? selectedWorkplace.workplaceName)
     : '전체'
+
+  // 근무처 선택 시 해당 근무처의 직급/직책, 전체일 때는 숨김
+  const displayRank = selectedWorkplace?.rank ?? null
+  const displayPosition = selectedWorkplace?.position ?? null
 
   const segments = pathname.split('/').filter(Boolean)
   const isSubPage = segments.length >= 2
@@ -68,15 +75,15 @@ export default function Header() {
     <header className={`${pathname === '/mypage' ? 'mypage' : ''}`}>
       <div className="header-inner">
         <div className="header-top">
-          <div className="header-data-wrap" onClick={() => router.push('/list')}>
+          <div className="header-data-wrap" onClick={() => router.push('/')}>
             <div className="header-data-img">
               <Image src="/assets/images/common/avatar_icon.svg" alt="header-data-img" fill />
             </div>
             <ul className="header-data-list">
               <li className="header-data-item">
-                <span>{user?.memberName ?? '사용자'}</span>{user?.rank ? ` ${user.rank}` : ''}
+                <span>{user?.memberName ?? '사용자'}</span>{displayRank ? ` ${displayRank}` : ''}
               </li>
-              {user?.position && <li className="header-data-item">{user.position}</li>}
+              {displayPosition && <li className="header-data-item">{displayPosition}</li>}
             </ul>
           </div>
           <div className="header-menu-btn">

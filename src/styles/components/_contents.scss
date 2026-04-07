@@ -570,7 +570,15 @@
 }
 .commute-work-list-item {
   @include flex(8px);
+  align-items: flex-start;
   min-height: 130px;
+}
+.commute-work-list-item-conts {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 .commute-work-list-item-date {
   flex: none;
@@ -671,6 +679,23 @@
   height: 100%;
   @include fontDefinition(15px, 700, 150%);
   color: #777;
+}
+
+.work-commute-status {
+  margin-top: 8px;
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 8px;
+  @include fontDefinition(14px, 600, 22px);
+  &.absent {
+    background-color: #fef0f0;
+    color: #d42626;
+  }
+}
+
+.unrecorded {
+  @include fontDefinition(13px, 500, 150%);
+  color: #f29436;
 }
 
 // TO-DO 체크

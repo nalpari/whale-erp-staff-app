@@ -42,7 +42,7 @@ export default function StoreSheet() {
                       className={`array-btn ${selectedWorkplaceId === wp.id ? 'active' : ''}`}
                       onClick={() => handleSelect(wp.id)}
                     >
-                      {wp.workplaceName}
+                      {wp.storeName ?? wp.workplaceName}
                     </button>
                   </li>
                 ))}

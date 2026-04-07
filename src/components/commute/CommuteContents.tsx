@@ -3,7 +3,11 @@ import { useState } from 'react'
 import CommuteCheck from './CommuteCheck'
 import CommuteWork from './CommuteWork'
 
-export default function CommuteContents() {
+interface Props {
+  storeName: string | null
+}
+
+export default function CommuteContents({ storeName }: Props) {
   const [commuteTab, setCommuteTab] = useState<'check' | 'work'>('check')
   return (
     <div className="commute-contents">
@@ -23,7 +27,11 @@ export default function CommuteContents() {
           </button>
         </div>
       </div>
-      {commuteTab === 'check' ? <CommuteCheck /> : <CommuteWork />}
+      {commuteTab === 'check' ? (
+        <CommuteCheck storeName={storeName} />
+      ) : (
+        <CommuteWork storeName={storeName} />
+      )}
     </div>
   )
 }

@@ -1,6 +1,20 @@
 import { create } from 'zustand'
 import type { CareerResponse } from '@/types/api'
 
+function formatStoreDate(d: Date): string {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}.${mm}.${dd}`
+}
+
+function getDefaultWeek(): { from: string; to: string } {
+  const today = new Date()
+  const end = new Date(today)
+  end.setDate(today.getDate() + 6)
+  return { from: formatStoreDate(today), to: formatStoreDate(end) }
+}
+
 type BottomSheetControllerState = {
   storeSheet: boolean
   setStoreSheet: (isOpen: boolean) => void
@@ -18,6 +32,9 @@ type BottomSheetControllerState = {
   setEmploymentNotificationSheet: (isOpen: boolean) => void
   commuteDaySelectSheet: boolean
   setCommuteDaySelectSheet: (isOpen: boolean) => void
+  commuteFrom: string
+  commuteTo: string
+  setCommuteDateRange: (from: string, to: string) => void
   avatarSelectSheet: boolean
   setAvatarSelectSheet: (isOpen: boolean) => void
   phoneChangeSheet: boolean
@@ -52,6 +69,8 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   selectedWorkplaceForAccount: null,
   employmentNotificationSheet: false,
   commuteDaySelectSheet: false,
+  commuteFrom: getDefaultWeek().from,
+  commuteTo: getDefaultWeek().to,
   avatarSelectSheet: false,
   phoneChangeSheet: false,
   personalAddSheet: false,
@@ -74,6 +93,7 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   setSelectedWorkplaceForAccount: (id: number | null) => set((state) => ({ ...state, selectedWorkplaceForAccount: id })),
   setEmploymentNotificationSheet: (isOpen: boolean) => set((state) => ({ ...state, employmentNotificationSheet: isOpen })),
   setCommuteDaySelectSheet: (isOpen: boolean) => set((state) => ({ ...state, commuteDaySelectSheet: isOpen })),
+  setCommuteDateRange: (from: string, to: string) => set((state) => ({ ...state, commuteFrom: from, commuteTo: to, commuteDaySelectSheet: false })),
   setAvatarSelectSheet: (isOpen: boolean) => set((state) => ({ ...state, avatarSelectSheet: isOpen })),
   setPhoneChangeSheet: (isOpen: boolean) => set((state) => ({ ...state, phoneChangeSheet: isOpen })),
   setPersonalAddSheet: (isOpen: boolean) => set((state) => ({

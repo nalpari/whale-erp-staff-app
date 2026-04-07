@@ -11,13 +11,13 @@ export const useAttendanceToday = (enabled = true) =>
   })
 
 export const useAttendanceHistory = (
-  params?: { yearMonth?: string; workplaceId?: number },
+  params: { from: string; to: string },
   enabled = true,
 ) =>
   useQuery({
     queryKey: queryKeys.attendance.history(params),
     queryFn: () => attendanceApi.getHistory(params),
-    enabled,
+    enabled: enabled && !!params.from && !!params.to,
   })
 
 export const useCheckIn = () => {

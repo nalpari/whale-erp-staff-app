@@ -142,15 +142,37 @@ export interface CodeOptions {
 export interface WorkplaceResponse {
   id: number
   workplaceName: string
+  storeId: number | null
   storeName: string | null
   workplaceType: string
   workStatus: string | null
   workStatusName: string | null
   colorIndex: number
+  rank: string | null
+  position: string | null
 }
 
 export interface AddWorkplaceRequest {
   registrationCode: string
+}
+
+export interface ValidateEmployeeRequest {
+  employeeNumber: string
+}
+
+export interface ValidateEmployeeResponse {
+  valid: boolean
+  employeeName?: string
+  workplaceName?: string
+}
+
+export interface LinkEmployeeRequest {
+  employeeNumber: string
+}
+
+export interface LinkEmployeeResponse {
+  memberId: number
+  employeeNumber: string
 }
 
 export interface WorkplaceDetailResponse {
@@ -294,19 +316,18 @@ export interface AttendanceTodayResponse {
 }
 
 export interface WorkplaceAttendance {
-  workplaceId: number
   workplaceName: string
-  workplaceColor: string
-  scheduledStart?: string
-  scheduledEnd?: string
-  clockIn?: string
-  clockOut?: string
-  status: string
+  scheduleStartTime: string | null
+  scheduleEndTime: string | null
+  checkInTime: string | null
+  checkOutTime: string | null
+  workDuration: number | null
+  colorIndex: number
 }
 
 export interface AttendanceCheckRequest {
-  qrData: string
   workplaceId: number
+  storeId?: number | null
 }
 
 export interface AttendanceCheckResponse {
@@ -315,13 +336,17 @@ export interface AttendanceCheckResponse {
 }
 
 export interface AttendanceHistoryItem {
-  date: string
+  date: string          // "YYYY-MM-DD"
   dayOfWeek: string
   workplaceName: string
-  workplaceColor: string
-  clockIn?: string
-  clockOut?: string
+  checkInTime: string | null   // "HH:mm"
+  checkOutTime: string | null  // "HH:mm"
+  workDuration: number | null
   status: string
+}
+
+export interface AttendanceHistoryResponse {
+  items: AttendanceHistoryItem[]
 }
 
 // ============================================================
@@ -672,4 +697,35 @@ export interface WorkplaceDailySummary {
   scheduledEnd?: string
   clockIn?: string
   clockOut?: string
+}
+
+// ============================================================
+// 근무 스케줄 (by-org)
+// ============================================================
+
+export interface ScheduleDailyResponse {
+  date: string          // "YYYY-MM-DD"
+  dayOfWeek: string
+  hasWork: boolean
+  startTime: string | null   // "HH:mm:ss"
+  endTime: string | null
+  hasBreak: boolean
+  breakStartTime: string | null
+  breakEndTime: string | null
+  workHours: number | null
+  source: 'CONTRACT' | 'SCHEDULE'
+  isDeleted: boolean
+  scheduleId: number | null
+  shiftId: number | null
+}
+
+export interface ScheduleGroupResponse {
+  workPlace: 'HEAD_OFFICE' | 'FRANCHISE' | 'STORE'
+  headOfficeId: number
+  headOfficeName: string
+  franchiseId: number | null
+  franchiseName: string | null
+  storeId: number | null
+  storeName: string | null
+  schedules: ScheduleDailyResponse[]
 }
