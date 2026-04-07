@@ -35,17 +35,10 @@ export default function MainContents() {
     memberId,
     today.getFullYear(),
     today.getMonth() + 1,
+    selectedWorkplaceId,
   )
 
-  const rawTodayData = calendarResponse?.data.find((d) => d.day === today.getDate()) ?? null
-  const filteredOrganizations = rawTodayData?.organizations.filter(
-    (org) =>
-      selectedWorkplaceId === null ||
-      org.headOfficeId === selectedWorkplaceId ||
-      org.franchiseId === selectedWorkplaceId ||
-      org.storeId === selectedWorkplaceId,
-  ) ?? []
-  const todayData = rawTodayData ? { ...rawTodayData, organizations: filteredOrganizations } : null
+  const todayData = calendarResponse?.data.find((d) => d.day === today.getDate()) ?? null
   const totalTodoCount = todayData?.totalCount ?? 0
 
   const handleTodoClick = () => {

@@ -485,10 +485,13 @@ export const homeApi = {
 
 export const todoApi = {
   /** 회원별 월별 캘린더 조회 */
-  getMonthlyCalendar: (memberId: number, year: number, month: number) =>
-    apiClient<ApiResponse<CalendarDayData[]>>(
-      `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${memberId}&year=${year}&month=${month}`,
-    ),
+  getMonthlyCalendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) => {
+    const params = new URLSearchParams({ memberId: String(memberId), year: String(year), month: String(month) })
+    if (employeeInfoId != null) params.set('employeeInfoId', String(employeeInfoId))
+    return apiClient<ApiResponse<CalendarDayData[]>>(
+      `/api/v1/employee-todos/mobile/calendar/by-employee?${params.toString()}`,
+    )
+  },
 
   /** TODO 상태 변경 */
   toggleStatus: (id: number, isCompleted: boolean) =>

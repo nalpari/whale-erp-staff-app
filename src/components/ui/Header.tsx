@@ -31,8 +31,11 @@ export default function Header() {
   const [isSideNavOpen, setIsSideNavOpen] = useState(false)
 
   // 선택된 근무처명 (null이면 전체)
-  const selectedWorkplaceName = selectedWorkplaceId
-    ? workplaces.find((w) => w.id === selectedWorkplaceId)?.workplaceName ?? '전체'
+  const selectedWorkplace = workplaces.find((w) => w.id === selectedWorkplaceId) ?? null
+  const selectedWorkplaceName = selectedWorkplace
+    ? selectedWorkplace.storeName
+      ? `${selectedWorkplace.workplaceName} - ${selectedWorkplace.storeName}`
+      : selectedWorkplace.workplaceName
     : '전체'
 
   const segments = pathname.split('/').filter(Boolean)

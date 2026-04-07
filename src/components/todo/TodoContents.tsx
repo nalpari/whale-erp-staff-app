@@ -39,16 +39,6 @@ function getOrgGroupsForDay(
   return data?.data.find((d) => d.day === day)?.organizations ?? []
 }
 
-function filterByWorkplace(orgs: OrgGroup[], selectedWorkplaceId: number | null): OrgGroup[] {
-  if (selectedWorkplaceId === null) return orgs
-  return orgs.filter(
-    (org) =>
-      org.headOfficeId === selectedWorkplaceId ||
-      org.franchiseId === selectedWorkplaceId ||
-      org.storeId === selectedWorkplaceId,
-  )
-}
-
 function getOrgDisplayName(org: OrgGroup): string {
   if (org.storeName) return org.storeName
   if (org.franchiseName) return org.franchiseName
@@ -77,14 +67,11 @@ export default function TodoContents() {
   const year = selectedDate.getFullYear()
   const month = selectedDate.getMonth() + 1
 
-  const { data: calendarData } = useTodoMonthlyCalendar(memberId, year, month)
-  const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month)
+  const { data: calendarData } = useTodoMonthlyCalendar(memberId, year, month, selectedWorkplaceId)
+  const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
 
   const isToday = isSameDay(selectedDate, new Date())
-  const orgGroups = filterByWorkplace(
-    getOrgGroupsForDay(calendarData, selectedDate.getDate()),
-    selectedWorkplaceId,
-  )
+  const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
 
   const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
   const goToToday = () => setSelectedDate(new Date())

@@ -7,10 +7,11 @@ export const useTodoMonthlyCalendar = (
   memberId: number | undefined,
   year: number,
   month: number,
+  employeeInfoId?: number | null,
 ) =>
   useQuery({
-    queryKey: queryKeys.todo.calendar(memberId ?? 0, year, month),
-    queryFn: () => todoApi.getMonthlyCalendar(memberId!, year, month),
+    queryKey: queryKeys.todo.calendar(memberId ?? 0, year, month, employeeInfoId),
+    queryFn: () => todoApi.getMonthlyCalendar(memberId!, year, month, employeeInfoId),
     enabled: !!memberId,
   })
 
@@ -18,9 +19,10 @@ export const useToggleTodoStatus = (
   memberId: number | undefined,
   year: number,
   month: number,
+  employeeInfoId?: number | null,
 ) => {
   const queryClient = useQueryClient()
-  const key = queryKeys.todo.calendar(memberId ?? 0, year, month)
+  const key = queryKeys.todo.calendar(memberId ?? 0, year, month, employeeInfoId)
 
   return useMutation({
     mutationFn: ({ id, isCompleted }: { id: number; isCompleted: boolean }) =>
