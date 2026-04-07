@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { WhaleCalendar } from 'whale-calendar'
 import type { CalendarData } from 'whale-calendar'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useTodoMonthlyCalendar } from '@/hooks/queries'
 import type { CalendarDayData } from '@/types/todo'
 import 'whale-calendar/styles.css'
 
@@ -40,18 +42,32 @@ export default function TodoCalendar({
 }: TodoCalendarProps) {
   const [viewYear, setViewYear] = useState<number | null>(null)
   const [viewMonth, setViewMonth] = useState<number | null>(null)
-  const [browseData, setBrowseData] = useState<CalendarDayData[] | null>(null)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+
+  const memberId = useAuthStore((s) => s.user?.memberId)
 
   const selectedYear = selectedDate.getFullYear()
   const selectedMonth = selectedDate.getMonth() + 1
+
   const isViewingSelectedMonth =
     viewYear === null || (viewYear === selectedYear && viewMonth === selectedMonth)
 
   const displayYear = viewYear ?? selectedYear
   const displayMonth = viewMonth ?? selectedMonth
-  const displayData = isViewingSelectedMonth ? initialCalendarData : (browseData ?? [])
+
+  // 탐색 중인 월 데이터 (선택된 월과 다를 때만 fetch)
+  const { data: browseResponse } = useTodoMonthlyCalendar(
+    isViewingSelectedMonth ? undefined : memberId,
+    displayYear,
+    displayMonth,
+  )
+
+  const displayData = isViewingSelectedMonth
+    ? initialCalendarData
+    : (browseResponse?.data ?? [])
 
   // whale-calendar 타이틀 "M월 스케줄" → "yyyy년 MM월"로 교체
   useEffect(() => {
@@ -69,22 +85,54 @@ export default function TodoCalendar({
     }
   }, [isGridOpen])
 
+  // 캘린더 내부 스와이프: 월 탐색 (selectedDate 변경 없음)
+  const handleCalendarTouchStart = (e: React.TouchEvent) => {
+    if (!isGridOpen) return
+    e.stopPropagation()
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  const handleCalendarTouchEnd = (e: React.TouchEvent) => {
+    if (!isGridOpen) return
+    e.stopPropagation()
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current
+    if (Math.abs(deltaX) <= 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return
+
+    const direction = deltaX > 0 ? -1 : 1
+    const baseYear = viewYear ?? selectedYear
+    const baseMonth = viewMonth ?? selectedMonth
+    let newMonth = baseMonth + direction
+    let newYear = baseYear
+    if (newMonth > 12) { newMonth = 1; newYear++ }
+    if (newMonth < 1) { newMonth = 12; newYear-- }
+    setViewYear(newYear)
+    setViewMonth(newMonth)
+  }
+
+  // 캘린더 < / > 버튼: selectedDate를 해당 월 1일로 이동 + 탐색 리셋
   const handleMonthChange = (year: number, month: number) => {
     setViewYear(null)
     setViewMonth(null)
-    setBrowseData(null)
     onDateSelect(new Date(year, month - 1, 1))
   }
 
+  // 날짜 셀 / 뱃지 클릭: selectedDate 변경 + 탐색 리셋
   const handleDayClick = (date: Date) => {
     setViewYear(null)
     setViewMonth(null)
-    setBrowseData(null)
     onDateSelect(date)
   }
 
   return (
-    <div ref={wrapperRef} className="todo-diary-wrap" style={{ position: 'relative' }}>
+    <div
+      ref={wrapperRef}
+      className="todo-diary-wrap"
+      style={{ position: 'relative' }}
+      onTouchStart={handleCalendarTouchStart}
+      onTouchEnd={handleCalendarTouchEnd}
+    >
       <WhaleCalendar
         year={displayYear}
         month={displayMonth}

@@ -71,6 +71,9 @@ export default function TodoContents() {
   const isToday = isSameDay(selectedDate, new Date())
   const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
 
+  const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
+  const goToToday = () => setSelectedDate(new Date())
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
@@ -80,7 +83,7 @@ export default function TodoContents() {
     const deltaX = e.changedTouches[0].clientX - touchStartX.current
     const deltaY = e.changedTouches[0].clientY - touchStartY.current
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      setSelectedDate((prev) => addDays(prev, deltaX > 0 ? -1 : 1))
+      moveDay(deltaX > 0 ? -1 : 1)
     }
   }
 
@@ -105,18 +108,31 @@ export default function TodoContents() {
       />
 
       <div className="todo-list-wrap">
-        <div className="todo-date">
-          <div className="todo-date-left">
-            <span>{formatDateKorean(selectedDate)}</span>
-            {!isToday && (
-              <button
-                className="btn-form xs outline"
-                onClick={() => setSelectedDate(new Date())}
-              >
-                오늘
-              </button>
-            )}
-          </div>
+        <div className="todo-date" style={{ justifyContent: 'flex-start', gap: 4 }}>
+          <button
+            className="whale-calendar__nav-button"
+            onClick={() => moveDay(-1)}
+            aria-label="이전 날"
+            style={{ '--whale-calendar-border': '#ededed', '--whale-calendar-bg': '#ffffff', '--whale-calendar-radius-full': '9999px', '--whale-calendar-nav-button-size': '32px' } as React.CSSProperties}
+          >
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M18.5 12L14.5 16L18.5 20" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <span>{formatDateKorean(selectedDate)}</span>
+          {!isToday && (
+            <button className="btn-form xs outline" onClick={goToToday}>오늘</button>
+          )}
+          <button
+            className="whale-calendar__nav-button"
+            onClick={() => moveDay(1)}
+            aria-label="다음 날"
+            style={{ '--whale-calendar-border': '#ededed', '--whale-calendar-bg': '#ffffff', '--whale-calendar-radius-full': '9999px', '--whale-calendar-nav-button-size': '32px' } as React.CSSProperties}
+          >
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M14.5 20L18.5 16L14.5 12" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
 
         {orgGroups.length === 0 ? (
