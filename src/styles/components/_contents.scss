@@ -257,6 +257,9 @@
           height: 8px;
           background-color: #919191;
         }
+        &.no-divider::after {
+          display: none;
+        }
       }
       &.todo {
         padding-left: 28px;

@@ -117,40 +117,50 @@ export default function MainContents() {
   }, [workplaces])
 
   // by-org 일정 + TODO → WhaleCalendar CalendarData 변환
-  // 근무 일정 & TODO가 있는 날짜에 근무처 색상 도트 표시 (중복 제거)
+  // activeTab에 따라 표시할 마커 종류를 분기
   const calendarData: CalendarData = useMemo(() => {
     const result: CalendarData = {}
+    const showCommute = activeTab === 'all' || activeTab === 'commute'
+    const showTodo    = activeTab === 'all' || activeTab === 'todo'
 
-    // 1) 근무 일정 마커
-    for (const group of monthScheduleGroups) {
-      const groupName = getGroupName(group)
-      const color = workplaceColorByName.get(groupName) ?? colorFromIndex(0)
-      for (const schedule of group.schedules) {
-        if (!schedule.hasWork || schedule.isDeleted) continue
-        if (!result[schedule.date]) result[schedule.date] = { schedules: [] }
-        result[schedule.date].schedules?.push({
-          id: `${schedule.date}-${groupName}`,
-          label: '●',
-          color,
-        })
+    // 1) 근무 일정 마커 (전체·출퇴근 탭)
+    if (showCommute) {
+      for (const group of monthScheduleGroups) {
+        const groupName = getGroupName(group)
+        const color = workplaceColorByName.get(groupName) ?? colorFromIndex(0)
+        for (const schedule of group.schedules) {
+          if (!schedule.hasWork || schedule.isDeleted) continue
+          if (!result[schedule.date]) result[schedule.date] = { schedules: [] }
+          result[schedule.date].schedules?.push({
+            id: `${schedule.date}-${groupName}`,
+            label: '●',
+            color,
+          })
+        }
       }
     }
 
-    // 2) TODO 마커 (같은 날·같은 근무처 마커가 없을 때만 추가)
-    for (const todoDay of todoCalendarDays) {
-      const d = String(todoDay.day).padStart(2, '0')
-      const dateStr = `${calYear}-${mm}-${d}`
-      for (const org of todoDay.organizations) {
-        const scheduleMarkerId = `${dateStr}-${org.storeName}`
-        const alreadyHas = result[dateStr]?.schedules?.some((s) => s.id === scheduleMarkerId)
-        if (alreadyHas) continue           // 이미 근무 마커 있음 → 스킵
-        const color = workplaceColorByStoreId.get(org.storeId) ?? colorFromIndex(0)
-        if (!result[dateStr]) result[dateStr] = { schedules: [] }
-        result[dateStr].schedules?.push({
-          id: `todo-${dateStr}-${org.storeId}`,
-          label: '●',
-          color,
-        })
+    // 2) TODO 마커 (전체·TODO 탭)
+    if (showTodo) {
+      for (const todoDay of todoCalendarDays) {
+        const d = String(todoDay.day).padStart(2, '0')
+        const dateStr = `${calYear}-${mm}-${d}`
+        for (const org of todoDay.organizations) {
+          // 전체 탭: 같은 날·같은 근무처에 근무 마커가 이미 있으면 스킵 (중복 방지)
+          if (activeTab === 'all') {
+            const alreadyHas = result[dateStr]?.schedules?.some(
+              (s) => s.id === `${dateStr}-${org.storeName}`,
+            )
+            if (alreadyHas) continue
+          }
+          const color = workplaceColorByStoreId.get(org.storeId) ?? colorFromIndex(0)
+          if (!result[dateStr]) result[dateStr] = { schedules: [] }
+          result[dateStr].schedules?.push({
+            id: `todo-${dateStr}-${org.storeId}`,
+            label: '●',
+            color,
+          })
+        }
       }
     }
 
@@ -164,7 +174,7 @@ export default function MainContents() {
     }
 
     return result
-  }, [monthScheduleGroups, workplaceColorByName, todoCalendarDays, workplaceColorByStoreId, calYear, mm])
+  }, [activeTab, monthScheduleGroups, workplaceColorByName, todoCalendarDays, workplaceColorByStoreId, calYear, mm])
 
   // 오늘 출퇴근 기록
   const { data: attendanceData, isLoading: isAttendanceLoading } = useAttendanceToday(isSelectedToday)
@@ -285,8 +295,14 @@ export default function MainContents() {
               {isSelectedToday && <span className="badge-today">오늘</span>}
             </div>
             <div className="data-jop-wrap">
-              <div className="data-jop work">근무: {activeGroups.length}</div>
-              <div className="data-jop todo">TO-DO: {selectedDayTodoData?.totalCount ?? 0}</div>
+              {(activeTab === 'all' || activeTab === 'commute') && (
+                <div className={`data-jop work${activeTab !== 'all' ? ' no-divider' : ''}`}>
+                  근무: {activeGroups.length}
+                </div>
+              )}
+              {(activeTab === 'all' || activeTab === 'todo') && (
+                <div className="data-jop todo">TO-DO: {selectedDayTodoData?.totalCount ?? 0}</div>
+              )}
             </div>
           </div>
 
