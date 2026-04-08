@@ -3,7 +3,7 @@ import TodoContents from '@/components/todo/TodoContents'
 
 export default function TodoPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <TodoContents />
     </Suspense>
   )

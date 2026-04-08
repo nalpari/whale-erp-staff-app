@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
@@ -39,11 +39,12 @@ function getOrgDisplayName(org: OrgGroup): string {
 
 function parseInitialDate(dateParam: string | null): Date {
   if (!dateParam) return new Date()
-  const parsed = new Date(dateParam)
-  if (isNaN(parsed.getTime())) {
-    console.warn(`[TodoContents] 유효하지 않은 date 파라미터: "${dateParam}", 오늘 날짜로 대체합니다.`)
-    return new Date()
-  }
+  // YYYY-MM-DD 형식만 허용 — 그 외 형식은 UTC 기준 파싱으로 날짜가 하루 밀릴 수 있음
+  const match = dateParam.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return new Date()
+  const [, y, m, d] = match.map(Number)
+  const parsed = new Date(y, m - 1, d) // 로컬 timezone 기준 생성
+  if (isNaN(parsed.getTime())) return new Date()
   return parsed
 }
 
@@ -56,6 +57,7 @@ export default function TodoContents() {
     parseInitialDate(searchParams.get('date')),
   )
   const [isCalendarOpen, setIsCalendarOpen] = useState(true)
+  const [pendingTodoId, setPendingTodoId] = useState<number | null>(null)
 
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
@@ -64,7 +66,7 @@ export default function TodoContents() {
   const month = selectedDate.getMonth() + 1
 
   const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(memberId, year, month, selectedWorkplaceId)
-  const { mutate: toggleStatus, isPending } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
+  const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
 
   const isToday = isSameDay(selectedDate, new Date())
   const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
@@ -85,9 +87,13 @@ export default function TodoContents() {
     }
   }
 
-  const handleToggleTodo = (todoId: number, currentCompleted: boolean) => {
-    toggleStatus({ id: todoId, isCompleted: !currentCompleted })
-  }
+  const handleToggleTodo = useCallback((todoId: number, currentCompleted: boolean) => {
+    setPendingTodoId(todoId)
+    toggleStatus(
+      { id: todoId, isCompleted: !currentCompleted },
+      { onSettled: () => setPendingTodoId(null) },
+    )
+  }, [toggleStatus])
 
   return (
     <div
@@ -144,7 +150,7 @@ export default function TodoContents() {
               key={`${org.headOfficeId}-${org.franchiseId}-${org.storeId}`}
               org={org}
               onToggle={handleToggleTodo}
-              isPending={isPending}
+              pendingTodoId={pendingTodoId}
             />
           ))
         )}
@@ -156,18 +162,18 @@ export default function TodoContents() {
 function TodoOrgSection({
   org,
   onToggle,
-  isPending,
+  pendingTodoId,
 }: {
   org: OrgGroup
   onToggle: (id: number, isCompleted: boolean) => void
-  isPending: boolean
+  pendingTodoId: number | null
 }) {
   return (
     <div className="todo-list-item">
       <div className="todo-list-item-tit">{getOrgDisplayName(org)}</div>
       <div className="todo-check-wrap">
         {org.todos.map((todo) => (
-          <TodoCheckItem key={todo.id} todo={todo} onToggle={onToggle} isPending={isPending} />
+          <TodoCheckItem key={todo.id} todo={todo} onToggle={onToggle} isPending={pendingTodoId === todo.id} />
         ))}
       </div>
     </div>

@@ -24,18 +24,26 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     () => false,
   )
 
+  // 렌더 시점에 토큰 유효성을 직접 검증한다.
+  // checkAuth()는 Zustand set()만 호출하며 React setState를 호출하지 않는다.
+  // isAuthenticated가 useSyncExternalStore로 구독되므로
+  // checkAuth()가 Zustand 상태를 변경하면 자동으로 리렌더가 발생한다.
+  const isVerified = isPublic || useAuthStore.getState().checkAuth()
+
+  // 사이드이펙트: 인증 실패 시 리디렉션, 성공 시 사업장 목록 로드
   useEffect(() => {
     if (isPublic) return
-    // checkAuth()는 Zustand set()만 호출 (React setState 아님)
-    const isAuth = useAuthStore.getState().checkAuth()
-    if (!isAuth) { router.replace('/login'); return }
+    if (!isVerified) {
+      router.replace('/login')
+      return
+    }
     fetchWorkplaces().catch((err) => {
       console.error('[AuthGuard] 사업장 목록 로드 실패:', err)
     })
-  }, [pathname, isPublic, router, fetchWorkplaces])
+  }, [pathname, isPublic, isVerified, router, fetchWorkplaces])
 
   if (isPublic) return <>{children}</>
-  if (!isAuthenticated) return null
+  if (!isAuthenticated || !isVerified) return null
 
   return <>{children}</>
 }

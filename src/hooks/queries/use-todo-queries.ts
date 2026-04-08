@@ -48,6 +48,7 @@ export const useToggleTodoStatus = (
               return {
                 ...dayData,
                 organizations: updatedOrgs,
+                totalCount: allTodos.length,
                 completedCount: allTodos.filter((t) => t.isCompleted).length,
                 incompleteCount: allTodos.filter((t) => !t.isCompleted).length,
               }
@@ -62,7 +63,6 @@ export const useToggleTodoStatus = (
     onError: (err, _vars, context) => {
       if (context?.prev) queryClient.setQueryData(key, context.prev)
       console.error('[TodoToggle] 상태 변경 실패:', err)
-      alert('할 일 상태를 변경하지 못했습니다. 다시 시도해주세요.')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.todo.all() })
