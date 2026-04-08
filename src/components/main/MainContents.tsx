@@ -154,6 +154,15 @@ export default function MainContents() {
       }
     }
 
+    // 3) 날짜별 마커를 빨주노초파남보 순서로 정렬
+    for (const dateStr of Object.keys(result)) {
+      result[dateStr].schedules?.sort((a, b) => {
+        const ai = WORKPLACE_COLORS.indexOf(a.color ?? '')
+        const bi = WORKPLACE_COLORS.indexOf(b.color ?? '')
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+      })
+    }
+
     return result
   }, [monthScheduleGroups, workplaceColorByName, todoCalendarDays, workplaceColorByStoreId, calYear, mm])
 
