@@ -14,6 +14,7 @@ interface TodoCalendarProps {
   onDateSelect: (date: Date) => void
   isGridOpen: boolean
   onToggleGrid: () => void
+  employeeInfoId?: number | null
 }
 
 function buildCalendarData(
@@ -39,6 +40,7 @@ export default function TodoCalendar({
   onDateSelect,
   isGridOpen,
   onToggleGrid,
+  employeeInfoId,
 }: TodoCalendarProps) {
   const [viewYear, setViewYear] = useState<number | null>(null)
   const [viewMonth, setViewMonth] = useState<number | null>(null)
@@ -63,6 +65,7 @@ export default function TodoCalendar({
     isViewingSelectedMonth ? undefined : memberId,
     displayYear,
     displayMonth,
+    employeeInfoId,
   )
 
   const displayData = isViewingSelectedMonth

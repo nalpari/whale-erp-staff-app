@@ -59,7 +59,7 @@ export default function TodoContents() {
   const [selectedDate, setSelectedDate] = useState(() =>
     parseInitialDate(searchParams.get('date')),
   )
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [isCalendarOpen, setIsCalendarOpen] = useState(true)
 
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
@@ -107,6 +107,7 @@ export default function TodoContents() {
         onDateSelect={setSelectedDate}
         isGridOpen={isCalendarOpen}
         onToggleGrid={() => setIsCalendarOpen((prev) => !prev)}
+        employeeInfoId={selectedWorkplaceId}
       />
 
       <div className="todo-list-wrap">
