@@ -1,10 +1,3 @@
-/** API 공통 응답 래퍼 */
-export interface ApiResponse<T> {
-  status: string
-  message: string
-  data: T
-}
-
 /** API #9 - 모바일 직원용 월별 캘린더 일 단위 응답 */
 export interface CalendarDayData {
   day: number

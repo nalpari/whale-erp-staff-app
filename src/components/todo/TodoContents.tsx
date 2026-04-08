@@ -48,7 +48,11 @@ function getOrgDisplayName(org: OrgGroup): string {
 function parseInitialDate(dateParam: string | null): Date {
   if (!dateParam) return new Date()
   const parsed = new Date(dateParam)
-  return isNaN(parsed.getTime()) ? new Date() : parsed
+  if (isNaN(parsed.getTime())) {
+    console.warn(`[TodoContents] 유효하지 않은 date 파라미터: "${dateParam}", 오늘 날짜로 대체합니다.`)
+    return new Date()
+  }
+  return parsed
 }
 
 export default function TodoContents() {
@@ -67,8 +71,8 @@ export default function TodoContents() {
   const year = selectedDate.getFullYear()
   const month = selectedDate.getMonth() + 1
 
-  const { data: calendarData } = useTodoMonthlyCalendar(memberId, year, month, selectedWorkplaceId)
-  const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
+  const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(memberId, year, month, selectedWorkplaceId)
+  const { mutate: toggleStatus, isPending } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
 
   const isToday = isSameDay(selectedDate, new Date())
   const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
@@ -138,7 +142,9 @@ export default function TodoContents() {
           </button>
         </div>
 
-        {orgGroups.length === 0 ? (
+        {isCalendarError ? (
+          <div className="todo-empty">할 일 정보를 불러오지 못했습니다</div>
+        ) : orgGroups.length === 0 ? (
           <div className="todo-empty">할 일이 없습니다</div>
         ) : (
           orgGroups.map((org) => (
@@ -146,6 +152,7 @@ export default function TodoContents() {
               key={`${org.headOfficeId}-${org.franchiseId}-${org.storeId}`}
               org={org}
               onToggle={handleToggleTodo}
+              isPending={isPending}
             />
           ))
         )}
@@ -157,16 +164,18 @@ export default function TodoContents() {
 function TodoOrgSection({
   org,
   onToggle,
+  isPending,
 }: {
   org: OrgGroup
   onToggle: (id: number, isCompleted: boolean) => void
+  isPending: boolean
 }) {
   return (
     <div className="todo-list-item">
       <div className="todo-list-item-tit">{getOrgDisplayName(org)}</div>
       <div className="todo-check-wrap">
         {org.todos.map((todo) => (
-          <TodoCheckItem key={todo.id} todo={todo} onToggle={onToggle} />
+          <TodoCheckItem key={todo.id} todo={todo} onToggle={onToggle} isPending={isPending} />
         ))}
       </div>
     </div>
@@ -176,9 +185,11 @@ function TodoOrgSection({
 function TodoCheckItem({
   todo,
   onToggle,
+  isPending,
 }: {
   todo: TodoItem
   onToggle: (id: number, isCompleted: boolean) => void
+  isPending: boolean
 }) {
   return (
     <div className="todo-check-item">
@@ -187,6 +198,7 @@ function TodoCheckItem({
           type="checkbox"
           id={`todo-check-${todo.id}`}
           checked={todo.isCompleted}
+          disabled={isPending}
           onChange={() => onToggle(todo.id, todo.isCompleted)}
         />
         <label htmlFor={`todo-check-${todo.id}`}>{todo.content}</label>

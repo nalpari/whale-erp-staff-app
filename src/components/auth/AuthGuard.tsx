@@ -29,7 +29,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     // checkAuth()는 Zustand set()만 호출 (React setState 아님)
     const isAuth = useAuthStore.getState().checkAuth()
     if (!isAuth) { router.replace('/login'); return }
-    fetchWorkplaces()
+    fetchWorkplaces().catch((err) => {
+      console.error('[AuthGuard] 사업장 목록 로드 실패:', err)
+    })
   }, [pathname, isPublic, router, fetchWorkplaces])
 
   if (isPublic) return <>{children}</>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -30,8 +31,9 @@ export default function MainContents() {
   const memberId = useAuthStore((s) => s.user?.memberId)
   const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
 
-  const today = new Date()
-  const { data: calendarResponse } = useTodoMonthlyCalendar(
+  // 렌더마다 재생성 방지: 마운트 시점의 날짜로 고정
+  const [today] = useState(() => new Date())
+  const { data: calendarResponse, isLoading: isTodoLoading, isError: isTodoError } = useTodoMonthlyCalendar(
     memberId,
     today.getFullYear(),
     today.getMonth() + 1,
@@ -54,7 +56,9 @@ export default function MainContents() {
             <div className="date-list-tit">{formatDateKorean(today)}</div>
             <div className="data-jop-wrap">
               <div className="data-jop work">근무: 2일</div>
-              <div className="data-jop todo">TO-DO: {totalTodoCount}개</div>
+              <div className="data-jop todo">
+                TO-DO: {isTodoLoading ? '...' : isTodoError ? '-' : `${totalTodoCount}개`}
+              </div>
             </div>
           </div>
           <ul className="date-cont-list">

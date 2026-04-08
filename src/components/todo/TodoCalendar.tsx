@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { WhaleCalendar } from 'whale-calendar'
 import type { CalendarData } from 'whale-calendar'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -61,7 +61,7 @@ export default function TodoCalendar({
   const displayMonth = viewMonth ?? selectedMonth
 
   // 탐색 중인 월 데이터 (선택된 월과 다를 때만 fetch)
-  const { data: browseResponse } = useTodoMonthlyCalendar(
+  const { data: browseResponse, isError: isBrowseError } = useTodoMonthlyCalendar(
     isViewingSelectedMonth ? undefined : memberId,
     displayYear,
     displayMonth,
@@ -70,13 +70,14 @@ export default function TodoCalendar({
 
   const displayData = isViewingSelectedMonth
     ? initialCalendarData
-    : (browseResponse?.data ?? [])
+    : isBrowseError ? [] : (browseResponse?.data ?? [])
 
   // whale-calendar 타이틀 "M월 스케줄" → "yyyy년 MM월"로 교체
   // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__title)에 의존.
   // 라이브러리 업데이트 시 클래스명 변경 여부 확인 필요.
   // whale-calendar에 titleFormat prop이 추가되면 이 코드를 제거하고 prop으로 교체할 것.
-  useEffect(() => {
+  // useLayoutEffect: DOM 페인트 전에 동기적으로 적용하여 타이틀 깜빡임 방지
+  useLayoutEffect(() => {
     const titleEl = wrapperRef.current?.querySelector('.whale-calendar__title')
     if (titleEl) {
       titleEl.textContent = `${displayYear}년 ${displayMonth}월`
@@ -87,7 +88,8 @@ export default function TodoCalendar({
   // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__grid)에 의존.
   // 라이브러리 업데이트 시 클래스명 변경 여부 확인 필요.
   // whale-calendar에 gridVisible prop이 추가되면 이 코드를 제거하고 prop으로 교체할 것.
-  useEffect(() => {
+  // useLayoutEffect: DOM 페인트 전에 동기적으로 적용하여 레이아웃 깜빡임 방지
+  useLayoutEffect(() => {
     const gridEl = wrapperRef.current?.querySelector('.whale-calendar__grid') as HTMLElement | null
     if (gridEl) {
       gridEl.style.display = isGridOpen ? '' : 'none'

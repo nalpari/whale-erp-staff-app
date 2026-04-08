@@ -33,14 +33,16 @@ export const useWorkplaceStore = create<WorkplaceState>((set, get) => ({
   },
 
   fetchWorkplaces: async () => {
-    const { workplaces, isLoading } = get()
-    if (workplaces.length > 0 || isLoading) return
+    const { workplaces, isLoading, error } = get()
+    // 이미 로드됐고 에러가 없으면 재호출 생략, 에러 상태면 재시도 허용
+    if ((workplaces.length > 0 && !error) || isLoading) return
     set({ isLoading: true, error: null })
     try {
       const response = await workplaceApi.getWorkplaces()
       set({ workplaces: response.data, isLoading: false })
     } catch (err) {
       const message = err instanceof Error ? err.message : '사업장 목록을 불러오지 못했습니다.'
+      console.error('[WorkplaceStore] 사업장 목록 로드 실패:', err)
       set({ error: message, isLoading: false })
     }
   },

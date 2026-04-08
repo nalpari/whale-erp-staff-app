@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from './query-keys'
 import { todoApi } from '@/lib/api-endpoints'
-import type { ApiResponse, CalendarDayData } from '@/types/todo'
+import type { ApiResponse } from '@/types/api'
+import type { CalendarDayData } from '@/types/todo'
 
 export const useTodoMonthlyCalendar = (
   memberId: number | undefined,
@@ -30,31 +31,38 @@ export const useToggleTodoStatus = (
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: key })
       const prev = queryClient.getQueryData<ApiResponse<CalendarDayData[]>>(key)
-      queryClient.setQueryData<ApiResponse<CalendarDayData[]>>(key, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          data: old.data.map((dayData) => {
-            const updatedOrgs = dayData.organizations.map((org) => ({
-              ...org,
-              todos: org.todos.map((todo) =>
-                todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo,
-              ),
-            }))
-            const allTodos = updatedOrgs.flatMap((o) => o.todos)
-            return {
-              ...dayData,
-              organizations: updatedOrgs,
-              completedCount: allTodos.filter((t) => t.isCompleted).length,
-              incompleteCount: allTodos.filter((t) => !t.isCompleted).length,
-            }
-          }),
-        }
-      })
+      // setQueryData 실패 시에도 prev를 반환해 롤백 보장
+      try {
+        queryClient.setQueryData<ApiResponse<CalendarDayData[]>>(key, (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            data: old.data.map((dayData) => {
+              const updatedOrgs = dayData.organizations.map((org) => ({
+                ...org,
+                todos: org.todos.map((todo) =>
+                  todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo,
+                ),
+              }))
+              const allTodos = updatedOrgs.flatMap((o) => o.todos)
+              return {
+                ...dayData,
+                organizations: updatedOrgs,
+                completedCount: allTodos.filter((t) => t.isCompleted).length,
+                incompleteCount: allTodos.filter((t) => !t.isCompleted).length,
+              }
+            }),
+          }
+        })
+      } catch (e) {
+        console.error('[TodoToggle] 낙관적 업데이트 적용 실패:', e)
+      }
       return { prev }
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.prev) queryClient.setQueryData(key, context.prev)
+      console.error('[TodoToggle] 상태 변경 실패:', err)
+      alert('할 일 상태를 변경하지 못했습니다. 다시 시도해주세요.')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.todo.all() })
