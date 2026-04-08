@@ -22,7 +22,7 @@ interface WorkplaceState {
   fetchWorkplaces: () => Promise<void>
 }
 
-export const useWorkplaceStore = create<WorkplaceState>((set) => ({
+export const useWorkplaceStore = create<WorkplaceState>((set, get) => ({
   selectedWorkplaceId: null,
   workplaces: [],
   isLoading: false,
@@ -33,6 +33,8 @@ export const useWorkplaceStore = create<WorkplaceState>((set) => ({
   },
 
   fetchWorkplaces: async () => {
+    const { workplaces, isLoading } = get()
+    if (workplaces.length > 0 || isLoading) return
     set({ isLoading: true, error: null })
     try {
       const response = await workplaceApi.getWorkplaces()

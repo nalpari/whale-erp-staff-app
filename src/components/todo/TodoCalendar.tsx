@@ -73,6 +73,9 @@ export default function TodoCalendar({
     : (browseResponse?.data ?? [])
 
   // whale-calendar 타이틀 "M월 스케줄" → "yyyy년 MM월"로 교체
+  // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__title)에 의존.
+  // 라이브러리 업데이트 시 클래스명 변경 여부 확인 필요.
+  // whale-calendar에 titleFormat prop이 추가되면 이 코드를 제거하고 prop으로 교체할 것.
   useEffect(() => {
     const titleEl = wrapperRef.current?.querySelector('.whale-calendar__title')
     if (titleEl) {
@@ -81,6 +84,9 @@ export default function TodoCalendar({
   }, [displayYear, displayMonth])
 
   // 그리드 숨김/표시
+  // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__grid)에 의존.
+  // 라이브러리 업데이트 시 클래스명 변경 여부 확인 필요.
+  // whale-calendar에 gridVisible prop이 추가되면 이 코드를 제거하고 prop으로 교체할 것.
   useEffect(() => {
     const gridEl = wrapperRef.current?.querySelector('.whale-calendar__grid') as HTMLElement | null
     if (gridEl) {

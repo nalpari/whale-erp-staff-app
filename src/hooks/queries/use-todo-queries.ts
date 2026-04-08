@@ -34,15 +34,21 @@ export const useToggleTodoStatus = (
         if (!old) return old
         return {
           ...old,
-          data: old.data.map((dayData) => ({
-            ...dayData,
-            organizations: dayData.organizations.map((org) => ({
+          data: old.data.map((dayData) => {
+            const updatedOrgs = dayData.organizations.map((org) => ({
               ...org,
               todos: org.todos.map((todo) =>
                 todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo,
               ),
-            })),
-          })),
+            }))
+            const allTodos = updatedOrgs.flatMap((o) => o.todos)
+            return {
+              ...dayData,
+              organizations: updatedOrgs,
+              completedCount: allTodos.filter((t) => t.isCompleted).length,
+              incompleteCount: allTodos.filter((t) => !t.isCompleted).length,
+            }
+          }),
         }
       })
       return { prev }
