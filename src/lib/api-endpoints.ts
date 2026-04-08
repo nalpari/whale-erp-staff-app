@@ -6,6 +6,7 @@ import { apiClient, apiUpload, getAccessToken, clearTokens } from '@/lib/api'
 import type {
   ApiResponse,
   PageResponse,
+  EmployeeTodoCalendarResponse,
   // Auth
   LoginRequest,
   LoginResponse,
@@ -511,6 +512,18 @@ export const homeApi = {
   getDailySummary: (date: string) =>
     apiClient<ApiResponse<DailySummaryResponse>>(
       `/api/v1/mobile/home/daily-summary?date=${encodeURIComponent(date)}`,
+    ),
+}
+
+// ============================================================
+// 직원 TODO API
+// ============================================================
+
+export const todoApi = {
+  /** 기간별 TODO 캘린더 조회 (from/to: YYYY-MM-DD) */
+  getCalendarByEmployee: (params: { memberId: number; year: number; month: number }) =>
+    apiClient<ApiResponse<EmployeeTodoCalendarResponse>>(
+      `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${params.memberId}&year=${params.year}&month=${params.month}`,
     ),
 }
 

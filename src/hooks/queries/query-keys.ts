@@ -74,4 +74,10 @@ export const queryKeys = {
     byOrg: (memberId: number, from: string, to: string) =>
       [...queryKeys.schedule.all(), 'by-org', memberId, from, to] as const,
   },
+
+  todo: {
+    all: () => [...queryKeys.all, 'todo'] as const,
+    calendar: (from: string, to: string) =>
+      [...queryKeys.todo.all(), 'calendar', from, to] as const,
+  },
 } as const

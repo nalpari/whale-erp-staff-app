@@ -729,3 +729,34 @@ export interface ScheduleGroupResponse {
   storeName: string | null
   schedules: ScheduleDailyResponse[]
 }
+
+// ============================================================
+// 직원 TODO (Employee Todos)
+// ============================================================
+
+export interface EmployeeTodoItem {
+  id: number
+  content: string
+  todoDate: string          // "YYYY-MM-DD" 또는 "YYYY-MM-DD ~ YYYY-MM-DD"
+  isCompleted: boolean
+}
+
+export interface EmployeeTodoOrganization {
+  headOfficeId: number
+  headOfficeName: string
+  franchiseId: number
+  franchiseName: string
+  storeId: number
+  storeName: string
+  todos: EmployeeTodoItem[]
+}
+
+export interface EmployeeTodoCalendarDay {
+  day: number               // 해당 월의 일(day)
+  totalCount: number
+  completedCount: number
+  incompleteCount: number
+  organizations: EmployeeTodoOrganization[]
+}
+
+export type EmployeeTodoCalendarResponse = EmployeeTodoCalendarDay[]
