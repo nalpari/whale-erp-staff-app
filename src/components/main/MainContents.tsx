@@ -107,10 +107,21 @@ export default function MainContents() {
     return map
   }, [workplaces])
 
-  // by-org 일정 → WhaleCalendar CalendarData 변환
-  // 근무 일정이 있는 날짜에 해당 근무처 색상 도트 표시
+  // storeId → 색상 맵 (TODO 마커용)
+  const workplaceColorByStoreId = useMemo(() => {
+    const map = new Map<number, string>()
+    workplaces.forEach((wp, idx) => {
+      if (wp.storeId != null) map.set(wp.storeId, colorFromIndex(idx))
+    })
+    return map
+  }, [workplaces])
+
+  // by-org 일정 + TODO → WhaleCalendar CalendarData 변환
+  // 근무 일정 & TODO가 있는 날짜에 근무처 색상 도트 표시 (중복 제거)
   const calendarData: CalendarData = useMemo(() => {
     const result: CalendarData = {}
+
+    // 1) 근무 일정 마커
     for (const group of monthScheduleGroups) {
       const groupName = getGroupName(group)
       const color = workplaceColorByName.get(groupName) ?? colorFromIndex(0)
@@ -124,8 +135,27 @@ export default function MainContents() {
         })
       }
     }
+
+    // 2) TODO 마커 (같은 날·같은 근무처 마커가 없을 때만 추가)
+    for (const todoDay of todoCalendarDays) {
+      const d = String(todoDay.day).padStart(2, '0')
+      const dateStr = `${calYear}-${mm}-${d}`
+      for (const org of todoDay.organizations) {
+        const scheduleMarkerId = `${dateStr}-${org.storeName}`
+        const alreadyHas = result[dateStr]?.schedules?.some((s) => s.id === scheduleMarkerId)
+        if (alreadyHas) continue           // 이미 근무 마커 있음 → 스킵
+        const color = workplaceColorByStoreId.get(org.storeId) ?? colorFromIndex(0)
+        if (!result[dateStr]) result[dateStr] = { schedules: [] }
+        result[dateStr].schedules?.push({
+          id: `todo-${dateStr}-${org.storeId}`,
+          label: '●',
+          color,
+        })
+      }
+    }
+
     return result
-  }, [monthScheduleGroups, workplaceColorByName])
+  }, [monthScheduleGroups, workplaceColorByName, todoCalendarDays, workplaceColorByStoreId, calYear, mm])
 
   // 오늘 출퇴근 기록
   const { data: attendanceData, isLoading: isAttendanceLoading } = useAttendanceToday(isSelectedToday)
@@ -176,7 +206,16 @@ export default function MainContents() {
     ? activeGroups
     : activeGroups.filter((g) => getGroupName(g) === selectedWorkplace.storeName)
 
-  const showEmpty = !isLoading && displayedGroups.length === 0 && activeTab !== 'todo'
+  // 근무 일정은 없지만 TODO만 있는 org (전체 탭에서 추가 표시용)
+  const todoOnlyOrgs = useMemo(() => {
+    const scheduleStoreIds = new Set(displayedGroups.map((g) => g.storeId).filter(Boolean))
+    const orgs = selectedDayTodoData?.organizations ?? []
+    const filtered = orgs.filter((org) => !scheduleStoreIds.has(org.storeId))
+    if (selectedWorkplace === null) return filtered
+    return filtered.filter((org) => org.storeId === selectedWorkplace.storeId)
+  }, [displayedGroups, selectedDayTodoData, selectedWorkplace])
+
+  const showEmpty = !isLoading && displayedGroups.length === 0 && todoOnlyOrgs.length === 0 && activeTab !== 'todo'
   const showTodoEmpty = activeTab === 'todo' && (selectedDayTodoData?.totalCount ?? 0) === 0
 
   // 월 변경: 캘린더 뷰만 이동, 선택된 날짜는 유지
@@ -258,7 +297,7 @@ export default function MainContents() {
             </div>
           )}
 
-          {/* 근무·출퇴근 리스트 (전체/출퇴근 탭) */}
+          {/* 근무·출퇴근 + TODO 리스트 (전체/출퇴근 탭) */}
           {activeTab !== 'todo' && (
             <ul className="date-cont-list">
               {displayedGroups.map((group, idx) => {
@@ -302,8 +341,9 @@ export default function MainContents() {
                               <div
                                 key={key}
                                 className="data-item-inner-item"
-                                style={{ cursor: 'pointer' }}
+                                style={{ cursor: isSelectedToday ? 'pointer' : 'default' }}
                                 onClick={() => {
+                                  if (!isSelectedToday) return
                                   if (matchedWp?.id) openQrCodePopup(matchedWp.id, groupName, matchedWp.storeId)
                                 }}
                               >
@@ -312,11 +352,15 @@ export default function MainContents() {
                               </div>
                             ))}
                           </div>
-                          <div
-                            className="data-item-inner-arr"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => router.push(`/commute?store=${encodeURIComponent(groupName)}`)}
-                          />
+                          {isSelectedToday ? (
+                            <div
+                              className="data-item-inner-arr"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => router.push(`/commute?store=${encodeURIComponent(groupName)}`)}
+                            />
+                          ) : (
+                            <div className="data-item-inner-arr" style={{ opacity: 0.3 }} />
+                          )}
                         </div>
                       </div>
 
@@ -347,6 +391,52 @@ export default function MainContents() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  </li>
+                )
+              })}
+
+              {/* TODO만 있는 근무처 카드 (전체 탭, 근무 일정 없는 경우) */}
+              {activeTab === 'all' && todoOnlyOrgs.map((org) => {
+                const matchedWp = workplaces.find((wp) => wp.storeId === org.storeId)
+                const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : 0
+                const ringColor = colorFromIndex(wpIdx)
+                const wpIncomplete = org.todos.filter((t) => !t.isCompleted).length
+                const wpCompleted = org.todos.filter((t) => t.isCompleted).length
+
+                return (
+                  <li key={`todo-only-${org.storeId}`} className="date-cont-item">
+                    <div className="date-cont-header">
+                      <div className="date-cont-ring" style={{ backgroundColor: ringColor }} />
+                      <div className="date-cont-info">
+                        <div className="date-cont-info-name">{org.storeName}</div>
+                      </div>
+                    </div>
+                    <div className="date-cont-wrap">
+                      <div className="date-cont-data-item">
+                        <div className="cont-item-tit todo">TO-DO 체크</div>
+                        <div className="cont-item-data-wrap">
+                          <div className="data-item-inner">
+                            <div className="data-item-inner-item">
+                              <span>미완료 </span>
+                              <span style={{ color: wpIncomplete > 0 ? '#2379e4' : undefined }}>
+                                {wpIncomplete}
+                              </span>
+                            </div>
+                            <div className="data-item-inner-item">
+                              <span>완료 </span>
+                              <span style={{ color: wpCompleted > 0 ? '#36886a' : undefined }}>
+                                {wpCompleted}
+                              </span>
+                            </div>
+                          </div>
+                          <div
+                            className="data-item-inner-arr"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => setActiveTab('todo')}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </li>
                 )

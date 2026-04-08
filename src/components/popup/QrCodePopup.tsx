@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useRef } from 'react'
 import { usePopupController } from '@/store/usePopupController'
 import { useCheckIn, useCheckOut } from '@/hooks/queries/use-attendance-queries'
 
@@ -20,6 +21,29 @@ export default function QrCodePopup() {
 
   const { mutate: checkIn } = useCheckIn()
   const { mutate: checkOut } = useCheckOut()
+
+  // 카메라 스트림
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  useEffect(() => {
+    let active = true
+    navigator.mediaDevices
+      ?.getUserMedia({ video: { facingMode: 'environment' } })
+      .then((stream) => {
+        if (!active) { stream.getTracks().forEach((t) => t.stop()); return }
+        streamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+        }
+      })
+      .catch(() => { /* 카메라 권한 거부 시 무시 */ })
+    return () => {
+      active = false
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+    }
+  }, [])
 
   const handleCheckIn = () => {
     if (!workplaceId) return
@@ -76,6 +100,15 @@ export default function QrCodePopup() {
               <div className="qr-frame-header">
                 <div className="qr-frame-tit">{storeName ?? '출퇴근 체크'}</div>
                 <div className="qr-frame-txt">{getTodayLabel()}</div>
+              </div>
+              <div className="qr-cam-area">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               </div>
               <div className="qr-btn-wrap">
                 <button className="btn-form login block" onClick={handleCheckIn}>
