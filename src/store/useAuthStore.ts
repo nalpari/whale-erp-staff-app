@@ -7,6 +7,7 @@
 import { create } from 'zustand'
 import { getAccessToken, setTokens, clearTokens } from '@/lib/api'
 import type { LoginResponse } from '@/types/api'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 
 interface AuthUser {
   memberId: number
@@ -55,6 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.removeItem('user_info')
     }
     set({ isAuthenticated: false, user: null })
+    useWorkplaceStore.getState().reset()
     if (typeof window !== 'undefined') {
       window.location.href = '/login'
     }

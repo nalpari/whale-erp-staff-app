@@ -68,4 +68,11 @@ export const queryKeys = {
     calendar: (yearMonth: string) => [...queryKeys.home.all(), 'calendar', yearMonth] as const,
     dailySummary: (date: string) => [...queryKeys.home.all(), 'daily-summary', date] as const,
   },
+
+  todo: {
+    all: () => [...queryKeys.all, 'todo'] as const,
+    calendars: () => [...queryKeys.todo.all(), 'calendar'] as const,
+    calendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) =>
+      [...queryKeys.todo.calendars(), memberId, year, month, employeeInfoId ?? null] as const,
+  },
 } as const

@@ -12,7 +12,6 @@ export default function Home() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const workplaces = useWorkplaceStore((s) => s.workplaces)
   const isLoading = useWorkplaceStore((s) => s.isLoading)
-  const fetchWorkplaces = useWorkplaceStore((s) => s.fetchWorkplaces)
   const setEmploymentNotificationPopup = usePopupController((s) => s.setEmploymentNotificationPopup)
   const setPendingContracts = usePopupController((s) => s.setPendingContracts)
   const checkedRef = useRef(false)
@@ -26,8 +25,6 @@ export default function Home() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchWorkplaces()
-
       // PROGRESS 상태 근로계약서 확인 (세션당 1회)
       if (!checkedRef.current) {
         checkedRef.current = true
@@ -44,7 +41,7 @@ export default function Home() {
         })
       }
     }
-  }, [isAuthenticated, fetchWorkplaces, setEmploymentNotificationPopup, setPendingContracts])
+  }, [isAuthenticated, setEmploymentNotificationPopup, setPendingContracts])
 
   // 로딩 중에는 빈 화면
   if (isLoading) {

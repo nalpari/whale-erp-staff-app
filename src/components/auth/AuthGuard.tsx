@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 
 // 로그인 없이 접근 가능한 경로
 const PUBLIC_PATHS = ['/login', '/signup', '/request', '/list']
@@ -10,24 +11,39 @@ const PUBLIC_PATHS = ['/login', '/signup', '/request', '/list']
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const checkAuth = useAuthStore((s) => s.checkAuth)
-  const [checked, setChecked] = useState(false)
+  const fetchWorkplaces = useWorkplaceStore((s) => s.fetchWorkplaces)
 
   const isPublic = PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
   )
 
+  // SSR-safe: 서버 스냅샷은 false, 클라이언트는 Zustand 실제 값 구독
+  const isAuthenticated = useSyncExternalStore(
+    useAuthStore.subscribe,
+    () => useAuthStore.getState().isAuthenticated,
+    () => false,
+  )
+
+  // 렌더 시점에 토큰 유효성을 직접 검증한다.
+  // checkAuth()는 Zustand set()만 호출하며 React setState를 호출하지 않는다.
+  // isAuthenticated가 useSyncExternalStore로 구독되므로
+  // checkAuth()가 Zustand 상태를 변경하면 자동으로 리렌더가 발생한다.
+  const isVerified = isPublic || useAuthStore.getState().checkAuth()
+
+  // 사이드이펙트: 인증 실패 시 리디렉션, 성공 시 사업장 목록 로드
   useEffect(() => {
-    // 경로 변경마다 초기화하여 만료된 토큰으로 보호 UI가 노출되지 않도록 방지
-    if (isPublic) { setChecked(true); return }
-    setChecked(false)
-    const isAuth = checkAuth()
-    if (!isAuth) { router.replace('/login'); return }
-    setChecked(true)
-  }, [pathname, isPublic, router, checkAuth])
+    if (isPublic) return
+    if (!isVerified) {
+      router.replace('/login')
+      return
+    }
+    fetchWorkplaces().catch((err) => {
+      console.error('[AuthGuard] 사업장 목록 로드 실패:', err)
+    })
+  }, [pathname, isPublic, isVerified, router, fetchWorkplaces])
 
   if (isPublic) return <>{children}</>
-  if (!checked) return null
+  if (!isAuthenticated || !isVerified) return null
 
   return <>{children}</>
 }

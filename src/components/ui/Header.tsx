@@ -31,8 +31,11 @@ export default function Header() {
   const [isSideNavOpen, setIsSideNavOpen] = useState(false)
 
   // 선택된 근무처명 (null이면 전체)
-  const selectedWorkplaceName = selectedWorkplaceId
-    ? workplaces.find((w) => w.id === selectedWorkplaceId)?.workplaceName ?? '전체'
+  const selectedWorkplace = workplaces.find((w) => w.id === selectedWorkplaceId) ?? null
+  const selectedWorkplaceName = selectedWorkplace
+    ? selectedWorkplace.storeName
+      ? `${selectedWorkplace.workplaceName} - ${selectedWorkplace.storeName}`
+      : selectedWorkplace.workplaceName
     : '전체'
 
   const segments = pathname.split('/').filter(Boolean)
@@ -133,6 +136,11 @@ export default function Header() {
               <li className="side-nav-body-item">
                 <Link href="/commute" onClick={() => setIsSideNavOpen(false)}>
                   출퇴근 체크
+                </Link>
+              </li>
+              <li className="side-nav-body-item">
+                <Link href="/todo" onClick={() => setIsSideNavOpen(false)}>
+                  TO-DO 체크
                 </Link>
               </li>
               <li className="side-nav-body-item">
