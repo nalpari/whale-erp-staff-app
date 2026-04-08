@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { WhaleCalendar } from 'whale-calendar'
 import type { CalendarData } from 'whale-calendar'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -14,7 +14,7 @@ interface TodoCalendarProps {
   onDateSelect: (date: Date) => void
   isGridOpen: boolean
   onToggleGrid: () => void
-  employeeInfoId?: number | null
+  selectedWorkplaceId?: number | null
 }
 
 function buildCalendarData(
@@ -40,7 +40,7 @@ export default function TodoCalendar({
   onDateSelect,
   isGridOpen,
   onToggleGrid,
-  employeeInfoId,
+  selectedWorkplaceId,
 }: TodoCalendarProps) {
   const [viewYear, setViewYear] = useState<number | null>(null)
   const [viewMonth, setViewMonth] = useState<number | null>(null)
@@ -65,12 +65,15 @@ export default function TodoCalendar({
     isViewingSelectedMonth ? undefined : memberId,
     displayYear,
     displayMonth,
-    employeeInfoId,
+    selectedWorkplaceId,
   )
 
-  const displayData = isViewingSelectedMonth
-    ? initialCalendarData
-    : isBrowseError ? [] : (browseResponse?.data ?? [])
+  const calendarData = useMemo(() => {
+    const data = isViewingSelectedMonth
+      ? initialCalendarData
+      : isBrowseError ? [] : (browseResponse?.data ?? [])
+    return buildCalendarData(displayYear, displayMonth, data)
+  }, [displayYear, displayMonth, isViewingSelectedMonth, initialCalendarData, isBrowseError, browseResponse])
 
   // whale-calendar 타이틀 "M월 스케줄" → "yyyy년 MM월"로 교체
   // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__title)에 의존.
@@ -147,7 +150,7 @@ export default function TodoCalendar({
       <WhaleCalendar
         year={displayYear}
         month={displayMonth}
-        data={buildCalendarData(displayYear, displayMonth, displayData)}
+        data={calendarData}
         selectedDate={selectedDate}
         onDayClick={handleDayClick}
         onScheduleClick={(date) => handleDayClick(date)}

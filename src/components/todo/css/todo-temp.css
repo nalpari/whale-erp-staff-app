@@ -1,3 +1,8 @@
+/*
+ * TODO: 임시 스타일 파일 — 공통 SCSS에 해당 스타일이 없어 임시로 작성한 파일입니다.
+ * 추후 src/styles 공통 스타일 확인 후 이관 또는 삭제 예정입니다.
+ */
+
 .todo-diary-wrap {
   padding: 0 24px;
   --whale-calendar-primary: #0168ff;

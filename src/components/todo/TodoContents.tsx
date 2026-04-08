@@ -6,17 +6,9 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar, useToggleTodoStatus } from '@/hooks/queries'
 import TodoCalendar from './TodoCalendar'
+import { formatDateKorean } from '@/lib/date-utils'
 import type { OrgGroup, TodoItem } from '@/types/todo'
 import './css/todo-temp.css'
-
-const WEEKDAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
-
-function formatDateKorean(date: Date): string {
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  const weekday = WEEKDAYS[date.getDay()]
-  return `${month}월 ${day}일 ${weekday}`
-}
 
 function addDays(date: Date, days: number): Date {
   const result = new Date(date)
@@ -111,7 +103,7 @@ export default function TodoContents() {
         onDateSelect={setSelectedDate}
         isGridOpen={isCalendarOpen}
         onToggleGrid={() => setIsCalendarOpen((prev) => !prev)}
-        employeeInfoId={selectedWorkplaceId}
+        selectedWorkplaceId={selectedWorkplaceId}
       />
 
       <div className="todo-list-wrap">

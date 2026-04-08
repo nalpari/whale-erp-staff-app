@@ -20,6 +20,7 @@ interface WorkplaceState {
 
   setSelectedWorkplace: (id: number | null) => void
   fetchWorkplaces: () => Promise<void>
+  reset: () => void
 }
 
 export const useWorkplaceStore = create<WorkplaceState>((set, get) => ({
@@ -30,6 +31,10 @@ export const useWorkplaceStore = create<WorkplaceState>((set, get) => ({
 
   setSelectedWorkplace: (id: number | null) => {
     set({ selectedWorkplaceId: id })
+  },
+
+  reset: () => {
+    set({ selectedWorkplaceId: null, workplaces: [], isLoading: false, error: null })
   },
 
   fetchWorkplaces: async () => {

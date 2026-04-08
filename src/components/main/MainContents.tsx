@@ -6,23 +6,8 @@ import { usePopupController } from '@/store/usePopupController'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar } from '@/hooks/queries'
+import { formatDateKorean, formatDate } from '@/lib/date-utils'
 import type { OrgGroup } from '@/types/todo'
-
-const WEEKDAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
-
-function formatDateKorean(date: Date): string {
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  const weekday = WEEKDAYS[date.getDay()]
-  return `${month}월 ${day}일 ${weekday}`
-}
-
-function formatDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 export default function MainContents() {
   const router = useRouter()
@@ -85,6 +70,7 @@ export default function MainContents() {
                     <div className="data-item-inner-arr"></div>
                   </div>
                 </div>
+                {/* TODO: 퍼블 구조 확인용 하드코딩 카드 — 확인 후 삭제 예정 */}
                 <TodoSection org={null} />
               </div>
             </li>
@@ -111,6 +97,7 @@ export default function MainContents() {
                     <div className="data-item-inner-arr"></div>
                   </div>
                 </div>
+                {/* TODO: 퍼블 구조 확인용 하드코딩 카드 — 확인 후 삭제 예정 */}
                 <TodoSection org={null} />
               </div>
             </li>
