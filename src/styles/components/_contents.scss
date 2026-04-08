@@ -137,6 +137,81 @@
   }
 }
 
+// 캘린더 영역
+.dtae-calendar-wrap {
+  padding: 16px 0 0;
+  background: #fff;
+  position: relative;
+  // 오늘 버튼 — whale-calendar 헤더 왼쪽에 오버레이
+  .calendar-nav-overlay {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    height: 32px;
+    .calendar-today-btn {
+      pointer-events: auto;
+      padding: 4px 14px;
+      height: 30px;
+      border-radius: 15px;
+      border: 1px solid #36886a;
+      background: #fff;
+      @include fontDefinition(13px, 600, 22px);
+      color: #36886a;
+      cursor: pointer;
+      &:active {
+        background: #ebf6f2;
+      }
+    }
+  }
+  // 탭(전체/출퇴근/TO-DO) — 화살표 오른편에 오버레이
+  .calendar-tab-overlay {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    height: 32px;
+    gap: 4px;
+    .calendar-tab-btn {
+      pointer-events: auto;
+      padding: 0 10px;
+      height: 26px;
+      border-radius: 13px;
+      border: 1px solid #e0e0e0;
+      background: #fff;
+      @include fontDefinition(12px, 500, 24px);
+      color: #777;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      &.active {
+        border-color: #36886a;
+        background: #36886a;
+        color: #fff;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// 오늘 배지 (date-list-header 내)
+.badge-today {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background-color: #36886a;
+  color: #fff;
+  @include fontDefinition(11px, 600, 16px);
+  vertical-align: middle;
+}
+
 // 할일 및 공휴일 리스트
 .date-list-wrap {
   padding-top: 32px;
