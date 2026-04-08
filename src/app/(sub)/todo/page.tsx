@@ -1,5 +1,10 @@
+import { Suspense } from 'react'
 import TodoContents from '@/components/todo/TodoContents'
 
 export default function TodoPage() {
-  return <TodoContents />
+  return (
+    <Suspense fallback={null}>
+      <TodoContents />
+    </Suspense>
+  )
 }

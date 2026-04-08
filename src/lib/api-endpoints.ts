@@ -3,6 +3,7 @@
 // ============================================================
 
 import { apiClient, apiUpload, getAccessToken, clearTokens } from '@/lib/api'
+import type { CalendarDayData } from '@/types/todo'
 import type {
   ApiResponse,
   PageResponse,
@@ -516,7 +517,7 @@ export const homeApi = {
 }
 
 // ============================================================
-// 직원 TODO API
+// TODO API
 // ============================================================
 
 export const todoApi = {
@@ -525,5 +526,20 @@ export const todoApi = {
     apiClient<ApiResponse<EmployeeTodoCalendarResponse>>(
       `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${params.memberId}&year=${params.year}&month=${params.month}`,
     ),
+  /** 회원별 월별 캘린더 조회 */
+  getMonthlyCalendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) => {
+    const params = new URLSearchParams({ memberId: String(memberId), year: String(year), month: String(month) })
+    if (employeeInfoId != null) params.set('employeeInfoId', String(employeeInfoId))
+    return apiClient<ApiResponse<CalendarDayData[]>>(
+      `/api/v1/employee-todos/mobile/calendar/by-employee?${params.toString()}`,
+    )
+  },
+
+  /** TODO 상태 변경 */
+  toggleStatus: (id: number, isCompleted: boolean) =>
+    apiClient<ApiResponse<null>>(`/api/v1/employee-todos/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isCompleted }),
+    }),
 }
 

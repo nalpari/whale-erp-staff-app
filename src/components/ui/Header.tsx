@@ -143,6 +143,11 @@ export default function Header() {
                 </Link>
               </li>
               <li className="side-nav-body-item">
+                <Link href="/todo" onClick={() => setIsSideNavOpen(false)}>
+                  TO-DO 체크
+                </Link>
+              </li>
+              <li className="side-nav-body-item">
                 <Link href="/employment" onClick={() => setIsSideNavOpen(false)}>
                   근로계약
                 </Link>
