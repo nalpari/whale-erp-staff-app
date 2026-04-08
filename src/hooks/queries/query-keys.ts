@@ -77,7 +77,7 @@ export const queryKeys = {
 
   todo: {
     all: () => [...queryKeys.all, 'todo'] as const,
-    calendar: (from: string, to: string) =>
-      [...queryKeys.todo.all(), 'calendar', from, to] as const,
+    homeCalendar: (from: string, to: string) =>
+      [...queryKeys.todo.all(), 'homeCalendar', from, to] as const,
   },
 } as const
