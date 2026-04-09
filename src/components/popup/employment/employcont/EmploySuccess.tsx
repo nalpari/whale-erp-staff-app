@@ -5,13 +5,7 @@ import { useState } from 'react'
 import { usePopupController } from '@/store/usePopupController'
 import { useContractSnapshot, useDownloadContractDocx } from '@/hooks/queries/use-contract-queries'
 
-/**
- * 근무 시간 포맷 (HH:MM:SS → HH:MM)
- */
-function formatTime(time: string | null | undefined): string {
-  if (!time) return '-'
-  return time.substring(0, 5)
-}
+import { formatTime } from '@/lib/date-utils'
 
 /**
  * 날짜 포맷 (YYYY-MM-DD)

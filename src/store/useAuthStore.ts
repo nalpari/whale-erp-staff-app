@@ -32,6 +32,8 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
+  // SSR·클라이언트 hydration 불일치 방지: 초기값은 항상 false
+  // checkAuth()를 useEffect에서 호출하면 클라이언트에서만 상태 업데이트됨
   isAuthenticated: false,
   user: null,
 

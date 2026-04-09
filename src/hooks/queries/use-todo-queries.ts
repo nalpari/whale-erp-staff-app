@@ -1,8 +1,23 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from './query-keys'
 import { todoApi } from '@/lib/api-endpoints'
 import type { ApiResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
+
+export const useTodoCalendar = (
+  params: { memberId: number | null; year: number; month: number },
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: queryKeys.todo.homeCalendar(params.memberId, String(params.year), String(params.month)),
+    queryFn: () => todoApi.getCalendarByEmployee({
+      memberId: params.memberId!,
+      year: params.year,
+      month: params.month,
+    }),
+    enabled: enabled && params.memberId !== null,
+  })
 
 export const useTodoMonthlyCalendar = (
   memberId: number | undefined,

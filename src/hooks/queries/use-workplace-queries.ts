@@ -26,6 +26,21 @@ export const useAddWorkplace = () => {
   })
 }
 
+export const useValidateEmployee = () =>
+  useMutation({
+    mutationFn: workplaceApi.validateEmployeeNumber,
+  })
+
+export const useLinkEmployee = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: workplaceApi.linkEmployeeByNumber,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workplace.lists() })
+    },
+  })
+}
+
 export const useChangeSalaryAccount = () => {
   const queryClient = useQueryClient()
   return useMutation({

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { CareerResponse } from '@/types/api'
+import { getDefaultCommuteWeek } from '@/lib/date-utils'
 
 type BottomSheetControllerState = {
   storeSheet: boolean
@@ -18,6 +19,9 @@ type BottomSheetControllerState = {
   setEmploymentNotificationSheet: (isOpen: boolean) => void
   commuteDaySelectSheet: boolean
   setCommuteDaySelectSheet: (isOpen: boolean) => void
+  commuteFrom: string
+  commuteTo: string
+  setCommuteDateRange: (from: string, to: string) => void
   avatarSelectSheet: boolean
   setAvatarSelectSheet: (isOpen: boolean) => void
   phoneChangeSheet: boolean
@@ -52,6 +56,8 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   selectedWorkplaceForAccount: null,
   employmentNotificationSheet: false,
   commuteDaySelectSheet: false,
+  commuteFrom: getDefaultCommuteWeek().from,
+  commuteTo: getDefaultCommuteWeek().to,
   avatarSelectSheet: false,
   phoneChangeSheet: false,
   personalAddSheet: false,
@@ -74,6 +80,7 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   setSelectedWorkplaceForAccount: (id: number | null) => set((state) => ({ ...state, selectedWorkplaceForAccount: id })),
   setEmploymentNotificationSheet: (isOpen: boolean) => set((state) => ({ ...state, employmentNotificationSheet: isOpen })),
   setCommuteDaySelectSheet: (isOpen: boolean) => set((state) => ({ ...state, commuteDaySelectSheet: isOpen })),
+  setCommuteDateRange: (from: string, to: string) => set((state) => ({ ...state, commuteFrom: from, commuteTo: to, commuteDaySelectSheet: false })),
   setAvatarSelectSheet: (isOpen: boolean) => set((state) => ({ ...state, avatarSelectSheet: isOpen })),
   setPhoneChangeSheet: (isOpen: boolean) => set((state) => ({ ...state, phoneChangeSheet: isOpen })),
   setPersonalAddSheet: (isOpen: boolean) => set((state) => ({

@@ -7,6 +7,7 @@ import type { CalendarDayData } from '@/types/todo'
 import type {
   ApiResponse,
   PageResponse,
+  EmployeeTodoCalendarResponse,
   // Auth
   LoginRequest,
   LoginResponse,
@@ -27,6 +28,10 @@ import type {
   WorkplaceResponse,
   WorkplaceDetailResponse,
   AddWorkplaceRequest,
+  ValidateEmployeeRequest,
+  ValidateEmployeeResponse,
+  LinkEmployeeRequest,
+  LinkEmployeeResponse,
   // Salary Account
   SalaryAccountResponse,
   CreateSalaryAccountRequest,
@@ -44,7 +49,7 @@ import type {
   AttendanceTodayResponse,
   AttendanceCheckRequest,
   AttendanceCheckResponse,
-  AttendanceHistoryItem,
+  AttendanceHistoryResponse,
   // Contract
   ContractListResponse,
   ContractDetailResponse,
@@ -59,6 +64,7 @@ import type {
   // Home
   CalendarResponse,
   DailySummaryResponse,
+  ScheduleGroupResponse,
 } from '@/types/api'
 
 // ============================================================
@@ -187,6 +193,26 @@ export const workplaceApi = {
     apiClient<ApiResponse<null>>(`/api/v1/mobile/employee/workplaces/${id}/salary-account`, {
       method: 'PUT',
       body: JSON.stringify({ salaryAccountId }),
+    }),
+
+  /**
+   * 직원 코드 유효성 검사
+   * - employeeNumber에 해당하는 직원의 전화번호가 현재 로그인한 유저의 전화번호와 일치하는지 확인
+   */
+  validateEmployeeNumber: (data: ValidateEmployeeRequest) =>
+    apiClient<ApiResponse<ValidateEmployeeResponse>>('/api/v1/mobile/employee/validate-employee', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * 사원번호로 직원 정보 연결
+   * - employeeNumber에 해당하는 employeeInfo의 memberId를 현재 로그인한 유저의 memberId로 업데이트
+   */
+  linkEmployeeByNumber: (data: LinkEmployeeRequest) =>
+    apiClient<ApiResponse<LinkEmployeeResponse>>('/api/v1/mobile/employee/link-member', {
+      method: 'PUT',
+      body: JSON.stringify(data),
     }),
 }
 
@@ -328,32 +354,27 @@ export const documentApi = {
 export const attendanceApi = {
   /** 오늘 출퇴근 현황 조회 */
   getToday: () =>
-    apiClient<ApiResponse<AttendanceTodayResponse>>('/api/v1/mobile/attendance/today'),
+    apiClient<ApiResponse<AttendanceTodayResponse>>('/api/v1/mobile/employee/attendance/today'),
 
-  /** 출근 체크 (QR) */
+  /** 출근 체크 */
   checkIn: (data: AttendanceCheckRequest) =>
-    apiClient<ApiResponse<AttendanceCheckResponse>>('/api/v1/mobile/attendance/check-in', {
+    apiClient<ApiResponse<AttendanceCheckResponse>>('/api/v1/mobile/employee/attendance/check-in', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  /** 퇴근 체크 (QR) */
+  /** 퇴근 체크 */
   checkOut: (data: AttendanceCheckRequest) =>
-    apiClient<ApiResponse<AttendanceCheckResponse>>('/api/v1/mobile/attendance/check-out', {
+    apiClient<ApiResponse<AttendanceCheckResponse>>('/api/v1/mobile/employee/attendance/check-out', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  /** 출퇴근 이력 조회 */
-  getHistory: (params?: { yearMonth?: string; workplaceId?: number }) => {
-    const query = new URLSearchParams()
-    if (params?.yearMonth) query.append('yearMonth', params.yearMonth)
-    if (params?.workplaceId != null) query.append('workplaceId', String(params.workplaceId))
-    const qs = query.toString()
-    return apiClient<ApiResponse<PageResponse<AttendanceHistoryItem>>>(
-      `/api/v1/mobile/attendance/history${qs ? `?${qs}` : ''}`,
-    )
-  },
+  /** 기간별 출퇴근 이력 조회 (from/to: YYYY-MM-DD) */
+  getHistory: (params: { from: string; to: string }) =>
+    apiClient<ApiResponse<AttendanceHistoryResponse>>(
+      `/api/v1/mobile/employee/attendance/history?from=${params.from}&to=${params.to}`,
+    ),
 }
 
 // ============================================================
@@ -465,6 +486,22 @@ export const payrollApi = {
 // 홈 API
 // ============================================================
 
+// ============================================================
+// 근무 스케줄 API
+// ============================================================
+
+export const scheduleApi = {
+  /** 조직별 근무 스케줄 조회 (date format: yyyy.MM.dd) */
+  getScheduleByOrg: (memberId: number, from: string, to: string) =>
+    apiClient<ApiResponse<ScheduleGroupResponse[]>>(
+      `/api/v1/mobile/schedule/by-org?memberId=${memberId}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+    ),
+}
+
+// ============================================================
+// 홈 API
+// ============================================================
+
 export const homeApi = {
   /** 월별 캘린더 데이터 조회 */
   getCalendar: (yearMonth: string) =>
@@ -484,6 +521,11 @@ export const homeApi = {
 // ============================================================
 
 export const todoApi = {
+  /** 기간별 TODO 캘린더 조회 (from/to: YYYY-MM-DD) */
+  getCalendarByEmployee: (params: { memberId: number; year: number; month: number }) =>
+    apiClient<ApiResponse<EmployeeTodoCalendarResponse>>(
+      `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${params.memberId}&year=${params.year}&month=${params.month}`,
+    ),
   /** 회원별 월별 캘린더 조회 */
   getMonthlyCalendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) => {
     const params = new URLSearchParams({ memberId: String(memberId), year: String(year), month: String(month) })

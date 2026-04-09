@@ -31,7 +31,7 @@ export const queryKeys = {
     all: () => [...queryKeys.all, 'attendance'] as const,
     today: () => [...queryKeys.attendance.all(), 'today'] as const,
     histories: () => [...queryKeys.attendance.all(), 'history'] as const,
-    history: (params?: { yearMonth?: string; workplaceId?: number }) =>
+    history: (params: { from: string; to: string }) =>
       [...queryKeys.attendance.histories(), params] as const,
   },
 
@@ -69,8 +69,16 @@ export const queryKeys = {
     dailySummary: (date: string) => [...queryKeys.home.all(), 'daily-summary', date] as const,
   },
 
+  schedule: {
+    all: () => [...queryKeys.all, 'schedule'] as const,
+    byOrg: (memberId: number, from: string, to: string) =>
+      [...queryKeys.schedule.all(), 'by-org', memberId, from, to] as const,
+  },
+
   todo: {
     all: () => [...queryKeys.all, 'todo'] as const,
+    homeCalendar: (memberId: number | null, year: string, month: string) =>
+      [...queryKeys.todo.all(), 'homeCalendar', memberId, year, month] as const,
     calendars: () => [...queryKeys.todo.all(), 'calendar'] as const,
     calendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) =>
       [...queryKeys.todo.calendars(), memberId, year, month, employeeInfoId ?? null] as const,
