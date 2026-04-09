@@ -1,10 +1,21 @@
+'use client'
+
 import { Sheet } from 'react-modal-sheet'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 
 export default function StoreSheet() {
-  // 필요한 상태와 함수만 선택적으로 구독
   const storeSheet = useBottomSheetController((state) => state.storeSheet)
   const setStoreSheet = useBottomSheetController((state) => state.setStoreSheet)
+
+  const workplaces = useWorkplaceStore((s) => s.workplaces)
+  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
+  const setSelectedWorkplace = useWorkplaceStore((s) => s.setSelectedWorkplace)
+
+  const handleSelect = (id: number | null) => {
+    setSelectedWorkplace(id)
+    setStoreSheet(false)
+  }
 
   return (
     <Sheet isOpen={storeSheet} onClose={() => setStoreSheet(false)} detent="content" disableScrollLocking={true}>
@@ -15,17 +26,26 @@ export default function StoreSheet() {
             <div className="bottom-sheet-header">
               <h3>근무처 선택</h3>
             </div>
-            <div className=" bottom-sheet-body">
+            <div className="bottom-sheet-body">
               <ul className="array-list">
                 <li className="array-item">
-                  <button className="array-btn">힘이나는커피생활 을지로3가점</button>
+                  <button
+                    className={`array-btn ${selectedWorkplaceId === null ? 'active' : ''}`}
+                    onClick={() => handleSelect(null)}
+                  >
+                    전체
+                  </button>
                 </li>
-                <li className="array-item">
-                  <button className="array-btn">메가커피 종로점</button>
-                </li>
-                <li className="array-item">
-                  <button className="array-btn">바나프레소무교점</button>
-                </li>
+                {workplaces.map((wp) => (
+                  <li key={wp.id} className="array-item">
+                    <button
+                      className={`array-btn ${selectedWorkplaceId === wp.id ? 'active' : ''}`}
+                      onClick={() => handleSelect(wp.id)}
+                    >
+                      {wp.storeName ?? wp.workplaceName}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

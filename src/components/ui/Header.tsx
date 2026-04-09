@@ -5,11 +5,15 @@ import { useState } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { SubMenuData } from '@/data/SubMenuData'
 
 export default function Header() {
   const router = useRouter()
   const pathname = usePathname()
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
 
   // 서브 페이지 타이틀
   const title = SubMenuData.find((item: { path: string }) => {
@@ -22,7 +26,21 @@ export default function Header() {
   // 필요한 함수만 선택적으로 구독 (함수는 변하지 않으므로 재렌더링 방지)
   const setPasswordChangePopup = usePopupController((state) => state.setPasswordChangePopup)
   const setStoreSheet = useBottomSheetController((state) => state.setStoreSheet)
+  const workplaces = useWorkplaceStore((s) => s.workplaces)
+  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
   const [isSideNavOpen, setIsSideNavOpen] = useState(false)
+
+  // 선택된 근무처 (null이면 전체)
+  const selectedWorkplace = selectedWorkplaceId
+    ? workplaces.find((w) => w.id === selectedWorkplaceId)
+    : null
+  const selectedWorkplaceName = selectedWorkplace
+    ? (selectedWorkplace.storeName ?? selectedWorkplace.workplaceName)
+    : '전체'
+
+  // 근무처 선택 시 해당 근무처의 직급/직책, 전체일 때는 숨김
+  const displayRank = selectedWorkplace?.rank ?? null
+  const displayPosition = selectedWorkplace?.position ?? null
 
   const segments = pathname.split('/').filter(Boolean)
   const isSubPage = segments.length >= 2
@@ -57,15 +75,15 @@ export default function Header() {
     <header className={`${pathname === '/mypage' ? 'mypage' : ''}`}>
       <div className="header-inner">
         <div className="header-top">
-          <div className="header-data-wrap" onClick={() => router.push('/list')}>
+          <div className="header-data-wrap" onClick={() => router.push('/')}>
             <div className="header-data-img">
               <Image src="/assets/images/common/avatar_icon.svg" alt="header-data-img" fill />
             </div>
             <ul className="header-data-list">
               <li className="header-data-item">
-                <span>홍길동</span> 과장
+                <span>{user?.memberName ?? '사용자'}</span>{displayRank ? ` ${displayRank}` : ''}
               </li>
-              <li className="header-data-item">매장 매니저</li>
+              {displayPosition && <li className="header-data-item">{displayPosition}</li>}
             </ul>
           </div>
           <div className="header-menu-btn">
@@ -76,8 +94,13 @@ export default function Header() {
         {pathname !== '/mypage' && (
           <div className="header-body">
             <div className="header-store-btn">
-              <button className="select-btn" onClick={() => setStoreSheet(true)}>
-                <span>힘이 나는 커피생활 을지로3가점</span>
+              <button
+                className="select-btn"
+                onClick={() => workplaces.length > 0 && setStoreSheet(true)}
+                disabled={workplaces.length === 0}
+                style={workplaces.length === 0 ? { opacity: 0.5, cursor: 'default' } : undefined}
+              >
+                <span>{workplaces.length === 0 ? '근무처 없음' : selectedWorkplaceName}</span>
               </button>
             </div>
           </div>
@@ -92,15 +115,15 @@ export default function Header() {
               </div>
               <div className="side-nav-header-info">
                 <div className="side-nav-header-name">
-                  <span>홍길동</span>님 환영 합니다.
+                  <span>{user?.memberName ?? '사용자'}</span>님 환영합니다.
                 </div>
-                <div className="side-nav-header-company">Interplug corp.</div>
+                {user?.loginId && <div className="side-nav-header-company">({user.loginId})</div>}
               </div>
             </div>
             <button className="side-close-btn" onClick={() => setIsSideNavOpen(false)}></button>
           </div>
           <div className="side-nav-logout-wrap">
-            <button className="btn-form black block" onClick={() => router.push('/login')}>
+            <button className="btn-form black block" onClick={() => { if (confirm('로그아웃 하시겠습니까?')) { setIsSideNavOpen(false); logout() } }}>
               로그아웃
             </button>
           </div>
@@ -120,6 +143,11 @@ export default function Header() {
                 </Link>
               </li>
               <li className="side-nav-body-item">
+                <Link href="/todo" onClick={() => setIsSideNavOpen(false)}>
+                  TO-DO 체크
+                </Link>
+              </li>
+              <li className="side-nav-body-item">
                 <Link href="/employment" onClick={() => setIsSideNavOpen(false)}>
                   근로계약
                 </Link>
@@ -130,8 +158,8 @@ export default function Header() {
                 </Link>
               </li>
               <li className="side-nav-body-item">
-                <Link href="/todo" onClick={() => setIsSideNavOpen(false)}>
-                  TO-DO 체크
+                <Link href="/mypage/account" onClick={() => setIsSideNavOpen(false)}>
+                  급여 계좌 관리
                 </Link>
               </li>
               <li className="side-nav-body-item">

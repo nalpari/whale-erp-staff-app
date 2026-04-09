@@ -1,10 +1,40 @@
+'use client'
 import { Sheet } from 'react-modal-sheet'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 
+const BANK_LIST = [
+  { code: 'BNKCD_004', name: 'KB국민은행' },
+  { code: 'BNKCD_088', name: '신한은행' },
+  { code: 'BNKCD_020', name: '우리은행' },
+  { code: 'BNKCD_081', name: '하나은행' },
+  { code: 'BNKCD_003', name: 'IBK기업은행' },
+  { code: 'BNKCD_011', name: 'NH농협은행' },
+  { code: 'BNKCD_023', name: 'SC제일은행' },
+  { code: 'BNKCD_027', name: '한국씨티은행' },
+  { code: 'BNKCD_089', name: '케이뱅크' },
+  { code: 'BNKCD_090', name: '카카오뱅크' },
+  { code: 'BNKCD_092', name: '토스뱅크' },
+  { code: 'BNKCD_007', name: '수협은행' },
+  { code: 'BNKCD_031', name: '대구은행' },
+  { code: 'BNKCD_032', name: '부산은행' },
+  { code: 'BNKCD_034', name: '광주은행' },
+  { code: 'BNKCD_035', name: '제주은행' },
+  { code: 'BNKCD_037', name: '전북은행' },
+  { code: 'BNKCD_039', name: '경남은행' },
+  { code: 'BNKCD_045', name: '새마을금고' },
+  { code: 'BNKCD_048', name: '신협중앙회' },
+  { code: 'BNKCD_071', name: '우체국' },
+]
+
 export default function BankSelectSheet() {
-  // 필요한 상태와 함수만 선택적으로 구독
   const bankSelectSheet = useBottomSheetController((state) => state.bankSelectSheet)
   const setBankSelectSheet = useBottomSheetController((state) => state.setBankSelectSheet)
+  const onBankSelect = useBottomSheetController((state) => state.onBankSelect)
+
+  const handleSelect = (bankCode: string, bankName: string) => {
+    onBankSelect?.(bankCode, bankName)
+    setBankSelectSheet(false)
+  }
 
   return (
     <Sheet
@@ -22,66 +52,13 @@ export default function BankSelectSheet() {
             </div>
             <div className="bottom-sheet-body">
               <div className="bank-list">
-                <div className="bank-item">
-                  <button className="bank-btn">현대</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">신한</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">비씨(페이북)</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">KB국민</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn act">삼성</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">롯데</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">하나(외환)</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">NH채움</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">우리</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">수협</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">시티</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">광주</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">전북</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">제주</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">신협체크</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">MG새마을체크</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">저축은행체크</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">우체국카드</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">KDB산업은행</button>
-                </div>
-                <div className="bank-item">
-                  <button className="bank-btn">카카오뱅크</button>
-                </div>
+                {BANK_LIST.map((bank) => (
+                  <div className="bank-item" key={bank.code}>
+                    <button className="bank-btn" onClick={() => handleSelect(bank.code, bank.name)}>
+                      {bank.name}
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

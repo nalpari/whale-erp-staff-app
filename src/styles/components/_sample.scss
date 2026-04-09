@@ -1,0 +1,104 @@
+@use '../abstracts' as *;
+
+.sample-distance {
+  padding: 24px;
+
+  &__title {
+    @include fontDefinition(22px, 700, 150%);
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+
+  &__desc {
+    @include fontDefinition(14px, 400, 150%);
+    color: #777;
+    margin-bottom: 24px;
+  }
+
+  &__section {
+    margin-bottom: 24px;
+  }
+
+  &__label {
+    @include fontDefinition(16px, 600, 150%);
+    color: #1a1a1a;
+    margin-bottom: 12px;
+  }
+
+  &__input-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__input {
+    flex: 1;
+    height: 48px;
+    border: 1px solid #e0e0e0;
+    border-radius: $radius-8;
+    padding: 0 16px;
+    @include fontDefinition(15px, 400, 150%);
+    color: #1a1a1a;
+    background-color: #fff;
+
+    &::placeholder {
+      color: #aaa;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #5c5df8;
+    }
+  }
+
+  &__btn {
+    height: 48px;
+    padding: 0 20px;
+    border-radius: $radius-8;
+    background-color: #5c5df8;
+    color: #fff;
+    @include fontDefinition(15px, 600, 150%);
+    white-space: nowrap;
+    transition: background-color 0.2s;
+
+    &:disabled {
+      background-color: #c0c0c0;
+      cursor: not-allowed;
+    }
+
+    &--full {
+      width: 100%;
+    }
+  }
+
+  &__coords {
+    margin-top: 10px;
+    @include fontDefinition(14px, 400, 150%);
+    color: #555;
+    background-color: #f8f8f8;
+    padding: 10px 14px;
+    border-radius: $radius-8;
+  }
+
+  &__result {
+    background-color: #f0f0ff;
+    border-radius: $radius-12;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  &__distance {
+    @include fontDefinition(36px, 700, 120%);
+    color: #5c5df8;
+    margin-top: 8px;
+  }
+
+  &__error {
+    margin-top: 12px;
+    @include fontDefinition(14px, 400, 150%);
+    color: #d42626;
+    background-color: #fef0f0;
+    padding: 12px 14px;
+    border-radius: $radius-8;
+  }
+}

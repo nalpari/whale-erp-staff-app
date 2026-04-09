@@ -46,9 +46,9 @@ export default function PopupController() {
       {isPasswordChangePopupOpen && <PasswordChangePop />}
       {isAIChatPopupOpen && <AIChat />}
       {isEmploymentNotificationPopupOpen && <EmploymentNotificationPop />}
+      {isContractHistoryPopupOpen && <ContractHistoryPop />}
       {isEmploymentPopFrameOpen && <EmploymentPopFrame />}
       {isSignPopupOpen && <SignPopup />}
-      {isContractHistoryPopupOpen && <ContractHistoryPop />}
       {isSalaryDetailFullTimePopupOpen && <SalaryDetailFullTime />}
     </>
   )

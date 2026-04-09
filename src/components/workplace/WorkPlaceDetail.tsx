@@ -1,20 +1,69 @@
 'use client'
+import { useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
+import { useWorkplaceDetail } from '@/hooks/queries/use-workplace-queries'
 
 export default function WorkPlaceDetail() {
+  const params = useParams()
+  const employeeInfoId = Number(params?.id)
+
   const setAccountSelectSheet = useBottomSheetController((state) => state.setAccountSelectSheet)
+  const setSelectedWorkplaceForAccount = useBottomSheetController((state) => state.setSelectedWorkplaceForAccount)
+
+  const { data, isPending: loading, refetch } = useWorkplaceDetail(
+    employeeInfoId || null,
+    !!employeeInfoId,
+  )
+  const detail = data?.data ?? null
+
+  // AccountSelect 닫힐 때 새로고침
+  const accountSelectSheet = useBottomSheetController((state) => state.accountSelectSheet)
+  useEffect(() => {
+    if (!accountSelectSheet) {
+      const timer = setTimeout(() => refetch(), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [accountSelectSheet, refetch])
+
+  const handleChangeSalaryAccount = () => {
+    setSelectedWorkplaceForAccount(employeeInfoId)
+    setAccountSelectSheet(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="data-wrap">
+        <div className="data-list">
+          <div className="data-item">
+            <div className="workplace-empty">불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!detail) {
+    return (
+      <div className="data-wrap">
+        <div className="data-list">
+          <div className="data-item">
+            <div className="workplace-empty">근무처 정보를 찾을 수 없습니다.</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const { workplace, employee, salaryAccount } = detail
 
   return (
     <div className="data-wrap">
-      <div className="data-delete-btn-wrap">
-        <button className="btn-form outline-r block ">
-          근무처 삭제 <i className="delete"></i>
-        </button>
-      </div>
       <div className="data-list">
+        {/* 근무처 정보 */}
         <div className="data-item">
           <div className="sub-tit-wrap">
-            <div className="sub-tit">힘이나는커피생활 을지로3가점</div>
+            <div className="sub-tit">{workplace.name}</div>
           </div>
           <table className="data-table">
             <colgroup>
@@ -24,25 +73,24 @@ export default function WorkPlaceDetail() {
             <tbody>
               <tr>
                 <th>근무장소</th>
-                <td>서울 중구 을지로</td>
+                <td>{workplace.address || '-'}</td>
               </tr>
               <tr>
                 <th>대표자명</th>
-                <td>홍길동</td>
+                <td>{workplace.representativeName || '-'}</td>
               </tr>
               <tr>
                 <th>점포 전화</th>
-                <td>070-1240-0000</td>
+                <td>{workplace.storePhone || '-'}</td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        {/* 나의 정보 */}
         <div className="data-item">
           <div className="sub-tit-wrap">
             <div className="sub-tit">나의 정보</div>
-            <div className="sub-tit-btn">
-              <button className="sub-edit-btn"></button>
-            </div>
           </div>
           <table className="data-table">
             <colgroup>
@@ -52,35 +100,37 @@ export default function WorkPlaceDetail() {
             <tbody>
               <tr>
                 <th>이름</th>
-                <td>홍길동</td>
+                <td>{employee.name}</td>
               </tr>
               <tr>
                 <th>사번</th>
-                <td>0026</td>
+                <td>{employee.employeeNumber}</td>
               </tr>
               <tr>
                 <th>계약분류/직급/직책</th>
-                <td>파트타이머/과장/매니저</td>
+                <td>
+                  {[employee.contractClassification, employee.rank, employee.position]
+                    .filter(Boolean)
+                    .join('/') || '-'}
+                </td>
               </tr>
               <tr>
                 <th>근무여부</th>
-                <td>근무</td>
+                <td>{employee.workStatusName || '-'}</td>
               </tr>
               <tr>
                 <th>입사일</th>
-                <td>2025.01.13</td>
+                <td>{employee.hireDate || '-'}</td>
               </tr>
               <tr>
                 <th>퇴사일</th>
-                <td>-</td>
-              </tr>
-              <tr>
-                <th>파트너오피스 권한</th>
-                <td>-</td>
+                <td>{employee.resignationDate || '-'}</td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        {/* 급여계좌 정보 */}
         <div className="data-item">
           <div className="sub-tit-wrap">
             <div className="sub-tit">급여계좌 정보</div>
@@ -93,26 +143,22 @@ export default function WorkPlaceDetail() {
             <tbody>
               <tr>
                 <th>은행명</th>
-                <td>한국은행</td>
+                <td>{salaryAccount?.bankName || '-'}</td>
               </tr>
               <tr>
                 <th>계좌 번호</th>
-                <td>123456-78-123456</td>
+                <td>{salaryAccount?.accountNumber || '-'}</td>
               </tr>
               <tr>
                 <th>예금주</th>
-                <td>홍길동</td>
-              </tr>
-              <tr>
-                <th>급여 계좌 변경일시</th>
-                <td>2025.01.01 10:22</td>
+                <td>{salaryAccount?.accountHolder || '-'}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       <div className="data-btn-wrap">
-        <button className="btn-form login block" onClick={() => setAccountSelectSheet(true)}>
+        <button className="btn-form login block" onClick={handleChangeSalaryAccount}>
           급여계좌 변경
         </button>
       </div>
