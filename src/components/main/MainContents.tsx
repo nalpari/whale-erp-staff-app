@@ -234,8 +234,23 @@ export default function MainContents() {
     return filtered.filter((org) => org.storeId === selectedWorkplace.storeId)
   }, [displayedGroups, selectedDayTodoData, selectedWorkplace])
 
-  const showEmpty = !isLoading && displayedGroups.length === 0 && todoOnlyOrgs.length === 0 && activeTab !== 'todo'
-  const showTodoEmpty = activeTab === 'todo' && (selectedDayTodoData?.totalCount ?? 0) === 0
+  // TODO 탭: todo가 있는 그룹만
+  const todoGroups = useMemo(() => {
+    if (activeTab !== 'todo') return displayedGroups
+    return displayedGroups.filter((group) => {
+      const matchedWp = workplaces.find((wp) => wp.storeName === getGroupName(group))
+      if (!matchedWp?.storeId) return false
+      return selectedDayTodoData?.organizations.some((org) => org.storeId === matchedWp.storeId) ?? false
+    })
+  }, [activeTab, displayedGroups, workplaces, selectedDayTodoData])
+
+  const hasTodoContent = (todoGroups.length > 0 || todoOnlyOrgs.length > 0)
+  const showEmpty = !isLoading && (
+    (activeTab === 'commute' && displayedGroups.length === 0) ||
+    (activeTab === 'all' && displayedGroups.length === 0 && todoOnlyOrgs.length === 0) ||
+    (activeTab === 'todo' && !hasTodoContent)
+  )
+  const showTodoEmpty = false // showEmpty로 통합
 
   // 월 변경: 캘린더 뷰만 이동, 선택된 날짜는 유지
   const handleMonthChange = (year: number, month: number) => {
@@ -322,42 +337,48 @@ export default function MainContents() {
             </div>
           )}
 
-          {/* 근무·출퇴근 + TODO 리스트 (전체/출퇴근 탭) */}
-          {activeTab !== 'todo' && (
-            <ul className="date-cont-list">
-              {displayedGroups.map((group, idx) => {
-                const groupName = getGroupName(group)
-                const daySchedule = group.schedules.find(
-                  (s) => s.date === selectedDateStr && s.hasWork && !s.isDeleted,
-                )
-                const attendance = attendanceMap.get(groupName)
-                const matchedWp = workplaces.find((wp) => wp.storeName === groupName)
-                const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : idx
-                const ringColor = colorFromIndex(wpIdx)
+          {/* 근무처 카드 리스트 */}
+          <ul className="date-cont-list">
+            {todoGroups.map((group, idx) => {
+              const groupName = getGroupName(group)
+              const daySchedule = group.schedules.find(
+                (s) => s.date === selectedDateStr && s.hasWork && !s.isDeleted,
+              )
+              const attendance = attendanceMap.get(groupName)
+              const matchedWp = workplaces.find((wp) => wp.storeName === groupName)
+              const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : idx
+              const ringColor = colorFromIndex(wpIdx)
 
-                // storeId로 매칭된 오늘의 TODO organization
-                const wpTodoOrg = activeTab === 'all' && matchedWp?.storeId
-                  ? (selectedDayTodoData?.organizations.find(
-                      (org) => org.storeId === matchedWp.storeId,
-                    ) ?? null)
-                  : null
-                const wpTodos = wpTodoOrg?.todos ?? []
-                const wpIncomplete = wpTodos.filter((t) => !t.isCompleted).length
-                const wpCompleted = wpTodos.filter((t) => t.isCompleted).length
+              const wpTodoOrg = matchedWp?.storeId
+                ? (selectedDayTodoData?.organizations.find(
+                    (org) => org.storeId === matchedWp.storeId,
+                  ) ?? null)
+                : null
+              const wpTodos = wpTodoOrg?.todos ?? []
+              const wpIncomplete = wpTodos.filter((t) => !t.isCompleted).length
+              const wpCompleted = wpTodos.filter((t) => t.isCompleted).length
 
-                return (
-                  <li key={idx} className="date-cont-item">
-                    <div className="date-cont-header">
-                      <div className="date-cont-ring" style={{ backgroundColor: ringColor }} />
-                      <div className="date-cont-info">
-                        <div className="date-cont-info-name">{groupName}</div>
+              // 출퇴근 row: TODO 탭이 아닐 때만
+              const showCommuteRow = activeTab !== 'todo'
+              // TO-DO row: 출퇴근 탭 아닐 때 + (전체 탭이면 todo가 있을 때만, TODO 탭이면 항상)
+              const showTodoRow = activeTab !== 'commute' && (activeTab === 'todo' || wpTodos.length > 0)
+
+              return (
+                <li key={idx} className="date-cont-item">
+                  <div className="date-cont-header">
+                    <div className="date-cont-ring" style={{ backgroundColor: ringColor }} />
+                    <div className="date-cont-info">
+                      <div className="date-cont-info-name">{groupName}</div>
+                      {showCommuteRow && (
                         <div className="date-cont-info-time">
                           {formatTime(daySchedule?.startTime)}-{formatTime(daySchedule?.endTime)}
                         </div>
-                      </div>
+                      )}
                     </div>
-                    <div className="date-cont-wrap">
-                      {/* 출퇴근 체크 row */}
+                  </div>
+                  <div className="date-cont-wrap">
+                    {/* 출퇴근 체크 row */}
+                    {showCommuteRow && (
                       <div className="date-cont-data-item">
                         <div className="cont-item-tit work">출퇴근 체크</div>
                         <div className="cont-item-data-wrap">
@@ -388,56 +409,10 @@ export default function MainContents() {
                           )}
                         </div>
                       </div>
+                    )}
 
-                      {/* TO-DO 체크 row (전체 탭에서만, 출퇴근 체크와 동일한 구조) */}
-                      {activeTab === 'all' && (
-                        <div className="date-cont-data-item">
-                          <div className="cont-item-tit todo">TO-DO 체크</div>
-                          <div className="cont-item-data-wrap">
-                            <div className="data-item-inner">
-                              <div className="data-item-inner-item">
-                                <span>미완료 </span>
-                                <span style={{ color: wpIncomplete > 0 ? '#2379e4' : undefined }}>
-                                  {wpIncomplete}
-                                </span>
-                              </div>
-                              <div className="data-item-inner-item">
-                                <span>완료 </span>
-                                <span style={{ color: wpCompleted > 0 ? '#36886a' : undefined }}>
-                                  {wpCompleted}
-                                </span>
-                              </div>
-                            </div>
-                            <div
-                              className="data-item-inner-arr"
-                              style={{ cursor: 'pointer' }}
-                              onClick={() => setActiveTab('todo')}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                )
-              })}
-
-              {/* TODO만 있는 근무처 카드 (전체 탭, 근무 일정 없는 경우) */}
-              {activeTab === 'all' && todoOnlyOrgs.map((org) => {
-                const matchedWp = workplaces.find((wp) => wp.storeId === org.storeId)
-                const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : 0
-                const ringColor = colorFromIndex(wpIdx)
-                const wpIncomplete = org.todos.filter((t) => !t.isCompleted).length
-                const wpCompleted = org.todos.filter((t) => t.isCompleted).length
-
-                return (
-                  <li key={`todo-only-${org.storeId}`} className="date-cont-item">
-                    <div className="date-cont-header">
-                      <div className="date-cont-ring" style={{ backgroundColor: ringColor }} />
-                      <div className="date-cont-info">
-                        <div className="date-cont-info-name">{org.storeName}</div>
-                      </div>
-                    </div>
-                    <div className="date-cont-wrap">
+                    {/* TO-DO 체크 row */}
+                    {showTodoRow && (
                       <div className="date-cont-data-item">
                         <div className="cont-item-tit todo">TO-DO 체크</div>
                         <div className="cont-item-data-wrap">
@@ -458,68 +433,70 @@ export default function MainContents() {
                           <div
                             className="data-item-inner-arr"
                             style={{ cursor: 'pointer' }}
-                            onClick={() => setActiveTab('todo')}
+                            onClick={() => {
+                              const params = new URLSearchParams({ date: selectedDateStr })
+                              if (matchedWp?.id) params.set('employeeInfoId', String(matchedWp.id))
+                              router.push(`/todo?${params.toString()}`)
+                            }}
                           />
                         </div>
                       </div>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-
-          {/* TO-DO 리스트 (todo 탭) — organization별 그룹 표시 */}
-          {activeTab === 'todo' && (selectedDayTodoData?.organizations ?? []).length > 0 && (
-            <div style={{ padding: '0 24px' }}>
-              {(selectedDayTodoData?.organizations ?? []).map((org) => (
-                <div key={org.storeId} className="todo-list-item" style={{ padding: '22px 0 0' }}>
-                  <div className="todo-list-item-tit">{org.storeName}</div>
-                  <div className="todo-check-wrap">
-                    {org.todos.map((todo) => (
-                      <div key={todo.id} className="todo-check-item">
-                        <div className="check-form-box">
-                          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                            <span style={{
-                              flexShrink: 0,
-                              width: '18px',
-                              height: '18px',
-                              borderRadius: '4px',
-                              border: `2px solid ${todo.isCompleted ? '#36886a' : '#ccc'}`,
-                              backgroundColor: todo.isCompleted ? '#36886a' : '#fff',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              marginTop: '1px',
-                            }}>
-                              {todo.isCompleted && (
-                                <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
-                                  <path d="M1 3.5L4 6.5L10 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              )}
-                            </span>
-                            <span style={{
-                              flex: 1,
-                              fontSize: '15px',
-                              fontWeight: 500,
-                              color: '#1a1a1a',
-                              textDecoration: todo.isCompleted ? 'line-through' : 'none',
-                              opacity: todo.isCompleted ? 0.5 : 1,
-                            }}>
-                              {todo.content}
-                              <span style={{ display: 'block', fontSize: '12px', color: '#aaa', marginTop: '3px', fontWeight: 400, textDecoration: 'none' }}>
-                                {todo.todoDate}
-                              </span>
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </li>
+              )
+            })}
+
+            {/* TODO만 있는 근무처 카드 (전체·TODO 탭) */}
+            {(activeTab === 'all' || activeTab === 'todo') && todoOnlyOrgs.map((org) => {
+              const matchedWp = workplaces.find((wp) => wp.storeId === org.storeId)
+              const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : 0
+              const ringColor = colorFromIndex(wpIdx)
+              const wpIncomplete = org.todos.filter((t) => !t.isCompleted).length
+              const wpCompleted = org.todos.filter((t) => t.isCompleted).length
+
+              return (
+                <li key={`todo-only-${org.storeId}`} className="date-cont-item">
+                  <div className="date-cont-header">
+                    <div className="date-cont-ring" style={{ backgroundColor: ringColor }} />
+                    <div className="date-cont-info">
+                      <div className="date-cont-info-name">{org.storeName}</div>
+                    </div>
+                  </div>
+                  <div className="date-cont-wrap">
+                    <div className="date-cont-data-item">
+                      <div className="cont-item-tit todo">TO-DO 체크</div>
+                      <div className="cont-item-data-wrap">
+                        <div className="data-item-inner">
+                          <div className="data-item-inner-item">
+                            <span>미완료 </span>
+                            <span style={{ color: wpIncomplete > 0 ? '#2379e4' : undefined }}>
+                              {wpIncomplete}
+                            </span>
+                          </div>
+                          <div className="data-item-inner-item">
+                            <span>완료 </span>
+                            <span style={{ color: wpCompleted > 0 ? '#36886a' : undefined }}>
+                              {wpCompleted}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                            className="data-item-inner-arr"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              const params = new URLSearchParams({ date: selectedDateStr })
+                              if (matchedWp?.id) params.set('employeeInfoId', String(matchedWp.id))
+                              router.push(`/todo?${params.toString()}`)
+                            }}
+                          />
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
         </div>
       </div>
       <button className="Ai" onClick={() => setAIChatPopup(true)} />
