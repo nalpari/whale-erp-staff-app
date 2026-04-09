@@ -274,7 +274,7 @@ export default function MainContents() {
     <div className="container main">
       <div className="main-contents">
         {/* 캘린더 영역 */}
-        <div className="dtae-calendar-wrap">
+        <div className="date-calendar-wrap">
           <div className="calendar-nav-overlay">
             <button className="calendar-today-btn" onClick={handleTodayClick}>오늘</button>
           </div>
