@@ -149,6 +149,18 @@
   .date-list-tit {
     @include fontDefinition(18px, 700, 150%);
     color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .badge-today {
+      @include fontDefinition(11px, 600, 1);
+      color: #fff;
+      background: #36886a;
+      border-radius: 10px;
+      padding: 3px 8px;
+      letter-spacing: 0.02em;
+    }
   }
   .data-jop-wrap {
     @include flex(0px);
@@ -1045,5 +1057,60 @@
   .withdrawal {
     background-color: #ee8924;
     color: #fff;
+  }
+}
+
+// 캘린더 영역
+.date-calendar-wrap {
+  background: #fff;
+
+  // 캘린더 상단 헤더 행 (오늘 버튼 + 탭 버튼)
+  .calendar-header-row {
+    display: flex;
+    align-items: center;
+    padding: 16px 16px 0;
+
+    .calendar-today-btn {
+      padding: 0 14px;
+      height: 28px;
+      border-radius: 14px;
+      border: 1px solid #36886a;
+      background: #fff;
+      @include fontDefinition(13px, 600, 22px);
+      color: #36886a;
+      cursor: pointer;
+      flex-shrink: 0;
+
+      &:active {
+        background: #ebf6f2;
+      }
+    }
+
+    .calendar-tab-group {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .calendar-tab-btn {
+        padding: 0 10px;
+        height: 28px;
+        border-radius: 14px;
+        border: 1px solid #e0e0e0;
+        background: #fff;
+        @include fontDefinition(12px, 500, 24px);
+        color: #777;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+
+        &.active {
+          border-color: #36886a;
+          background: #36886a;
+          color: #fff;
+          font-weight: 600;
+        }
+      }
+    }
   }
 }

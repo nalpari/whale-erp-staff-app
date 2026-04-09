@@ -275,19 +275,19 @@ export default function MainContents() {
       <div className="main-contents">
         {/* 캘린더 영역 */}
         <div className="date-calendar-wrap">
-          <div className="calendar-nav-overlay">
+          <div className="calendar-header-row">
             <button className="calendar-today-btn" onClick={handleTodayClick}>오늘</button>
-          </div>
-          <div className="calendar-tab-overlay">
-            {([['all', '전체'], ['commute', '출퇴근'], ['todo', 'TO-DO']] as [TabType, string][]).map(([key, label]) => (
-              <button
-                key={key}
-                className={`calendar-tab-btn${activeTab === key ? ' active' : ''}`}
-                onClick={() => setActiveTab(key)}
-              >
-                {label}
-              </button>
-            ))}
+            <div className="calendar-tab-group">
+              {([['all', '전체'], ['commute', '출퇴근'], ['todo', 'TO-DO']] as [TabType, string][]).map(([key, label]) => (
+                <button
+                  key={key}
+                  className={`calendar-tab-btn${activeTab === key ? ' active' : ''}`}
+                  onClick={() => setActiveTab(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           <WhaleCalendar
             year={calYear}
