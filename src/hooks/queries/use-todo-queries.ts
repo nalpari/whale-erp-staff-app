@@ -18,7 +18,7 @@ export const useTodoCalendar = (
       year: params.year,
       month: params.month,
     }),
-    enabled,
+    enabled: enabled && memberId !== null,
   })
 }
 
@@ -33,7 +33,7 @@ export const useTodoMonthlyCalendar = (
   return useQuery({
     queryKey: queryKeys.todo.calendar(memberId, year, month, employeeInfoId),
     queryFn: () => todoApi.getMonthlyCalendar(year, month, employeeInfoId),
-    enabled,
+    enabled: enabled && memberId !== null,
   })
 }
 
@@ -47,8 +47,12 @@ export const useToggleTodoStatus = (
   const key = queryKeys.todo.calendar(memberId, year, month, employeeInfoId)
 
   return useMutation({
-    mutationFn: ({ id, isCompleted }: { id: number; isCompleted: boolean }) =>
-      todoApi.toggleStatus(id, isCompleted),
+    mutationFn: async ({ id, isCompleted }: { id: number; isCompleted: boolean }) => {
+      if (memberId === null) {
+        throw new Error('인증 정보가 없어 TODO 상태를 변경할 수 없습니다.')
+      }
+      return todoApi.toggleStatus(id, isCompleted)
+    },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: key })
       const prev = queryClient.getQueryData<ApiResponse<CalendarDayData[]>>(key)

@@ -131,8 +131,7 @@ export default function TodoCalendar({
   return (
     <div
       ref={wrapperRef}
-      className="date-calendar-wrap"
-      style={{ position: 'relative' }}
+      className="date-calendar-wrap todo-calendar-wrap"
       onTouchStart={handleCalendarTouchStart}
       onTouchEnd={handleCalendarTouchEnd}
     >
@@ -146,9 +145,9 @@ export default function TodoCalendar({
         onMonthChange={handleMonthChange}
         locale="ko"
       />
-      <div style={{ position: 'absolute', top: '1rem', right: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+      <div className="todo-calendar-controls">
         {!isSameDay(selectedDate, today) && (
-          <button className="calendar-today-btn" onClick={onTodayClick}>오늘</button>
+          <button className="calendar-today-btn" onClick={onTodayClick} aria-label="오늘 날짜로 이동">오늘</button>
         )}
         <button
           className="todo-calendar-toggle"

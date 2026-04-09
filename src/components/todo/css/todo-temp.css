@@ -3,10 +3,23 @@
  * 추후 src/styles 공통 스타일 확인 후 이관 또는 삭제 예정입니다.
  */
 
+.todo-calendar-wrap {
+  position: relative;
+}
+
+.todo-calendar-controls {
+  position: absolute;
+  top: 1rem;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .todo-list-wrap .todo-date {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .todo-calendar-toggle {

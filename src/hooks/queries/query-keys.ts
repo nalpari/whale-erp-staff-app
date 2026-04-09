@@ -77,6 +77,7 @@ export const queryKeys = {
 
   todo: {
     all: () => [...queryKeys.all, 'todo'] as const,
+    // API는 토큰으로 사용자를 식별하지만, 캐시는 계정 전환 시 재사용되지 않도록 memberId로 분리한다.
     homeCalendar: (memberId: number | null, year: string, month: string) =>
       [...queryKeys.todo.all(), 'homeCalendar', memberId, year, month] as const,
     calendars: () => [...queryKeys.todo.all(), 'calendar'] as const,
