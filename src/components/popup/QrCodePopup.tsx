@@ -101,7 +101,7 @@ export default function QrCodePopup() {
                 <div className="qr-frame-tit">{storeName ?? '출퇴근 체크'}</div>
                 <div className="qr-frame-txt">{getTodayLabel()}</div>
               </div>
-              <div className="qr-cam-area">
+              <div className="qr-cam-area" style={{ height: '175px', backgroundColor: '#101010' }}>
                 <video
                   ref={videoRef}
                   autoPlay
