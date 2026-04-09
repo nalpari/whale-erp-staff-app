@@ -522,13 +522,13 @@ export const homeApi = {
 
 export const todoApi = {
   /** 기간별 TODO 캘린더 조회 (from/to: YYYY-MM-DD) */
-  getCalendarByEmployee: (params: { memberId: number; year: number; month: number }) =>
+  getCalendarByEmployee: (params: { year: number; month: number }) =>
     apiClient<ApiResponse<EmployeeTodoCalendarResponse>>(
-      `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${params.memberId}&year=${params.year}&month=${params.month}`,
+      `/api/v1/employee-todos/mobile/calendar/by-employee?year=${params.year}&month=${params.month}`,
     ),
   /** 회원별 월별 캘린더 조회 */
-  getMonthlyCalendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) => {
-    const params = new URLSearchParams({ memberId: String(memberId), year: String(year), month: String(month) })
+  getMonthlyCalendar: (year: number, month: number, employeeInfoId?: number | null) => {
+    const params = new URLSearchParams({ year: String(year), month: String(month) })
     if (employeeInfoId != null) params.set('employeeInfoId', String(employeeInfoId))
     return apiClient<ApiResponse<CalendarDayData[]>>(
       `/api/v1/employee-todos/mobile/calendar/by-employee?${params.toString()}`,

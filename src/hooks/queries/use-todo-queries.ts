@@ -6,39 +6,37 @@ import type { ApiResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 
 export const useTodoCalendar = (
-  params: { memberId: number | null; year: number; month: number },
+  params: { year: number; month: number },
   enabled = true,
 ) =>
   useQuery({
-    queryKey: queryKeys.todo.homeCalendar(params.memberId, String(params.year), String(params.month)),
+    queryKey: queryKeys.todo.homeCalendar(String(params.year), String(params.month)),
     queryFn: () => todoApi.getCalendarByEmployee({
-      memberId: params.memberId!,
       year: params.year,
       month: params.month,
     }),
-    enabled: enabled && params.memberId !== null,
+    enabled,
   })
 
 export const useTodoMonthlyCalendar = (
-  memberId: number | undefined,
   year: number,
   month: number,
   employeeInfoId?: number | null,
+  enabled = true,
 ) =>
   useQuery({
-    queryKey: queryKeys.todo.calendar(memberId ?? 0, year, month, employeeInfoId),
-    queryFn: () => todoApi.getMonthlyCalendar(memberId!, year, month, employeeInfoId),
-    enabled: !!memberId,
+    queryKey: queryKeys.todo.calendar(year, month, employeeInfoId),
+    queryFn: () => todoApi.getMonthlyCalendar(year, month, employeeInfoId),
+    enabled,
   })
 
 export const useToggleTodoStatus = (
-  memberId: number | undefined,
   year: number,
   month: number,
   employeeInfoId?: number | null,
 ) => {
   const queryClient = useQueryClient()
-  const key = queryKeys.todo.calendar(memberId ?? 0, year, month, employeeInfoId)
+  const key = queryKeys.todo.calendar(year, month, employeeInfoId)
 
   return useMutation({
     mutationFn: ({ id, isCompleted }: { id: number; isCompleted: boolean }) =>

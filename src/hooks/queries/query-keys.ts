@@ -77,10 +77,10 @@ export const queryKeys = {
 
   todo: {
     all: () => [...queryKeys.all, 'todo'] as const,
-    homeCalendar: (memberId: number | null, year: string, month: string) =>
-      [...queryKeys.todo.all(), 'homeCalendar', memberId, year, month] as const,
+    homeCalendar: (year: string, month: string) =>
+      [...queryKeys.todo.all(), 'homeCalendar', year, month] as const,
     calendars: () => [...queryKeys.todo.all(), 'calendar'] as const,
-    calendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) =>
-      [...queryKeys.todo.calendars(), memberId, year, month, employeeInfoId ?? null] as const,
+    calendar: (year: number, month: number, employeeInfoId?: number | null) =>
+      [...queryKeys.todo.calendars(), year, month, employeeInfoId ?? null] as const,
   },
 } as const

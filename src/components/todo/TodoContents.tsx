@@ -2,7 +2,6 @@
 
 import { useRef, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar, useToggleTodoStatus } from '@/hooks/queries'
 import TodoCalendar from './TodoCalendar'
@@ -14,14 +13,6 @@ function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
   return result
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
 }
 
 function getOrgGroupsForDay(
@@ -50,7 +41,6 @@ function parseInitialDate(dateParam: string | null): Date {
 
 export default function TodoContents() {
   const searchParams = useSearchParams()
-  const memberId = useAuthStore((s) => s.user?.memberId)
   const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
 
   const [selectedDate, setSelectedDate] = useState(() =>
@@ -65,10 +55,9 @@ export default function TodoContents() {
   const year = selectedDate.getFullYear()
   const month = selectedDate.getMonth() + 1
 
-  const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(memberId, year, month, selectedWorkplaceId)
-  const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
+  const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(year, month, selectedWorkplaceId)
+  const { mutate: toggleStatus } = useToggleTodoStatus(year, month, selectedWorkplaceId)
 
-  const isToday = isSameDay(selectedDate, new Date())
   const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
 
   const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
@@ -109,35 +98,13 @@ export default function TodoContents() {
         onDateSelect={setSelectedDate}
         isGridOpen={isCalendarOpen}
         onToggleGrid={() => setIsCalendarOpen((prev) => !prev)}
+        onTodayClick={goToToday}
         selectedWorkplaceId={selectedWorkplaceId}
       />
 
       <div className="todo-list-wrap">
-        <div className="todo-date" style={{ justifyContent: 'flex-start', gap: 4 }}>
-          <button
-            className="whale-calendar__nav-button"
-            onClick={() => moveDay(-1)}
-            aria-label="이전 날"
-            style={{ '--whale-calendar-border': '#ededed', '--whale-calendar-bg': '#ffffff', '--whale-calendar-radius-full': '9999px', '--whale-calendar-nav-button-size': '32px' } as React.CSSProperties}
-          >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M18.5 12L14.5 16L18.5 20" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+        <div className="todo-date">
           <span>{formatDateKorean(selectedDate)}</span>
-          {!isToday && (
-            <button className="btn-form xs outline" onClick={goToToday}>오늘</button>
-          )}
-          <button
-            className="whale-calendar__nav-button"
-            onClick={() => moveDay(1)}
-            aria-label="다음 날"
-            style={{ '--whale-calendar-border': '#ededed', '--whale-calendar-bg': '#ffffff', '--whale-calendar-radius-full': '9999px', '--whale-calendar-nav-button-size': '32px' } as React.CSSProperties}
-          >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M14.5 20L18.5 16L14.5 12" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
         </div>
 
         {isCalendarError ? (

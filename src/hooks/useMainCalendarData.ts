@@ -1,8 +1,8 @@
 'use client'
 import { useState, useMemo } from 'react'
 import type { CalendarData } from 'whale-calendar'
-import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useAttendanceToday, useAttendanceHistory } from '@/hooks/queries/use-attendance-queries'
 import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import { useTodoCalendar } from '@/hooks/queries/use-todo-queries'
@@ -59,7 +59,7 @@ export function useMainCalendarData() {
   )
 
   const { data: todoCalendarData } = useTodoCalendar(
-    { memberId: user?.memberId ?? null, year: calYear, month: calMonth },
+    { year: calYear, month: calMonth },
   )
   const todoCalendarDays = useMemo(
     () => todoCalendarData?.data ?? [],
