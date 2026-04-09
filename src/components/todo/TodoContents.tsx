@@ -51,7 +51,11 @@ function parseInitialDate(dateParam: string | null): Date {
 export default function TodoContents() {
   const searchParams = useSearchParams()
   const memberId = useAuthStore((s) => s.user?.memberId)
-  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
+  const storeWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
+
+  // URL ?employeeInfoId=N 이 있으면 해당 근무처만 표시, 없으면 스토어 전역 필터 사용
+  const employeeInfoIdParam = searchParams.get('employeeInfoId')
+  const selectedWorkplaceId = employeeInfoIdParam ? Number(employeeInfoIdParam) : storeWorkplaceId
 
   const [selectedDate, setSelectedDate] = useState(() =>
     parseInitialDate(searchParams.get('date')),
