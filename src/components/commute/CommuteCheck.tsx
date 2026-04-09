@@ -1,10 +1,12 @@
 'use client'
+import { useState } from 'react'
 import { usePopupController } from '@/store/usePopupController'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useAttendanceToday } from '@/hooks/queries/use-attendance-queries'
 import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import type { ScheduleGroupResponse } from '@/types/api'
+import { formatTime } from '@/lib/date-utils'
 
 interface Props {
   /** 특정 점포로 진입 시 해당 점포명. null이면 전체 표시 */
@@ -23,10 +25,6 @@ function toScheduleDateParam(s: string): string {
   return s.replace(/-/g, '.')
 }
 
-function formatTime(t?: string | null): string {
-  if (!t) return '-'
-  return t.slice(0, 5)
-}
 
 function formatDuration(clockIn?: string | null, clockOut?: string | null): string {
   if (!clockIn || !clockOut) return ''
@@ -47,6 +45,8 @@ export default function CommuteCheck({ storeName }: Props) {
   const openQrCodePopup = usePopupController((state) => state.openQrCodePopup)
   const user = useAuthStore((s) => s.user)
   const workplaces = useWorkplaceStore((s) => s.workplaces)
+  // 직접 접근(/commute) 시 다수 근무처 중 선택한 그룹 인덱스
+  const [selectedGroupIdx, setSelectedGroupIdx] = useState<number | null>(null)
 
   const today = getTodayString()
   const todayParam = toScheduleDateParam(today)
@@ -83,10 +83,21 @@ export default function CommuteCheck({ storeName }: Props) {
 
   const isLoading = isAttendanceLoading || isScheduleLoading
 
-  // workplaceId는 workplaces 스토어에서 storeName으로 매칭
-  const handleOpenPopup = (name: string) => {
-    const matched = workplaces.find((wp) => wp.storeName === name)
-    if (matched?.id) openQrCodePopup(matched.id, name, matched.storeId)
+  // workplaceId는 storeId 우선, fallback으로 storeName 문자열 매칭
+  const handleOpenPopup = (name: string, storeId?: number | null) => {
+    const matched = workplaces.find((wp) =>
+      (storeId != null && wp.storeId === storeId) || wp.storeName === name,
+    )
+    if (matched?.id) {
+      const attendance = attendanceMap.get(name)
+      openQrCodePopup(
+        matched.id,
+        name,
+        matched.storeId,
+        attendance?.checkInTime ?? null,
+        attendance?.checkOutTime ?? null,
+      )
+    }
   }
 
   return (
@@ -163,20 +174,64 @@ export default function CommuteCheck({ storeName }: Props) {
         })}
       </div>
 
-      {storeName !== null && (
-        <div className="commute-btn-wrap">
+      {/* 출퇴근 체크 버튼: 특정 점포 진입이면 바로 노출, 직접 접근이면 항상 노출 */}
+      <div className="commute-btn-wrap">
+        {storeName !== null ? (
+          // 점포 진입: 해당 점포 바로 오픈
           <button
             className="btn-form block login"
             disabled={displayGroups.length === 0}
             onClick={() => {
-              const firstName = displayGroups[0] ? getGroupName(displayGroups[0]) : null
-              if (firstName) handleOpenPopup(firstName)
+              const firstGroup = displayGroups[0]
+              if (firstGroup) handleOpenPopup(getGroupName(firstGroup), firstGroup.storeId)
             }}
           >
             출퇴근 체크
           </button>
-        </div>
-      )}
+        ) : displayGroups.length === 1 ? (
+          // 단일 근무처: 자동 선택
+          <button
+            className="btn-form block login"
+            onClick={() => {
+              const g = displayGroups[0]
+              if (g) handleOpenPopup(getGroupName(g), g.storeId)
+            }}
+          >
+            출퇴근 체크
+          </button>
+        ) : displayGroups.length > 1 ? (
+          // 다수 근무처: 선택 UI 제공
+          <>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              {displayGroups.map((g, i) => (
+                <button
+                  key={i}
+                  className={`btn-form outline s${selectedGroupIdx === i ? ' active' : ''}`}
+                  onClick={() => setSelectedGroupIdx(i)}
+                >
+                  {getGroupName(g)}
+                </button>
+              ))}
+            </div>
+            <button
+              className="btn-form block login"
+              disabled={selectedGroupIdx === null}
+              onClick={() => {
+                if (selectedGroupIdx === null) return
+                const g = displayGroups[selectedGroupIdx]
+                if (g) handleOpenPopup(getGroupName(g), g.storeId)
+              }}
+            >
+              출퇴근 체크
+            </button>
+          </>
+        ) : (
+          // 오늘 근무 없음: 비활성 버튼
+          <button className="btn-form block login" disabled>
+            출퇴근 체크
+          </button>
+        )}
+      </div>
     </div>
   )
 }

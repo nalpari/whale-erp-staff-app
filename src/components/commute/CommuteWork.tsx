@@ -1,28 +1,19 @@
 'use client'
+import { useMemo } from 'react'
 import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import { useAttendanceHistory } from '@/hooks/queries/use-attendance-queries'
 import type { ScheduleGroupResponse, AttendanceHistoryItem } from '@/types/api'
+import { formatTime } from '@/lib/date-utils'
 
 interface Props {
   storeName: string | null
 }
 
-/** HH:mm 또는 ISO datetime 문자열을 HH:mm으로 변환 */
-function formatTime(t?: string | null): string {
-  if (!t) return '-'
-  // ISO 형식 (2026-04-07T16:14:34...) → HH:mm
-  if (t.includes('T')) return t.slice(11, 16)
-  // 이미 HH:mm or HH:mm:ss 형식
-  return t.slice(0, 5)
-}
-
 /** 출퇴근 기록 시간을 HH:mm으로 변환 */
 function formatAttendanceTime(t: string | null): string {
-  if (!t) return '-'
-  if (t.includes('T')) return t.slice(11, 16)
-  return t.slice(0, 5)
+  return formatTime(t)
 }
 
 function formatWorkHours(hours: number | null | undefined): string {
@@ -73,13 +64,14 @@ export default function CommuteWork({ storeName }: Props) {
     !!user?.memberId,
   )
 
-  // 출퇴근 이력을 "날짜_근무처명" 키로 맵핑
-  const attendanceMap = new Map<string, AttendanceHistoryItem>()
-  const historyItems = historyData?.data?.items ?? []
-  for (const item of historyItems) {
-    const key = `${item.date}_${item.workplaceName}`
-    attendanceMap.set(key, item)
-  }
+  // 출퇴근 이력을 "날짜_근무처명" 키로 맵핑 (렌더마다 순회 방지)
+  const attendanceMap = useMemo(() => {
+    const map = new Map<string, AttendanceHistoryItem>()
+    for (const item of (historyData?.data?.items ?? [])) {
+      map.set(`${item.date}_${item.workplaceName}`, item)
+    }
+    return map
+  }, [historyData])
 
   const allGroups = scheduleData?.data ?? []
 
@@ -152,8 +144,10 @@ export default function CommuteWork({ storeName }: Props) {
                   const hasCheckOut = !!attendance?.checkOutTime
                   const hasAttendance = hasCheckIn || hasCheckOut
 
-                  // 결근 여부: 과거 날짜이고 출퇴근 기록이 없는 경우
-                  const isAbsent = isPast && !hasAttendance
+                  // 결근 여부: 서버 status 우선 사용 (연차/휴가/관리자 처리 반영)
+                  // status가 없을 때만 "과거 + 기록 없음" fallback 적용
+                  const isAbsent = attendance?.status === 'ABSENT'
+                    || (attendance?.status === undefined && isPast && !hasAttendance)
 
                   return (
                     <div key={i} className="commute-work-list-item-cont">

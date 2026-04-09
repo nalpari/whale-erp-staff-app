@@ -8,7 +8,16 @@ type PopupControllerState = {
   qrCodeWorkplaceId: number | null
   qrCodeStoreId: number | null
   qrCodeStoreName: string | null
-  openQrCodePopup: (workplaceId: number, storeName: string, storeId?: number | null) => void
+  /** 팝업 오픈 시 전달된 현재 출퇴근 시간 (근태 상태 판단용) */
+  qrCodeCheckInTime: string | null
+  qrCodeCheckOutTime: string | null
+  openQrCodePopup: (
+    workplaceId: number,
+    storeName: string,
+    storeId?: number | null,
+    checkInTime?: string | null,
+    checkOutTime?: string | null,
+  ) => void
   AlertPopup: boolean
   setAlertPopup: (isOpen: boolean) => void
   /** Alert 팝업 동적 콘텐츠 */
@@ -59,6 +68,8 @@ export const usePopupController = create<PopupControllerState>((set) => ({
   qrCodeWorkplaceId: null,
   qrCodeStoreId: null,
   qrCodeStoreName: null,
+  qrCodeCheckInTime: null,
+  qrCodeCheckOutTime: null,
   AlertPopup: false,
   alertMessage: '',
   alertConfirmLabel: '확인',
@@ -78,9 +89,22 @@ export const usePopupController = create<PopupControllerState>((set) => ({
   selectedPayrollId: null,
   selectedPayrollType: null,
   setQrCodePopup: (isOpen: boolean) => set((state) => ({ ...state, QrCodePopup: isOpen })),
-  openQrCodePopup: (workplaceId: number, storeName: string, storeId?: number | null) =>
-    set((state) => ({ ...state, QrCodePopup: true, qrCodeWorkplaceId: workplaceId, qrCodeStoreId: storeId ?? null, qrCodeStoreName: storeName })),
-  setAlertPopup: (isOpen: boolean) => set((state) => ({ ...state, AlertPopup: isOpen })),
+  openQrCodePopup: (workplaceId, storeName, storeId, checkInTime, checkOutTime) =>
+    set((state) => ({
+      ...state,
+      QrCodePopup: true,
+      qrCodeWorkplaceId: workplaceId,
+      qrCodeStoreId: storeId ?? null,
+      qrCodeStoreName: storeName,
+      qrCodeCheckInTime: checkInTime ?? null,
+      qrCodeCheckOutTime: checkOutTime ?? null,
+    })),
+  setAlertPopup: (isOpen: boolean) => set((state) => ({
+    ...state,
+    AlertPopup: isOpen,
+    // 팝업 닫을 때 stale closure·GC 방해 방지를 위해 콜백 참조 즉시 해제
+    ...(!isOpen && { alertOnConfirm: null }),
+  })),
   openAlertPopup: ({ message, confirmLabel = '확인', cancelLabel = null, onConfirm }) =>
     set((state) => ({
       ...state,

@@ -10,7 +10,7 @@ export const useTodoCalendar = (
   enabled = true,
 ) =>
   useQuery({
-    queryKey: queryKeys.todo.homeCalendar(String(params.year), String(params.month)),
+    queryKey: queryKeys.todo.homeCalendar(params.memberId, String(params.year), String(params.month)),
     queryFn: () => todoApi.getCalendarByEmployee({
       memberId: params.memberId!,
       year: params.year,

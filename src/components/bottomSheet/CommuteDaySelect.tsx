@@ -100,7 +100,14 @@ export default function CommuteDaySelect() {
       setError('시작일과 종료일을 입력해주세요.')
       return
     }
-    if (new Date(dotToHyphen(customFrom)) > new Date(dotToHyphen(customTo))) {
+    const fromDate = new Date(dotToHyphen(customFrom))
+    const toDate   = new Date(dotToHyphen(customTo))
+    // 빈 문자열 or 잘못된 형식 → Invalid Date 차단
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      setError('유효한 날짜를 입력해주세요.')
+      return
+    }
+    if (fromDate > toDate) {
       setError('시작일은 종료일보다 이전이어야 합니다.')
       return
     }

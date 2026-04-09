@@ -23,13 +23,14 @@ export default function WorkPlaceAddSheet() {
 
   const handleClose = () => {
     setWorkPlaceAddSheet(false)
-    // 닫을 때 상태 초기화
-    setTimeout(() => {
-      setStep('input')
-      setEmployeeNumber('')
-      setErrorMsg('')
-      setConfirmedInfo(null)
-    }, 300)
+  }
+
+  // 닫기 애니메이션 완료 후 상태 초기화 (setTimeout 하드코딩 대신 onCloseEnd 활용)
+  const handleCloseEnd = () => {
+    setStep('input')
+    setEmployeeNumber('')
+    setErrorMsg('')
+    setConfirmedInfo(null)
   }
 
   // Step 1: 직원 코드 유효성 확인
@@ -82,6 +83,7 @@ export default function WorkPlaceAddSheet() {
     <Sheet
       isOpen={workPlaceAddSheet}
       onClose={handleClose}
+      onCloseEnd={handleCloseEnd}
       detent="content"
       disableScrollLocking={true}
     >
