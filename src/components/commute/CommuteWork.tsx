@@ -4,11 +4,12 @@ import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import { useAttendanceHistory } from '@/hooks/queries/use-attendance-queries'
-import type { ScheduleGroupResponse, AttendanceHistoryItem } from '@/types/api'
+import type { AttendanceHistoryItem } from '@/types/api'
 import { formatTime } from '@/lib/date-utils'
+import { getGroupName } from '@/lib/schedule-utils'
 
 interface Props {
-  storeName: string | null
+  storeId: number | null
 }
 
 /** 출퇴근 기록 시간을 HH:mm으로 변환 */
@@ -21,10 +22,6 @@ function formatWorkHours(hours: number | null | undefined): string {
   const h = Math.floor(hours)
   const m = Math.round((hours - h) * 60)
   return h > 0 ? `${h}시간${m > 0 ? ` ${m}분` : ''}` : `${m}분`
-}
-
-function getGroupName(group: ScheduleGroupResponse): string {
-  return group.storeName ?? group.franchiseName ?? group.headOfficeName
 }
 
 function parseApiDate(dateStr: string): Date {
@@ -44,7 +41,7 @@ function dotToHyphen(s: string): string {
 
 const DAY_KOR = ['일', '월', '화', '수', '목', '금', '토']
 
-export default function CommuteWork({ storeName }: Props) {
+export default function CommuteWork({ storeId }: Props) {
   const setCommuteDaySelectSheet = useBottomSheetController((state) => state.setCommuteDaySelectSheet)
   const commuteFrom = useBottomSheetController((state) => state.commuteFrom)
   const commuteTo = useBottomSheetController((state) => state.commuteTo)
@@ -76,8 +73,8 @@ export default function CommuteWork({ storeName }: Props) {
   const allGroups = scheduleData?.data ?? []
 
   // 홈화면에서 특정 점포로 진입 시 해당 점포만, 햄버거 메뉴 진입 시 전체
-  const displayGroups = storeName
-    ? allGroups.filter((g) => getGroupName(g) === storeName)
+  const displayGroups = storeId !== null
+    ? allGroups.filter((g) => g.storeId === storeId)
     : allGroups
 
   // 날짜 범위 배열 생성

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import jsQR from 'jsqr'
 import { usePopupController } from '@/store/usePopupController'
 import { useCheckIn, useCheckOut } from '@/hooks/queries/use-attendance-queries'
 import { formatTodayLabel } from '@/lib/date-utils'
@@ -16,22 +17,86 @@ function getCameraErrorMessage(err: unknown): string {
 }
 
 export default function QrCodePopup() {
-  const setQrCodePopup = usePopupController((state) => state.setQrCodePopup)
-  const openAlertPopup = usePopupController((state) => state.openAlertPopup)
-  const workplaceId = usePopupController((state) => state.qrCodeWorkplaceId)
-  const storeId = usePopupController((state) => state.qrCodeStoreId)
-  const storeName = usePopupController((state) => state.qrCodeStoreName)
-  const checkInTime = usePopupController((state) => state.qrCodeCheckInTime)
-  const checkOutTime = usePopupController((state) => state.qrCodeCheckOutTime)
+  const setQrCodePopup  = usePopupController((state) => state.setQrCodePopup)
+  const openAlertPopup  = usePopupController((state) => state.openAlertPopup)
+  const workplaceId     = usePopupController((state) => state.qrCodeWorkplaceId)
+  const storeId         = usePopupController((state) => state.qrCodeStoreId)
+  const storeName       = usePopupController((state) => state.qrCodeStoreName)
+  const checkInTime     = usePopupController((state) => state.qrCodeCheckInTime)
+  const checkOutTime    = usePopupController((state) => state.qrCodeCheckOutTime)
 
-  // 근태 상태: NONE(미출근) → 출근만 가능 / CHECK_IN(출근 후) → 퇴근만 가능 / CHECK_OUT(퇴근 후) → 재출근 불가
-  const canCheckIn = !checkInTime
+  const canCheckIn  = !checkInTime
   const canCheckOut = !!checkInTime && !checkOutTime
 
   const { mutate: checkIn }  = useCheckIn()
   const { mutate: checkOut } = useCheckOut()
 
-  /** 출근/퇴근 공통 핸들러 — 구조가 동일하므로 type으로 분기 */
+  // ── 카메라 ──────────────────────────────────────────────────
+  const videoRef    = useRef<HTMLVideoElement>(null)
+  const canvasRef   = useRef<HTMLCanvasElement>(null)
+  const streamRef   = useRef<MediaStream | null>(null)
+  const rafRef      = useRef<number | null>(null)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+
+  // ── QR 스캔 결과 ─────────────────────────────────────────────
+  const [scannedQr, setScannedQr] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    function scanFrame() {
+      if (!active) return
+      const video  = videoRef.current
+      const canvas = canvasRef.current
+      if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
+        rafRef.current = requestAnimationFrame(scanFrame)
+        return
+      }
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return
+
+      canvas.width  = video.videoWidth
+      canvas.height = video.videoHeight
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert',
+      })
+      if (code) {
+        setScannedQr(code.data)
+        return  // 스캔 성공 → 루프 종료
+      }
+      rafRef.current = requestAnimationFrame(scanFrame)
+    }
+
+    navigator.mediaDevices
+      ?.getUserMedia({ video: { facingMode: 'environment' } })
+      .then((stream) => {
+        if (!active) { stream.getTracks().forEach((t) => t.stop()); return }
+        streamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.onloadedmetadata = () => {
+            rafRef.current = requestAnimationFrame(scanFrame)
+          }
+        }
+      })
+      .catch((err: unknown) => {
+        if (!active) return
+        const message = getCameraErrorMessage(err)
+        console.error('[QrCodePopup] 카메라 오류:', err)
+        setCameraError(message)
+      })
+    return () => {
+      active = false
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+    }
+  }, [])
+
+  // ── 출퇴근 핸들러 ────────────────────────────────────────────
   const handleAttendance = (type: 'checkIn' | 'checkOut') => {
     if (!workplaceId) return
     const isCheckIn = type === 'checkIn'
@@ -43,7 +108,7 @@ export default function QrCodePopup() {
         const mutate = isCheckIn ? checkIn : checkOut
         const label  = isCheckIn ? '출근' : '퇴근'
         mutate(
-          { workplaceId, storeId },
+          { workplaceId, storeId, qrData: scannedQr },
           {
             onSuccess: () => setQrCodePopup(false),
             onError: (err) => {
@@ -58,34 +123,7 @@ export default function QrCodePopup() {
     })
   }
 
-  // 카메라 스트림
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const [cameraError, setCameraError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let active = true
-    navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: 'environment' } })
-      .then((stream) => {
-        if (!active) { stream.getTracks().forEach((t) => t.stop()); return }
-        streamRef.current = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-        }
-      })
-      .catch((err: unknown) => {
-        if (!active) return
-        const message = getCameraErrorMessage(err)
-        console.error('[QrCodePopup] 카메라 오류:', err)
-        setCameraError(message)
-      })
-    return () => {
-      active = false
-      streamRef.current?.getTracks().forEach((t) => t.stop())
-      streamRef.current = null
-    }
-  }, [])
+  const allDone = !canCheckIn && !canCheckOut
 
   return (
     <div className="modal-popup">
@@ -101,36 +139,78 @@ export default function QrCodePopup() {
                 <div className="qr-frame-tit">{storeName ?? '출퇴근 체크'}</div>
                 <div className="qr-frame-txt">{formatTodayLabel()}</div>
               </div>
-              <div className="qr-cam-area" style={{ height: '175px', backgroundColor: '#101010', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+              {/* 카메라 뷰 */}
+              <div
+                className="qr-cam-area"
+                style={{ height: '175px', backgroundColor: '#101010', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}
+              >
                 {cameraError ? (
                   <p style={{ color: '#fff', fontSize: '13px', textAlign: 'center', padding: '0 16px', whiteSpace: 'pre-line', lineHeight: '1.6' }}>
                     {cameraError}
                   </p>
                 ) : (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    {/* 스캔 성공 오버레이 */}
+                    {scannedQr && (
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', gap: '8px',
+                      }}>
+                        <div style={{ fontSize: '28px' }}>✅</div>
+                        <span style={{ color: '#fff', fontSize: '14px', fontWeight: 600 }}>QR 스캔 완료</span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
+
+              {/* 숨김 캔버스 (jsQR 분석용) */}
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+              {/* 스캔 안내 */}
+              {!cameraError && !scannedQr && !allDone && (
+                <p style={{ textAlign: 'center', color: '#666', fontSize: '13px', margin: '8px 0 4px' }}>
+                  QR 코드를 카메라에 비춰주세요
+                </p>
+              )}
+
+              {/* 출퇴근 버튼 */}
               <div className="qr-btn-wrap">
-                {canCheckIn && (
-                  <button className="btn-form login block" onClick={() => handleAttendance('checkIn')}>
-                    출근하기
-                  </button>
-                )}
-                {canCheckOut && (
-                  <button className="btn-form outline block" onClick={() => handleAttendance('checkOut')}>
-                    퇴근하기
-                  </button>
-                )}
-                {!canCheckIn && !canCheckOut && (
+                {allDone ? (
                   <p style={{ textAlign: 'center', color: '#999', fontSize: '14px', margin: '8px 0' }}>
                     오늘 출퇴근이 모두 완료되었습니다.
                   </p>
+                ) : (
+                  <>
+                    {canCheckIn && (
+                      <button
+                        className="btn-form login block"
+                        disabled={!scannedQr && !cameraError}
+                        onClick={() => handleAttendance('checkIn')}
+                      >
+                        {scannedQr || cameraError ? '출근하기' : 'QR 스캔 후 출근하기'}
+                      </button>
+                    )}
+                    {canCheckOut && (
+                      <button
+                        className="btn-form outline block"
+                        disabled={!scannedQr && !cameraError}
+                        onClick={() => handleAttendance('checkOut')}
+                      >
+                        {scannedQr || cameraError ? '퇴근하기' : 'QR 스캔 후 퇴근하기'}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

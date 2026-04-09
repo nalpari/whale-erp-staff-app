@@ -1,10 +1,11 @@
 import CommuteContents from '@/components/commute/CommuteContents'
 
 interface Props {
-  searchParams: Promise<{ store?: string }>
+  searchParams: Promise<{ storeId?: string }>
 }
 
 export default async function CommutePage({ searchParams }: Props) {
-  const { store } = await searchParams
-  return <CommuteContents storeName={store ?? null} />
+  const { storeId } = await searchParams
+  const parsedStoreId = storeId ? Number(storeId) : null
+  return <CommuteContents storeId={!isNaN(parsedStoreId as number) ? parsedStoreId : null} />
 }

@@ -5,18 +5,17 @@ import CommuteCheck from './CommuteCheck'
 import CommuteWork from './CommuteWork'
 
 interface Props {
-  storeName: string | null
+  /** 특정 근무처로 진입 시 해당 storeId. null이면 전체 */
+  storeId: number | null
 }
 
-export default function CommuteContents({ storeName }: Props) {
+export default function CommuteContents({ storeId }: Props) {
   const [commuteTab, setCommuteTab] = useState<'check' | 'work'>('check')
   const workplaces = useWorkplaceStore((s) => s.workplaces)
 
-  // ?store= 쿼리 소속 검증: 내 사업장 목록에 없는 점포명이면 차단
-  if (storeName !== null) {
-    const isOwned = workplaces.some(
-      (wp) => wp.storeName === storeName || wp.workplaceName === storeName,
-    )
+  // storeId 기반 소속 검증: 내 사업장 목록에 없는 storeId면 차단
+  if (storeId !== null) {
+    const isOwned = workplaces.some((wp) => wp.storeId === storeId)
     if (workplaces.length > 0 && !isOwned) {
       return (
         <div className="commute-contents">
@@ -46,9 +45,9 @@ export default function CommuteContents({ storeName }: Props) {
         </div>
       </div>
       {commuteTab === 'check' ? (
-        <CommuteCheck storeName={storeName} />
+        <CommuteCheck storeId={storeId} />
       ) : (
-        <CommuteWork storeName={storeName} />
+        <CommuteWork storeId={storeId} />
       )}
     </div>
   )

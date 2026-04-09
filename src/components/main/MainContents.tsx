@@ -1,18 +1,11 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { WhaleCalendar } from 'whale-calendar'
-import 'whale-calendar/styles.css'
 import { usePopupController } from '@/store/usePopupController'
 import { colorFromIndex } from '@/hooks/useMainCalendarData'
 import { useMainCalendarData } from '@/hooks/useMainCalendarData'
-import type { TabType } from '@/hooks/useMainCalendarData'
 import WorkplaceCard from './WorkplaceCard'
+import MainCalendar from './MainCalendar'
 
-const TAB_LABELS: [TabType, string][] = [
-  ['all', '전체'],
-  ['commute', '출퇴근'],
-  ['todo', 'TO-DO'],
-]
 const WEEKDAYS_SHORT = ['일', '월', '화', '수', '목', '금', '토']
 
 export default function MainContents() {
@@ -42,33 +35,17 @@ export default function MainContents() {
       <div className="main-contents">
 
         {/* ── 캘린더 영역 ── */}
-        <div className="date-calendar-wrap">
-          <div className="calendar-header-row">
-            <button className="calendar-today-btn" onClick={handleTodayClick}>오늘</button>
-            <div className="calendar-tab-group">
-              {TAB_LABELS.map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`calendar-tab-btn${activeTab === key ? ' active' : ''}`}
-                  onClick={() => setActiveTab(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <WhaleCalendar
-            year={calYear}
-            month={calMonth}
-            data={calendarData}
-            selectedDate={selectedDate}
-            onMonthChange={handleMonthChange}
-            onDayClick={(date) => setSelectedDate(date)}
-            onScheduleClick={(date) => setSelectedDate(date)}
-            showToday={true}
-            locale="ko"
-          />
-        </div>
+        <MainCalendar
+          calYear={calYear}
+          calMonth={calMonth}
+          calendarData={calendarData}
+          selectedDate={selectedDate}
+          onDayClick={setSelectedDate}
+          onMonthChange={handleMonthChange}
+          onTodayClick={handleTodayClick}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
         {/* ── 선택 날짜 근무 목록 ── */}
         <div className="date-list-wrap">

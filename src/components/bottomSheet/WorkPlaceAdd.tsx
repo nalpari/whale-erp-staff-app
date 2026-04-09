@@ -17,6 +17,7 @@ export default function WorkPlaceAddSheet() {
   const [employeeNumber, setEmployeeNumber] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [confirmedInfo, setConfirmedInfo] = useState<{ employeeName?: string; workplaceName?: string } | null>(null)
+  const [linkToken, setLinkToken] = useState<string | null>(null)
 
   const { mutate: validate, isPending: isValidating } = useValidateEmployee()
   const { mutate: link, isPending: isLinking } = useLinkEmployee()
@@ -31,6 +32,7 @@ export default function WorkPlaceAddSheet() {
     setEmployeeNumber('')
     setErrorMsg('')
     setConfirmedInfo(null)
+    setLinkToken(null)
   }
 
   // Step 1: 직원 코드 유효성 확인
@@ -50,12 +52,14 @@ export default function WorkPlaceAddSheet() {
               employeeName: res.data.employeeName,
               workplaceName: res.data.workplaceName,
             })
+            setLinkToken(res.data.linkToken ?? null)
             setStep('confirm')
           } else {
             setErrorMsg('전화번호가 일치하지 않거나 유효하지 않은 직원 코드입니다.')
           }
         },
-        onError: () => {
+        onError: (err) => {
+          console.error('[WorkPlaceAdd] 직원 코드 검증 실패:', err)
           setErrorMsg('유효하지 않은 직원 코드입니다.')
         },
       },
@@ -65,13 +69,14 @@ export default function WorkPlaceAddSheet() {
   // Step 2: 실제 연결 저장
   const handleLink = () => {
     link(
-      { employeeNumber: employeeNumber.trim() },
+      { employeeNumber: employeeNumber.trim(), linkToken: linkToken ?? undefined },
       {
         onSuccess: () => {
           fetchWorkplaces()
           handleClose()
         },
-        onError: () => {
+        onError: (err) => {
+          console.error('[WorkPlaceAdd] 직원 연결 실패:', err)
           setErrorMsg('연결에 실패했습니다. 다시 시도해주세요.')
           setStep('input')
         },

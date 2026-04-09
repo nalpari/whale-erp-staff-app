@@ -1,19 +1,6 @@
 import { create } from 'zustand'
 import type { CareerResponse } from '@/types/api'
-
-function formatStoreDate(d: Date): string {
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}.${mm}.${dd}`
-}
-
-function getDefaultWeek(): { from: string; to: string } {
-  const today = new Date()
-  const end = new Date(today)
-  end.setDate(today.getDate() + 6)
-  return { from: formatStoreDate(today), to: formatStoreDate(end) }
-}
+import { getDefaultCommuteWeek } from '@/lib/date-utils'
 
 type BottomSheetControllerState = {
   storeSheet: boolean
@@ -69,8 +56,8 @@ export const useBottomSheetController = create<BottomSheetControllerState>((set)
   selectedWorkplaceForAccount: null,
   employmentNotificationSheet: false,
   commuteDaySelectSheet: false,
-  commuteFrom: getDefaultWeek().from,
-  commuteTo: getDefaultWeek().to,
+  commuteFrom: getDefaultCommuteWeek().from,
+  commuteTo: getDefaultCommuteWeek().to,
   avatarSelectSheet: false,
   phoneChangeSheet: false,
   personalAddSheet: false,

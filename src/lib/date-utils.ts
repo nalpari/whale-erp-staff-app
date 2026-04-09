@@ -41,3 +41,19 @@ export function formatTodayLabel(): string {
   const dayOfWeek = WEEKDAYS_SHORT[d.getDay()]
   return `${year}년 ${month}월 ${day}일 ${dayOfWeek}요일`
 }
+
+/** Date → 'YYYY.MM.DD' (점 구분, API 파라미터용) */
+export function formatDotDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}.${m}.${d}`
+}
+
+/** 기본 출퇴근 조회 주간 반환 (오늘 ~ 6일 후) */
+export function getDefaultCommuteWeek(): { from: string; to: string } {
+  const today = new Date()
+  const end = new Date(today)
+  end.setDate(today.getDate() + 6)
+  return { from: formatDotDate(today), to: formatDotDate(end) }
+}

@@ -164,10 +164,14 @@ export interface ValidateEmployeeResponse {
   valid: boolean
   employeeName?: string
   workplaceName?: string
+  /** validate 성공 시 서버가 발급하는 단기 연결 토큰 (IDOR 방지) */
+  linkToken?: string
 }
 
 export interface LinkEmployeeRequest {
   employeeNumber: string
+  /** validate 단계에서 발급된 서버 토큰 (재검증용) */
+  linkToken?: string
 }
 
 export interface LinkEmployeeResponse {
@@ -328,6 +332,8 @@ export interface WorkplaceAttendance {
 export interface AttendanceCheckRequest {
   workplaceId: number
   storeId?: number | null
+  /** QR 스캔으로 획득한 일회용 토큰 (서버측 검증용) */
+  qrData?: string | null
 }
 
 export interface AttendanceCheckResponse {

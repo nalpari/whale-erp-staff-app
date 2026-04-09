@@ -1,16 +1,16 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { usePopupController } from '@/store/usePopupController'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useAttendanceToday } from '@/hooks/queries/use-attendance-queries'
 import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
-import type { ScheduleGroupResponse } from '@/types/api'
 import { formatTime } from '@/lib/date-utils'
+import { getGroupName } from '@/lib/schedule-utils'
 
 interface Props {
-  /** 특정 점포로 진입 시 해당 점포명. null이면 전체 표시 */
-  storeName: string | null
+  /** 특정 점포로 진입 시 해당 storeId. null이면 전체 표시 */
+  storeId: number | null
 }
 
 function getTodayString(): string {
@@ -37,11 +37,7 @@ function formatDuration(clockIn?: string | null, clockOut?: string | null): stri
   return h > 0 ? `${h}시간${m > 0 ? ` ${m}분` : ''}` : `${m}분`
 }
 
-function getGroupName(group: ScheduleGroupResponse): string {
-  return group.storeName ?? group.franchiseName ?? group.headOfficeName
-}
-
-export default function CommuteCheck({ storeName }: Props) {
+export default function CommuteCheck({ storeId }: Props) {
   const openQrCodePopup = usePopupController((state) => state.openQrCodePopup)
   const user = useAuthStore((s) => s.user)
   const workplaces = useWorkplaceStore((s) => s.workplaces)
@@ -65,7 +61,6 @@ export default function CommuteCheck({ storeName }: Props) {
     todayParam,
   )
 
-  const allAttendance = attendanceData?.data?.workplaces ?? []
   const allGroups = scheduleData?.data ?? []
 
   // 오늘 근무 있는 그룹만 추출
@@ -73,13 +68,18 @@ export default function CommuteCheck({ storeName }: Props) {
     g.schedules.some((s) => s.date === today && s.hasWork && !s.isDeleted),
   )
 
-  // 점포별 진입 시 해당 점포만, 직접 진입 시 전체
-  const displayGroups = storeName
-    ? todayGroups.filter((g) => getGroupName(g) === storeName)
+  // 점포별 진입 시 storeId 기반 필터, 직접 진입 시 전체
+  const displayGroups = storeId !== null
+    ? todayGroups.filter((g) => g.storeId === storeId)
     : todayGroups
 
   // 출퇴근 기록 맵 (attendance.workplaceName = 실제 점포명 = workplace.storeName)
-  const attendanceMap = new Map(allAttendance.map((wp) => [wp.workplaceName, wp]))
+  const attendanceMap = useMemo(
+    () => new Map(
+      (attendanceData?.data?.workplaces ?? []).map((wp) => [wp.workplaceName, wp]),
+    ),
+    [attendanceData],
+  )
 
   const isLoading = isAttendanceLoading || isScheduleLoading
 
@@ -176,7 +176,7 @@ export default function CommuteCheck({ storeName }: Props) {
 
       {/* 출퇴근 체크 버튼: 특정 점포 진입이면 바로 노출, 직접 접근이면 항상 노출 */}
       <div className="commute-btn-wrap">
-        {storeName !== null ? (
+        {storeId !== null ? (
           // 점포 진입: 해당 점포 바로 오픈
           <button
             className="btn-form block login"

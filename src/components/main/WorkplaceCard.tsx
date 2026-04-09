@@ -3,7 +3,8 @@ import { useRouter } from 'next/navigation'
 import type { ScheduleGroupResponse, WorkplaceResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 import { formatTime } from '@/lib/date-utils'
-import { colorFromIndex, getGroupName, type AttendanceEntry, type TabType } from '@/hooks/useMainCalendarData'
+import { colorFromIndex, type AttendanceEntry, type TabType } from '@/hooks/useMainCalendarData'
+import { getGroupName } from '@/lib/schedule-utils'
 
 interface Props {
   group: ScheduleGroupResponse
@@ -35,7 +36,9 @@ export default function WorkplaceCard({
   const daySchedule = group.schedules.find(
     (s) => s.date === selectedDateStr && s.hasWork && !s.isDeleted,
   )
-  const matchedWp = workplaces.find((wp) => wp.storeName === groupName)
+  const matchedWp = workplaces.find((wp) =>
+    group.storeId != null ? wp.storeId === group.storeId : wp.storeName === groupName,
+  )
   const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : index
   const ringColor = colorFromIndex(wpIdx)
 
@@ -97,7 +100,7 @@ export default function WorkplaceCard({
                 <div
                   className="data-item-inner-arr"
                   style={{ cursor: 'pointer' }}
-                  onClick={() => router.push(`/commute?store=${encodeURIComponent(groupName)}`)}
+                  onClick={() => router.push(`/commute${group.storeId != null ? `?storeId=${group.storeId}` : ''}`)}
                 />
               ) : (
                 <div className="data-item-inner-arr" style={{ opacity: 0.3 }} />

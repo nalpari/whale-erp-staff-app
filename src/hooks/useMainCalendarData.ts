@@ -6,9 +6,9 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { useAttendanceToday, useAttendanceHistory } from '@/hooks/queries/use-attendance-queries'
 import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import { useTodoCalendar } from '@/hooks/queries/use-todo-queries'
-import type { ScheduleGroupResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 import { formatDate } from '@/lib/date-utils'
+import { getGroupName } from '@/lib/schedule-utils'
 
 // ─── 색상 상수 ──────────────────────────────────────────────
 export const WORKPLACE_COLORS = [
@@ -17,11 +17,6 @@ export const WORKPLACE_COLORS = [
 ]
 export function colorFromIndex(index: number): string {
   return WORKPLACE_COLORS[index % WORKPLACE_COLORS.length]
-}
-
-// ─── 유틸 ───────────────────────────────────────────────────
-export function getGroupName(group: ScheduleGroupResponse): string {
-  return group.storeName ?? group.franchiseName ?? group.headOfficeName
 }
 
 export type TabType = 'all' | 'commute' | 'todo'
@@ -228,4 +223,5 @@ export function useMainCalendarData() {
 }
 
 // 타입 re-export
+export { getGroupName }
 export type { CalendarDayData }
