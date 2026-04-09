@@ -47,6 +47,7 @@ export default function TodoCalendar({
   onTodayClick,
   selectedWorkplaceId,
 }: TodoCalendarProps) {
+  const [today] = useState(() => new Date())
   const [viewYear, setViewYear] = useState<number | null>(null)
   const [viewMonth, setViewMonth] = useState<number | null>(null)
 
@@ -146,7 +147,7 @@ export default function TodoCalendar({
         locale="ko"
       />
       <div style={{ position: 'absolute', top: '1rem', right: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-        {!isSameDay(selectedDate, new Date()) && (
+        {!isSameDay(selectedDate, today) && (
           <button className="calendar-today-btn" onClick={onTodayClick}>오늘</button>
         )}
         <button
