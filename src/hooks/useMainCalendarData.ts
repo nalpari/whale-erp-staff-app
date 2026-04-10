@@ -9,6 +9,7 @@ import { useTodoCalendar } from '@/hooks/queries/use-todo-queries'
 import type { CalendarDayData } from '@/types/todo'
 import { formatDate } from '@/lib/date-utils'
 import { getGroupName } from '@/lib/schedule-utils'
+import { isSameTodoOrgIdentity } from '@/lib/todo-org-route'
 
 // ─── 색상 상수 ──────────────────────────────────────────────
 export const WORKPLACE_COLORS = [
@@ -164,6 +165,20 @@ export function useMainCalendarData() {
     ? (workplaces.find((wp) => wp.id === selectedWorkplaceId) ?? null)
     : null
 
+  const selectedWorkplaceTodoOrgIdentity = useMemo(() => {
+    if (selectedWorkplace === null) return null
+
+    const selectedWorkplaceName = selectedWorkplace.storeName ?? selectedWorkplace.workplaceName
+    return selectedDayTodoData?.organizations.find((org) => {
+      if (selectedWorkplace.storeId != null && org.storeId != null) {
+        return org.storeId === selectedWorkplace.storeId
+      }
+
+      const orgName = org.storeName ?? org.franchiseName ?? org.headOfficeName
+      return orgName === selectedWorkplaceName
+    }) ?? null
+  }, [selectedDayTodoData, selectedWorkplace])
+
   const displayedGroups = selectedWorkplace === null
     ? activeGroups
     : activeGroups.filter((g) => getGroupName(g) === selectedWorkplace.storeName)
@@ -188,8 +203,10 @@ export function useMainCalendarData() {
       return true
     })
     if (selectedWorkplace === null) return filtered
-    return filtered.filter((org) => org.storeId === selectedWorkplace.storeId)
-  }, [todoGroups, selectedDayTodoData, selectedWorkplace])
+    if (selectedWorkplaceTodoOrgIdentity === null) return []
+
+    return filtered.filter((org) => isSameTodoOrgIdentity(org, selectedWorkplaceTodoOrgIdentity))
+  }, [todoGroups, selectedDayTodoData, selectedWorkplace, selectedWorkplaceTodoOrgIdentity])
 
   const hasTodoContent = todoGroups.length > 0 || todoOnlyOrgs.length > 0
   const showEmpty = !isLoading && (

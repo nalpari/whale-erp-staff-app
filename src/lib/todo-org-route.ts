@@ -10,6 +10,8 @@ export interface TodoOrgRouteFilter {
   storeId: number | null
 }
 
+type TodoOrgIdentity = Pick<OrgGroup, 'headOfficeId' | 'franchiseId' | 'storeId'>
+
 function parseNullableNumber(value: string | null): number | null | undefined {
   if (value === null) return undefined
   if (value === 'null') return null
@@ -56,14 +58,21 @@ export function parseTodoOrgRouteFilter(searchParams: SearchParamsLike): TodoOrg
 }
 
 export function matchesTodoOrgRouteFilter(
-  org: Pick<OrgGroup, 'headOfficeId' | 'franchiseId' | 'storeId'>,
+  org: TodoOrgIdentity,
   filter: TodoOrgRouteFilter | null,
 ): boolean {
   if (filter === null) return true
 
+  return isSameTodoOrgIdentity(org, filter)
+}
+
+export function isSameTodoOrgIdentity(
+  left: TodoOrgIdentity,
+  right: TodoOrgIdentity,
+): boolean {
   return (
-    org.headOfficeId === filter.headOfficeId &&
-    org.franchiseId === filter.franchiseId &&
-    org.storeId === filter.storeId
+    left.headOfficeId === right.headOfficeId &&
+    left.franchiseId === right.franchiseId &&
+    left.storeId === right.storeId
   )
 }

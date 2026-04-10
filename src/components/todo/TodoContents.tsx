@@ -63,18 +63,17 @@ export default function TodoContents() {
   const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(year, month, selectedWorkplaceId)
   const { mutate: toggleStatus } = useToggleTodoStatus(year, month, selectedWorkplaceId)
 
-  const activeOrgFilter = selectedWorkplaceId === null ? selectedOrgFilter : null
+  const currentOrgFilter = parseTodoOrgRouteFilter(searchParams)
+
+  const activeOrgFilter = selectedWorkplaceId === null
+    ? selectedOrgFilter
+    : null
   const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate()).filter((org) =>
     matchesTodoOrgRouteFilter(org, activeOrgFilter),
   )
 
   useEffect(() => {
-    const hasOrgQuery =
-      searchParams.get('headOfficeId') !== null ||
-      searchParams.get('franchiseId') !== null ||
-      searchParams.get('storeId') !== null
-
-    if (!hasOrgQuery) return
+    if (currentOrgFilter === null) return
 
     const params = new URLSearchParams(searchParams.toString())
     params.delete('headOfficeId')
@@ -83,7 +82,7 @@ export default function TodoContents() {
 
     const nextUrl = params.toString() ? `/todo?${params.toString()}` : '/todo'
     router.replace(nextUrl, { scroll: false })
-  }, [router, searchParams])
+  }, [currentOrgFilter, router, searchParams])
 
   const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
   const goToToday = () => setSelectedDate(new Date())
