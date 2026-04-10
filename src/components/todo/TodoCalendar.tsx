@@ -3,10 +3,13 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { WhaleCalendar } from 'whale-calendar'
 import type { CalendarData } from 'whale-calendar'
-import { useAuthStore } from '@/store/useAuthStore'
 import { useTodoMonthlyCalendar } from '@/hooks/queries'
 import type { CalendarDayData } from '@/types/todo'
 import 'whale-calendar/styles.css'
+
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
 
 interface TodoCalendarProps {
   selectedDate: Date
@@ -14,6 +17,7 @@ interface TodoCalendarProps {
   onDateSelect: (date: Date) => void
   isGridOpen: boolean
   onToggleGrid: () => void
+  onTodayClick: () => void
   selectedWorkplaceId?: number | null
 }
 
@@ -40,6 +44,7 @@ export default function TodoCalendar({
   onDateSelect,
   isGridOpen,
   onToggleGrid,
+  onTodayClick,
   selectedWorkplaceId,
 }: TodoCalendarProps) {
   const [viewYear, setViewYear] = useState<number | null>(null)
@@ -49,8 +54,6 @@ export default function TodoCalendar({
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
 
-  const memberId = useAuthStore((s) => s.user?.memberId)
-
   const selectedYear = selectedDate.getFullYear()
   const selectedMonth = selectedDate.getMonth() + 1
 
@@ -59,13 +62,14 @@ export default function TodoCalendar({
 
   const displayYear = viewYear ?? selectedYear
   const displayMonth = viewMonth ?? selectedMonth
+  const today = new Date()
 
   // 탐색 중인 월 데이터 (선택된 월과 다를 때만 fetch)
   const { data: browseResponse, isError: isBrowseError } = useTodoMonthlyCalendar(
-    isViewingSelectedMonth ? undefined : memberId,
     displayYear,
     displayMonth,
     selectedWorkplaceId,
+    !isViewingSelectedMonth,
   )
 
   const calendarData = useMemo(() => {
@@ -75,23 +79,8 @@ export default function TodoCalendar({
     return buildCalendarData(displayYear, displayMonth, data)
   }, [displayYear, displayMonth, isViewingSelectedMonth, initialCalendarData, isBrowseError, browseResponse])
 
-  // whale-calendar 타이틀 "M월 스케줄" → "yyyy년 MM월"로 교체
-  // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__title)에 의존.
-  // 라이브러리 업데이트 시 클래스명 변경 여부 확인 필요.
-  // whale-calendar에 titleFormat prop이 추가되면 이 코드를 제거하고 prop으로 교체할 것.
-  // useLayoutEffect: DOM 페인트 전에 동기적으로 적용하여 타이틀 깜빡임 방지
-  useLayoutEffect(() => {
-    const titleEl = wrapperRef.current?.querySelector('.whale-calendar__title')
-    if (titleEl) {
-      titleEl.textContent = `${displayYear}년 ${displayMonth}월`
-    }
-  }, [displayYear, displayMonth])
-
   // 그리드 숨김/표시
   // ⚠️ whale-calendar 내부 클래스명(.whale-calendar__grid)에 의존.
-  // 라이브러리 업데이트 시 클래스명 변경 여부 확인 필요.
-  // whale-calendar에 gridVisible prop이 추가되면 이 코드를 제거하고 prop으로 교체할 것.
-  // useLayoutEffect: DOM 페인트 전에 동기적으로 적용하여 레이아웃 깜빡임 방지
   useLayoutEffect(() => {
     const gridEl = wrapperRef.current?.querySelector('.whale-calendar__grid') as HTMLElement | null
     if (gridEl) {
@@ -142,8 +131,7 @@ export default function TodoCalendar({
   return (
     <div
       ref={wrapperRef}
-      className="todo-diary-wrap"
-      style={{ position: 'relative' }}
+      className="date-calendar-wrap todo-calendar-wrap"
       onTouchStart={handleCalendarTouchStart}
       onTouchEnd={handleCalendarTouchEnd}
     >
@@ -157,19 +145,23 @@ export default function TodoCalendar({
         onMonthChange={handleMonthChange}
         locale="ko"
       />
-      <button
-        className="todo-calendar-toggle"
-        onClick={onToggleGrid}
-        aria-label={isGridOpen ? '달력 접기' : '달력 펼치기'}
-        style={{ position: 'absolute', top: '1rem', right: 8, height: 32, display: 'flex', alignItems: 'center' }}
-      >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <rect x="2" y="3" width="16" height="14" rx="2" stroke="#777" strokeWidth="1.5" />
-          <path d="M2 7H18" stroke="#777" strokeWidth="1.5" />
-          <path d="M6 1V4" stroke="#777" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M14 1V4" stroke="#777" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
+      <div className="todo-calendar-controls">
+        {!isSameDay(selectedDate, today) && (
+          <button className="calendar-today-btn" onClick={onTodayClick} aria-label="오늘 날짜로 이동">오늘</button>
+        )}
+        <button
+          className="todo-calendar-toggle"
+          onClick={onToggleGrid}
+          aria-label={isGridOpen ? '달력 접기' : '달력 펼치기'}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="2" y="3" width="16" height="14" rx="2" stroke="#777" strokeWidth="1.5" />
+            <path d="M2 7H18" stroke="#777" strokeWidth="1.5" />
+            <path d="M6 1V4" stroke="#777" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M14 1V4" stroke="#777" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }

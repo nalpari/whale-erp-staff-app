@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import { usePopupController } from '@/store/usePopupController'
 import { useCheckIn, useCheckOut } from '@/hooks/queries/use-attendance-queries'
+import { useWorkplaceDetail } from '@/hooks/queries/use-workplace-queries'
 import { formatTodayLabel } from '@/lib/date-utils'
+import { getDistanceFromLatLng, getCurrentPosition, geocodeAddress } from '@/lib/geo-utils'
 
 function getCameraErrorMessage(err: unknown): string {
   if (err instanceof DOMException) {
@@ -30,6 +32,36 @@ export default function QrCodePopup() {
 
   const { mutate: checkIn }  = useCheckIn()
   const { mutate: checkOut } = useCheckOut()
+
+  // ── 근무처 상세 (주소 조회용) ────────────────────────────────
+  const { data: workplaceDetail } = useWorkplaceDetail(workplaceId)
+  const locationCheckedRef = useRef(false)
+
+  useEffect(() => {
+    const address = workplaceDetail?.data?.workplace?.address
+    if (!address || locationCheckedRef.current) return
+    locationCheckedRef.current = true
+
+    void (async () => {
+      const [userPos, workplacePos] = await Promise.all([
+        getCurrentPosition(),
+        geocodeAddress(address),
+      ])
+      if (!userPos || !workplacePos) return  // 위치 정보 없으면 조용히 스킵
+
+      const distance = getDistanceFromLatLng(
+        userPos.lat, userPos.lng,
+        workplacePos.lat, workplacePos.lng,
+      )
+      if (distance > 50) {
+        openAlertPopup({
+          message: `현재 위치가 근무처와\n약 ${Math.round(distance)}m 떨어져 있습니다.\n\n거리가 멀어 출퇴근 체크가 불가합니다.`,
+          confirmLabel: '확인',
+          onConfirm: () => setQrCodePopup(false),
+        })
+      }
+    })()
+  }, [workplaceDetail, openAlertPopup, setQrCodePopup])
 
   // ── 카메라 ──────────────────────────────────────────────────
   const videoRef    = useRef<HTMLVideoElement>(null)

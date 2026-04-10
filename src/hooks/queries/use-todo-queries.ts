@@ -2,47 +2,57 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from './query-keys'
 import { todoApi } from '@/lib/api-endpoints'
+import { useAuthStore } from '@/store/useAuthStore'
 import type { ApiResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 
 export const useTodoCalendar = (
-  params: { memberId: number | null; year: number; month: number },
+  params: { year: number; month: number },
   enabled = true,
-) =>
-  useQuery({
-    queryKey: queryKeys.todo.homeCalendar(params.memberId, String(params.year), String(params.month)),
+) => {
+  const memberId = useAuthStore((s) => s.user?.memberId ?? null)
+
+  return useQuery({
+    queryKey: queryKeys.todo.homeCalendar(memberId, String(params.year), String(params.month)),
     queryFn: () => todoApi.getCalendarByEmployee({
-      memberId: params.memberId!,
       year: params.year,
       month: params.month,
     }),
-    enabled: enabled && params.memberId !== null,
+    enabled: enabled && memberId !== null,
   })
+}
 
 export const useTodoMonthlyCalendar = (
-  memberId: number | undefined,
   year: number,
   month: number,
   employeeInfoId?: number | null,
-) =>
-  useQuery({
-    queryKey: queryKeys.todo.calendar(memberId ?? 0, year, month, employeeInfoId),
-    queryFn: () => todoApi.getMonthlyCalendar(memberId!, year, month, employeeInfoId),
-    enabled: !!memberId,
+  enabled = true,
+) => {
+  const memberId = useAuthStore((s) => s.user?.memberId ?? null)
+
+  return useQuery({
+    queryKey: queryKeys.todo.calendar(memberId, year, month, employeeInfoId),
+    queryFn: () => todoApi.getMonthlyCalendar(year, month, employeeInfoId),
+    enabled: enabled && memberId !== null,
   })
+}
 
 export const useToggleTodoStatus = (
-  memberId: number | undefined,
   year: number,
   month: number,
   employeeInfoId?: number | null,
 ) => {
+  const memberId = useAuthStore((s) => s.user?.memberId ?? null)
   const queryClient = useQueryClient()
-  const key = queryKeys.todo.calendar(memberId ?? 0, year, month, employeeInfoId)
+  const key = queryKeys.todo.calendar(memberId, year, month, employeeInfoId)
 
   return useMutation({
-    mutationFn: ({ id, isCompleted }: { id: number; isCompleted: boolean }) =>
-      todoApi.toggleStatus(id, isCompleted),
+    mutationFn: async ({ id, isCompleted }: { id: number; isCompleted: boolean }) => {
+      if (memberId === null) {
+        throw new Error('인증 정보가 없어 TODO 상태를 변경할 수 없습니다.')
+      }
+      return todoApi.toggleStatus(id, isCompleted)
+    },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: key })
       const prev = queryClient.getQueryData<ApiResponse<CalendarDayData[]>>(key)

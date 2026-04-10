@@ -1,12 +1,12 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar, useToggleTodoStatus } from '@/hooks/queries'
 import TodoCalendar from './TodoCalendar'
 import { formatDateKorean } from '@/lib/date-utils'
+import { matchesTodoOrgRouteFilter, parseTodoOrgRouteFilter } from '@/lib/todo-org-route'
 import type { OrgGroup, TodoItem } from '@/types/todo'
 import './css/todo-temp.css'
 
@@ -14,14 +14,6 @@ function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
   return result
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
 }
 
 function getOrgGroupsForDay(
@@ -49,16 +41,15 @@ function parseInitialDate(dateParam: string | null): Date {
 }
 
 export default function TodoContents() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const memberId = useAuthStore((s) => s.user?.memberId)
-  const storeWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
-
-  // URL ?employeeInfoId=N 이 있으면 해당 근무처만 표시, 없으면 스토어 전역 필터 사용
-  const employeeInfoIdParam = searchParams.get('employeeInfoId')
-  const selectedWorkplaceId = employeeInfoIdParam ? Number(employeeInfoIdParam) : storeWorkplaceId
+  const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
 
   const [selectedDate, setSelectedDate] = useState(() =>
     parseInitialDate(searchParams.get('date')),
+  )
+  const [selectedOrgFilter] = useState(() =>
+    parseTodoOrgRouteFilter(searchParams),
   )
   const [isCalendarOpen, setIsCalendarOpen] = useState(true)
   const [pendingTodoId, setPendingTodoId] = useState<number | null>(null)
@@ -69,11 +60,29 @@ export default function TodoContents() {
   const year = selectedDate.getFullYear()
   const month = selectedDate.getMonth() + 1
 
-  const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(memberId, year, month, selectedWorkplaceId)
-  const { mutate: toggleStatus } = useToggleTodoStatus(memberId, year, month, selectedWorkplaceId)
+  const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(year, month, selectedWorkplaceId)
+  const { mutate: toggleStatus } = useToggleTodoStatus(year, month, selectedWorkplaceId)
 
-  const isToday = isSameDay(selectedDate, new Date())
-  const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
+  const currentOrgFilter = parseTodoOrgRouteFilter(searchParams)
+
+  const activeOrgFilter = selectedWorkplaceId === null
+    ? selectedOrgFilter
+    : null
+  const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate()).filter((org) =>
+    matchesTodoOrgRouteFilter(org, activeOrgFilter),
+  )
+
+  useEffect(() => {
+    if (currentOrgFilter === null) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('headOfficeId')
+    params.delete('franchiseId')
+    params.delete('storeId')
+
+    const nextUrl = params.toString() ? `/todo?${params.toString()}` : '/todo'
+    router.replace(nextUrl, { scroll: false })
+  }, [currentOrgFilter, router, searchParams])
 
   const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
   const goToToday = () => setSelectedDate(new Date())
@@ -113,35 +122,13 @@ export default function TodoContents() {
         onDateSelect={setSelectedDate}
         isGridOpen={isCalendarOpen}
         onToggleGrid={() => setIsCalendarOpen((prev) => !prev)}
+        onTodayClick={goToToday}
         selectedWorkplaceId={selectedWorkplaceId}
       />
 
       <div className="todo-list-wrap">
-        <div className="todo-date" style={{ justifyContent: 'flex-start', gap: 4 }}>
-          <button
-            className="whale-calendar__nav-button"
-            onClick={() => moveDay(-1)}
-            aria-label="이전 날"
-            style={{ '--whale-calendar-border': '#ededed', '--whale-calendar-bg': '#ffffff', '--whale-calendar-radius-full': '9999px', '--whale-calendar-nav-button-size': '32px' } as React.CSSProperties}
-          >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M18.5 12L14.5 16L18.5 20" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+        <div className="todo-date">
           <span>{formatDateKorean(selectedDate)}</span>
-          {!isToday && (
-            <button className="btn-form xs outline" onClick={goToToday}>오늘</button>
-          )}
-          <button
-            className="whale-calendar__nav-button"
-            onClick={() => moveDay(1)}
-            aria-label="다음 날"
-            style={{ '--whale-calendar-border': '#ededed', '--whale-calendar-bg': '#ffffff', '--whale-calendar-radius-full': '9999px', '--whale-calendar-nav-button-size': '32px' } as React.CSSProperties}
-          >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M14.5 20L18.5 16L14.5 12" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
         </div>
 
         {isCalendarError ? (
