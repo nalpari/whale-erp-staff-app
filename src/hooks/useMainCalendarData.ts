@@ -120,7 +120,7 @@ export function useMainCalendarData() {
           }
           const color = workplaceColorByStoreId.get(org.storeId) ?? colorFromIndex(0)
           if (!result[dateStr]) result[dateStr] = { schedules: [] }
-          result[dateStr].schedules?.push({ id: `todo-${dateStr}-${org.storeId}`, label: '●', color })
+          result[dateStr].schedules?.push({ id: `todo-${dateStr}-${org.headOfficeId}-${org.franchiseId}-${org.storeId}`, label: '●', color })
         }
       }
     }
@@ -168,14 +168,6 @@ export function useMainCalendarData() {
     ? activeGroups
     : activeGroups.filter((g) => getGroupName(g) === selectedWorkplace.storeName)
 
-  const todoOnlyOrgs = useMemo(() => {
-    const scheduleStoreIds = new Set(displayedGroups.map((g) => g.storeId).filter(Boolean))
-    const orgs = selectedDayTodoData?.organizations ?? []
-    const filtered = orgs.filter((org) => !scheduleStoreIds.has(org.storeId))
-    if (selectedWorkplace === null) return filtered
-    return filtered.filter((org) => org.storeId === selectedWorkplace.storeId)
-  }, [displayedGroups, selectedDayTodoData, selectedWorkplace])
-
   const todoGroups = useMemo(() => {
     if (activeTab !== 'todo') return displayedGroups
     return displayedGroups.filter((group) => {
@@ -184,6 +176,20 @@ export function useMainCalendarData() {
       return selectedDayTodoData?.organizations.some((org) => org.storeId === matchedWp.storeId) ?? false
     })
   }, [activeTab, displayedGroups, workplaces, selectedDayTodoData])
+
+  const todoOnlyOrgs = useMemo(() => {
+    const scheduleStoreIds = new Set(todoGroups.map((g) => g.storeId).filter(Boolean))
+    const scheduleNames = new Set(todoGroups.map((g) => getGroupName(g)))
+    const orgs = selectedDayTodoData?.organizations ?? []
+    const filtered = orgs.filter((org) => {
+      if (org.storeId != null && scheduleStoreIds.has(org.storeId)) return false
+      const orgName = org.storeName ?? org.franchiseName ?? org.headOfficeName
+      if (scheduleNames.has(orgName)) return false
+      return true
+    })
+    if (selectedWorkplace === null) return filtered
+    return filtered.filter((org) => org.storeId === selectedWorkplace.storeId)
+  }, [todoGroups, selectedDayTodoData, selectedWorkplace])
 
   const hasTodoContent = todoGroups.length > 0 || todoOnlyOrgs.length > 0
   const showEmpty = !isLoading && (

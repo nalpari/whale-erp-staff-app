@@ -99,15 +99,16 @@ export default function MainContents() {
               const matchedWp = workplaces.find((wp) => wp.storeId === org.storeId)
               const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : 0
               const ringColor = colorFromIndex(wpIdx)
+              const orgName = org.storeName ?? org.franchiseName ?? org.headOfficeName
               const wpIncomplete = org.todos.filter((t) => !t.isCompleted).length
               const wpCompleted  = org.todos.filter((t) => t.isCompleted).length
 
               return (
-                <li key={`todo-only-${org.storeId}`} className="date-cont-item">
+                <li key={`todo-only-${org.headOfficeId}-${org.franchiseId}-${org.storeId}`} className="date-cont-item">
                   <div className="date-cont-header">
                     <div className="date-cont-ring" style={{ backgroundColor: ringColor }} />
                     <div className="date-cont-info">
-                      <div className="date-cont-info-name">{org.storeName}</div>
+                      <div className="date-cont-info-name">{orgName}</div>
                     </div>
                   </div>
                   <div className="date-cont-wrap">

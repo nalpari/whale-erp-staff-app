@@ -42,9 +42,11 @@ export default function WorkplaceCard({
   const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : index
   const ringColor = colorFromIndex(wpIdx)
 
-  const wpTodoOrg = matchedWp?.storeId
-    ? (selectedDayTodoData?.organizations.find((org) => org.storeId === matchedWp.storeId) ?? null)
-    : null
+  const wpTodoOrg = selectedDayTodoData?.organizations.find((org) => {
+    if (matchedWp?.storeId != null && org.storeId != null) return org.storeId === matchedWp.storeId
+    const orgName = org.storeName ?? org.franchiseName ?? org.headOfficeName
+    return orgName === groupName
+  }) ?? null
   const wpTodos = wpTodoOrg?.todos ?? []
   const wpIncomplete = wpTodos.filter((t) => !t.isCompleted).length
   const wpCompleted  = wpTodos.filter((t) => t.isCompleted).length
