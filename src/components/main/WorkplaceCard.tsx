@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import type { ScheduleGroupResponse, WorkplaceResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 import { formatTime } from '@/lib/date-utils'
+import { buildTodoOrgSearchParams } from '@/lib/todo-org-route'
 import { colorFromIndex, type AttendanceEntry, type TabType } from '@/hooks/useMainCalendarData'
 import { getGroupName } from '@/lib/schedule-utils'
 
@@ -42,9 +43,11 @@ export default function WorkplaceCard({
   const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : index
   const ringColor = colorFromIndex(wpIdx)
 
-  const wpTodoOrg = matchedWp?.storeId
-    ? (selectedDayTodoData?.organizations.find((org) => org.storeId === matchedWp.storeId) ?? null)
-    : null
+  const wpTodoOrg = selectedDayTodoData?.organizations.find((org) => {
+    if (matchedWp?.storeId != null && org.storeId != null) return org.storeId === matchedWp.storeId
+    const orgName = org.storeName ?? org.franchiseName ?? org.headOfficeName
+    return orgName === groupName
+  }) ?? null
   const wpTodos = wpTodoOrg?.todos ?? []
   const wpIncomplete = wpTodos.filter((t) => !t.isCompleted).length
   const wpCompleted  = wpTodos.filter((t) => t.isCompleted).length
@@ -128,8 +131,7 @@ export default function WorkplaceCard({
                 className="data-item-inner-arr"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
-                  const params = new URLSearchParams({ date: selectedDateStr })
-                  if (matchedWp?.id) params.set('employeeInfoId', String(matchedWp.id))
+                  const params = buildTodoOrgSearchParams(selectedDateStr, group)
                   router.push(`/todo?${params.toString()}`)
                 }}
               />

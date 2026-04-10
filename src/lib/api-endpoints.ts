@@ -521,14 +521,14 @@ export const homeApi = {
 // ============================================================
 
 export const todoApi = {
-  /** 기간별 TODO 캘린더 조회 (from/to: YYYY-MM-DD) */
-  getCalendarByEmployee: (params: { memberId: number; year: number; month: number }) =>
+  /** 월별 TODO 캘린더 조회 — 홈 화면용 (year/month 기준) */
+  getCalendarByEmployee: (params: { year: number; month: number }) =>
     apiClient<ApiResponse<EmployeeTodoCalendarResponse>>(
-      `/api/v1/employee-todos/mobile/calendar/by-employee?memberId=${params.memberId}&year=${params.year}&month=${params.month}`,
+      `/api/v1/employee-todos/mobile/calendar/by-employee?year=${params.year}&month=${params.month}`,
     ),
-  /** 회원별 월별 캘린더 조회 */
-  getMonthlyCalendar: (memberId: number, year: number, month: number, employeeInfoId?: number | null) => {
-    const params = new URLSearchParams({ memberId: String(memberId), year: String(year), month: String(month) })
+  /** 월별 TODO 캘린더 조회 — TODO 페이지용 (근무처 필터 지원) */
+  getMonthlyCalendar: (year: number, month: number, employeeInfoId?: number | null) => {
+    const params = new URLSearchParams({ year: String(year), month: String(month) })
     if (employeeInfoId != null) params.set('employeeInfoId', String(employeeInfoId))
     return apiClient<ApiResponse<CalendarDayData[]>>(
       `/api/v1/employee-todos/mobile/calendar/by-employee?${params.toString()}`,
