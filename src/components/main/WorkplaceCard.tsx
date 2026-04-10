@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import type { ScheduleGroupResponse, WorkplaceResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 import { formatTime } from '@/lib/date-utils'
+import { buildTodoOrgSearchParams } from '@/lib/todo-org-route'
 import { colorFromIndex, type AttendanceEntry, type TabType } from '@/hooks/useMainCalendarData'
 import { getGroupName } from '@/lib/schedule-utils'
 
@@ -130,8 +131,7 @@ export default function WorkplaceCard({
                 className="data-item-inner-arr"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
-                  const params = new URLSearchParams({ date: selectedDateStr })
-                  if (matchedWp?.id) params.set('employeeInfoId', String(matchedWp.id))
+                  const params = buildTodoOrgSearchParams(selectedDateStr, group)
                   router.push(`/todo?${params.toString()}`)
                 }}
               />

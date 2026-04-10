@@ -1,11 +1,12 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
 import { useTodoMonthlyCalendar, useToggleTodoStatus } from '@/hooks/queries'
 import TodoCalendar from './TodoCalendar'
 import { formatDateKorean } from '@/lib/date-utils'
+import { matchesTodoOrgRouteFilter, parseTodoOrgRouteFilter } from '@/lib/todo-org-route'
 import type { OrgGroup, TodoItem } from '@/types/todo'
 import './css/todo-temp.css'
 
@@ -40,11 +41,15 @@ function parseInitialDate(dateParam: string | null): Date {
 }
 
 export default function TodoContents() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const selectedWorkplaceId = useWorkplaceStore((s) => s.selectedWorkplaceId)
 
   const [selectedDate, setSelectedDate] = useState(() =>
     parseInitialDate(searchParams.get('date')),
+  )
+  const [selectedOrgFilter] = useState(() =>
+    parseTodoOrgRouteFilter(searchParams),
   )
   const [isCalendarOpen, setIsCalendarOpen] = useState(true)
   const [pendingTodoId, setPendingTodoId] = useState<number | null>(null)
@@ -58,7 +63,27 @@ export default function TodoContents() {
   const { data: calendarData, isError: isCalendarError } = useTodoMonthlyCalendar(year, month, selectedWorkplaceId)
   const { mutate: toggleStatus } = useToggleTodoStatus(year, month, selectedWorkplaceId)
 
-  const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate())
+  const activeOrgFilter = selectedWorkplaceId === null ? selectedOrgFilter : null
+  const orgGroups = getOrgGroupsForDay(calendarData, selectedDate.getDate()).filter((org) =>
+    matchesTodoOrgRouteFilter(org, activeOrgFilter),
+  )
+
+  useEffect(() => {
+    const hasOrgQuery =
+      searchParams.get('headOfficeId') !== null ||
+      searchParams.get('franchiseId') !== null ||
+      searchParams.get('storeId') !== null
+
+    if (!hasOrgQuery) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('headOfficeId')
+    params.delete('franchiseId')
+    params.delete('storeId')
+
+    const nextUrl = params.toString() ? `/todo?${params.toString()}` : '/todo'
+    router.replace(nextUrl, { scroll: false })
+  }, [router, searchParams])
 
   const moveDay = (delta: number) => setSelectedDate((prev) => addDays(prev, delta))
   const goToToday = () => setSelectedDate(new Date())

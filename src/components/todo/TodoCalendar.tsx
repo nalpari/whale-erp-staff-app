@@ -47,7 +47,6 @@ export default function TodoCalendar({
   onTodayClick,
   selectedWorkplaceId,
 }: TodoCalendarProps) {
-  const [today] = useState(() => new Date())
   const [viewYear, setViewYear] = useState<number | null>(null)
   const [viewMonth, setViewMonth] = useState<number | null>(null)
 
@@ -63,6 +62,7 @@ export default function TodoCalendar({
 
   const displayYear = viewYear ?? selectedYear
   const displayMonth = viewMonth ?? selectedMonth
+  const today = new Date()
 
   // 탐색 중인 월 데이터 (선택된 월과 다를 때만 fetch)
   const { data: browseResponse, isError: isBrowseError } = useTodoMonthlyCalendar(

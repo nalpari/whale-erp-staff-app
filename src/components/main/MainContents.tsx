@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { usePopupController } from '@/store/usePopupController'
 import { colorFromIndex } from '@/hooks/useMainCalendarData'
 import { useMainCalendarData } from '@/hooks/useMainCalendarData'
+import { buildTodoOrgSearchParams } from '@/lib/todo-org-route'
 import WorkplaceCard from './WorkplaceCard'
 import MainCalendar from './MainCalendar'
 
@@ -129,8 +130,7 @@ export default function MainContents() {
                           className="data-item-inner-arr"
                           style={{ cursor: 'pointer' }}
                           onClick={() => {
-                            const params = new URLSearchParams({ date: selectedDateStr })
-                            if (matchedWp?.id) params.set('employeeInfoId', String(matchedWp.id))
+                            const params = buildTodoOrgSearchParams(selectedDateStr, org)
                             router.push(`/todo?${params.toString()}`)
                           }}
                         />
