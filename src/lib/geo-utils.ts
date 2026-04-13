@@ -23,27 +23,27 @@ export function getCurrentPosition(): Promise<{ lat: number; lng: number } | nul
   })
 }
 
+/** 주소 → 좌표 변환 결과 캐시 (사업장 주소는 거의 바뀌지 않으므로 세션 내 재사용) */
+const geocodeCache = new Map<string, { lat: number; lng: number }>()
+
 /**
- * Kakao Local REST API로 주소를 좌표로 변환합니다.
- * 실패·API키 미설정 시 null 반환 (에러 미전파).
- * 환경변수: NEXT_PUBLIC_KAKAO_REST_KEY
+ * 주소를 좌표로 변환합니다.
+ * 서버 Route Handler(/api/geocode)를 통해 Kakao API를 호출하므로 키가 브라우저에 노출되지 않습니다.
+ * 동일 주소는 캐시에서 반환합니다.
  */
 export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  const apiKey = process.env.NEXT_PUBLIC_KAKAO_REST_KEY
-  if (!apiKey) return null
+  const cached = geocodeCache.get(address)
+  if (cached) return cached
 
   try {
-    const res = await fetch(
-      `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
-      { headers: { Authorization: `KakaoAK ${apiKey}` } },
-    )
+    const res = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`)
     if (!res.ok) return null
 
-    const data = (await res.json()) as { documents: { y: string; x: string }[] }
-    if (!data.documents?.length) return null
+    const data = (await res.json()) as { lat: number; lng: number } | null
+    if (!data) return null
 
-    const { y, x } = data.documents[0]
-    return { lat: parseFloat(y), lng: parseFloat(x) }
+    geocodeCache.set(address, data)
+    return data
   } catch {
     return null
   }

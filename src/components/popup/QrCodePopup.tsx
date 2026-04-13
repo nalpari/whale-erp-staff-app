@@ -5,10 +5,8 @@ import { usePopupController } from '@/store/usePopupController'
 import { useCheckIn, useCheckOut } from '@/hooks/queries/use-attendance-queries'
 import { useWorkplaceDetail } from '@/hooks/queries/use-workplace-queries'
 import { formatTodayLabel } from '@/lib/date-utils'
-
 import { getCurrentPosition, geocodeAddress, getDistanceFromLatLng } from '@/lib/geo-utils'
-
-const DISTANCE_LIMIT_M = 50
+import { DISTANCE_LIMIT_M } from '@/constants/attendance'
 
 function getCameraErrorMessage(err: unknown): string {
   if (err instanceof DOMException) {
@@ -36,9 +34,12 @@ export default function QrCodePopup() {
   const { mutate: checkIn }  = useCheckIn()
   const { mutate: checkOut } = useCheckOut()
 
-  // ── 근무처 상세 (주소 조회용) ────────────────────────────────
+  // ── 위치 체크 ────────────────────────────────────────────────
   const { data: workplaceDetail } = useWorkplaceDetail(workplaceId)
   const locationCheckedRef = useRef(false)
+
+  // 위치 확인 중 여부 (true: 버튼 비활성화)
+  const [isCheckingLocation, setIsCheckingLocation] = useState(true)
 
   useEffect(() => {
     const address = workplaceDetail?.data?.workplace?.address
@@ -46,26 +47,40 @@ export default function QrCodePopup() {
     locationCheckedRef.current = true
 
     void (async () => {
-      const [userPos, workplacePos] = await Promise.all([
-        getCurrentPosition(),
-        geocodeAddress(address),
-      ])
-      if (!userPos || !workplacePos) return  // 위치 정보 없으면 조용히 스킵
+      setIsCheckingLocation(true)
+      try {
+        const [userPos, workplacePos] = await Promise.all([
+          getCurrentPosition(),
+          geocodeAddress(address),
+        ])
 
-      const distance = getDistanceFromLatLng(
-        userPos.lat, userPos.lng,
-        workplacePos.lat, workplacePos.lng,
-      )
-      if (distance > 50) {
-        openAlertPopup({
-          message: `현재 위치가 근무처와\n약 ${Math.round(distance)}m 떨어져 있습니다.\n\n거리가 멀어 출퇴근 체크가 불가합니다.`,
-          confirmLabel: '확인',
-          onConfirm: () => setQrCodePopup(false),
-        })
+        if (!userPos || !workplacePos) {
+          // GPS 권한 거부·API 오류 시 사용자에게 명시적 안내 후 팝업 닫기
+          openAlertPopup({
+            message: '위치를 확인할 수 없습니다.\n출퇴근 체크를 진행할 수 없습니다.',
+            confirmLabel: '확인',
+            onConfirm: () => setQrCodePopup(false),
+          })
+          return
+        }
+
+        const distance = getDistanceFromLatLng(
+          userPos.lat, userPos.lng,
+          workplacePos.lat, workplacePos.lng,
+        )
+        if (distance > DISTANCE_LIMIT_M) {
+          openAlertPopup({
+            message: `현재 위치가 근무처와\n약 ${Math.round(distance)}m 떨어져 있습니다.\n\n출퇴근 체크가 불가합니다.`,
+            confirmLabel: '확인',
+            onConfirm: () => setQrCodePopup(false),
+          })
+          return
+        }
+      } finally {
+        setIsCheckingLocation(false)
       }
     })()
   }, [workplaceDetail, openAlertPopup, setQrCodePopup])
-
 
   // ── 카메라 ──────────────────────────────────────────────────
   const videoRef    = useRef<HTMLVideoElement>(null)
@@ -131,35 +146,6 @@ export default function QrCodePopup() {
       streamRef.current = null
     }
   }, [])
-  
-
-  useEffect(() => {
-    if (locationCheckedRef.current) return
-
-    const address = workplaceDetail?.data?.workplace?.address
-    if (!address) return
-
-    locationCheckedRef.current = true
-
-    ;(async () => {
-      const [current, workplace] = await Promise.all([
-        getCurrentPosition(),
-        geocodeAddress(address),
-      ])
-      if (!current || !workplace) return
-
-      const distance = getDistanceFromLatLng(
-        current.lat, current.lng,
-        workplace.lat, workplace.lng,
-      )
-      if (distance > DISTANCE_LIMIT_M) {
-        openAlertPopup({
-          message: `현재 위치가 근무처와 ${Math.round(distance)}m 떨어져 있습니다.\n출퇴근 체크가 제한될 수 있습니다.`,
-          onConfirm: () => setQrCodePopup(false),
-        })
-      }
-    })()
-  }, [workplaceDetail, openAlertPopup])
 
   // ── 출퇴근 핸들러 ────────────────────────────────────────────
   const handleAttendance = (type: 'checkIn' | 'checkOut') => {
@@ -249,11 +235,15 @@ export default function QrCodePopup() {
                 </p>
               )}
 
-              {/* 출퇴근 버튼 (QR 스캔 없이도 항상 활성화) */}
+              {/* 출퇴근 버튼 */}
               <div className="qr-btn-wrap">
                 {allDone ? (
                   <p style={{ textAlign: 'center', color: '#999', fontSize: '14px', margin: '8px 0' }}>
                     오늘 출퇴근이 모두 완료되었습니다.
+                  </p>
+                ) : isCheckingLocation ? (
+                  <p style={{ textAlign: 'center', color: '#999', fontSize: '13px', margin: '8px 0' }}>
+                    위치 확인 중...
                   </p>
                 ) : (
                   <>
