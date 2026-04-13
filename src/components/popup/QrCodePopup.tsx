@@ -5,7 +5,10 @@ import { usePopupController } from '@/store/usePopupController'
 import { useCheckIn, useCheckOut } from '@/hooks/queries/use-attendance-queries'
 import { useWorkplaceDetail } from '@/hooks/queries/use-workplace-queries'
 import { formatTodayLabel } from '@/lib/date-utils'
-import { getDistanceFromLatLng, getCurrentPosition, geocodeAddress } from '@/lib/geo-utils'
+
+import { getCurrentPosition, geocodeAddress, getDistanceFromLatLng } from '@/lib/geo-utils'
+
+const DISTANCE_LIMIT_M = 50
 
 function getCameraErrorMessage(err: unknown): string {
   if (err instanceof DOMException) {
@@ -62,6 +65,7 @@ export default function QrCodePopup() {
       }
     })()
   }, [workplaceDetail, openAlertPopup, setQrCodePopup])
+
 
   // ── 카메라 ──────────────────────────────────────────────────
   const videoRef    = useRef<HTMLVideoElement>(null)
@@ -127,6 +131,35 @@ export default function QrCodePopup() {
       streamRef.current = null
     }
   }, [])
+  
+
+  useEffect(() => {
+    if (locationCheckedRef.current) return
+
+    const address = workplaceDetail?.data?.workplace?.address
+    if (!address) return
+
+    locationCheckedRef.current = true
+
+    ;(async () => {
+      const [current, workplace] = await Promise.all([
+        getCurrentPosition(),
+        geocodeAddress(address),
+      ])
+      if (!current || !workplace) return
+
+      const distance = getDistanceFromLatLng(
+        current.lat, current.lng,
+        workplace.lat, workplace.lng,
+      )
+      if (distance > DISTANCE_LIMIT_M) {
+        openAlertPopup({
+          message: `현재 위치가 근무처와 ${Math.round(distance)}m 떨어져 있습니다.\n출퇴근 체크가 제한될 수 있습니다.`,
+          onConfirm: () => setQrCodePopup(false),
+        })
+      }
+    })()
+  }, [workplaceDetail, openAlertPopup])
 
   // ── 출퇴근 핸들러 ────────────────────────────────────────────
   const handleAttendance = (type: 'checkIn' | 'checkOut') => {
@@ -216,7 +249,7 @@ export default function QrCodePopup() {
                 </p>
               )}
 
-              {/* 출퇴근 버튼 */}
+              {/* 출퇴근 버튼 (QR 스캔 없이도 항상 활성화) */}
               <div className="qr-btn-wrap">
                 {allDone ? (
                   <p style={{ textAlign: 'center', color: '#999', fontSize: '14px', margin: '8px 0' }}>
@@ -227,19 +260,17 @@ export default function QrCodePopup() {
                     {canCheckIn && (
                       <button
                         className="btn-form login block"
-                        disabled={!scannedQr && !cameraError}
                         onClick={() => handleAttendance('checkIn')}
                       >
-                        {scannedQr || cameraError ? '출근하기' : 'QR 스캔 후 출근하기'}
+                        출근하기
                       </button>
                     )}
                     {canCheckOut && (
                       <button
                         className="btn-form outline block"
-                        disabled={!scannedQr && !cameraError}
                         onClick={() => handleAttendance('checkOut')}
                       >
-                        {scannedQr || cameraError ? '퇴근하기' : 'QR 스캔 후 퇴근하기'}
+                        퇴근하기
                       </button>
                     )}
                   </>
