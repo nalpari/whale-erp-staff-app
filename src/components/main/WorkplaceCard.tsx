@@ -4,12 +4,12 @@ import type { ScheduleGroupResponse, WorkplaceResponse } from '@/types/api'
 import type { CalendarDayData } from '@/types/todo'
 import { formatTime } from '@/lib/date-utils'
 import { buildTodoOrgSearchParams } from '@/lib/todo-org-route'
-import { colorFromIndex, type AttendanceEntry, type TabType } from '@/hooks/useMainCalendarData'
+import type { AttendanceEntry, TabType } from '@/hooks/useMainCalendarData'
 import { getGroupName } from '@/lib/schedule-utils'
 
 interface Props {
   group: ScheduleGroupResponse
-  index: number
+  ringColor: string
   workplaces: WorkplaceResponse[]
   selectedDateStr: string
   isSelectedToday: boolean
@@ -22,7 +22,7 @@ interface Props {
 /** 홈 화면 날짜별 근무처 카드 */
 export default function WorkplaceCard({
   group,
-  index,
+  ringColor,
   workplaces,
   selectedDateStr,
   isSelectedToday,
@@ -40,8 +40,6 @@ export default function WorkplaceCard({
   const matchedWp = workplaces.find((wp) =>
     group.storeId != null ? wp.storeId === group.storeId : wp.storeName === groupName,
   )
-  const wpIdx = matchedWp ? workplaces.indexOf(matchedWp) : index
-  const ringColor = colorFromIndex(wpIdx)
 
   const wpTodoOrg = selectedDayTodoData?.organizations.find((org) => {
     if (matchedWp?.storeId != null && org.storeId != null) return org.storeId === matchedWp.storeId

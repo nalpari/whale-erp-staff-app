@@ -11,7 +11,7 @@ type Step = 'input' | 'confirm'
 export default function WorkPlaceAddSheet() {
   const workPlaceAddSheet = useBottomSheetController((state) => state.workPlaceAddSheet)
   const setWorkPlaceAddSheet = useBottomSheetController((state) => state.setWorkPlaceAddSheet)
-  const fetchWorkplaces = useWorkplaceStore((s) => s.fetchWorkplaces)
+  const refreshWorkplaces = useWorkplaceStore((s) => s.refreshWorkplaces)
 
   const [step, setStep] = useState<Step>('input')
   const [employeeNumber, setEmployeeNumber] = useState('')
@@ -72,7 +72,7 @@ export default function WorkPlaceAddSheet() {
       { employeeNumber: employeeNumber.trim(), linkToken: linkToken ?? undefined },
       {
         onSuccess: () => {
-          fetchWorkplaces()
+          void refreshWorkplaces()
           handleClose()
         },
         onError: (err) => {

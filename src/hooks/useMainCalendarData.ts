@@ -8,7 +8,7 @@ import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import { useTodoCalendar } from '@/hooks/queries/use-todo-queries'
 import type { CalendarDayData } from '@/types/todo'
 import { formatDate } from '@/lib/date-utils'
-import { getGroupName } from '@/lib/schedule-utils'
+import { getGroupName, getGroupKey } from '@/lib/schedule-utils'
 import { isSameTodoOrgIdentity } from '@/lib/todo-org-route'
 
 // ─── 색상 상수 ──────────────────────────────────────────────
@@ -54,10 +54,23 @@ export function useMainCalendarData() {
   const { data: monthScheduleData } = useScheduleByOrg(
     user?.memberId ?? null, monthFromParam, monthToParam,
   )
-  const monthScheduleGroups = useMemo(
-    () => monthScheduleData?.data ?? [],
-    [monthScheduleData],
-  )
+  // by-org API 결과를 workplaces 스토어 기준으로 필터링:
+  // 근로계약이 확정된 사업장만 캘린더에 표시한다.
+  const monthScheduleGroups = useMemo(() => {
+    const all = monthScheduleData?.data ?? []
+    if (workplaces.length === 0) return all
+    return all.filter((group) => {
+      // STORE 타입: storeId로 직접 매칭
+      if (group.storeId != null) {
+        return workplaces.some((wp) => wp.storeId === group.storeId)
+      }
+      // HEAD_OFFICE / FRANCHISE 타입: 이름으로 매칭
+      const groupName = getGroupName(group)
+      return workplaces.some(
+        (wp) => wp.storeName === groupName || wp.workplaceName === groupName,
+      )
+    })
+  }, [monthScheduleData, workplaces])
 
   const { data: todoCalendarData } = useTodoCalendar(
     { year: calYear, month: calMonth },
@@ -74,23 +87,32 @@ export function useMainCalendarData() {
   )
   const isLoading = isAttendanceLoading || isHistoryLoading
 
-  // ─── 색상 맵 ─────────────────────────────────────────────
-  const workplaceColorByName = useMemo(() => {
+  // ─── 색상 맵: monthScheduleGroups 기준으로 직접 구성 ─────
+  // workplaces 스토어와 이름/storeId 매칭이 불안정하므로,
+  // 캘린더에 실제 표시되는 그룹 자체에서 색상을 할당한다.
+  const groupColorMap = useMemo(() => {
     const map = new Map<string, string>()
-    workplaces.forEach((wp, idx) => {
-      const name = wp.storeName ?? wp.workplaceName
-      if (name) map.set(name, colorFromIndex(idx))
+    const seen = new Set<string>()
+    // headOfficeId → franchiseId → storeId 기준으로 정렬해 색상 순서 고정
+    const sorted = [...monthScheduleGroups].sort((a, b) => {
+      if (a.headOfficeId !== b.headOfficeId) return a.headOfficeId - b.headOfficeId
+      const aF = a.franchiseId ?? -1
+      const bF = b.franchiseId ?? -1
+      if (aF !== bF) return aF - bF
+      const aS = a.storeId ?? -1
+      const bS = b.storeId ?? -1
+      return aS - bS
     })
+    let idx = 0
+    for (const g of sorted) {
+      const key = getGroupKey(g)
+      if (!seen.has(key)) {
+        seen.add(key)
+        map.set(key, colorFromIndex(idx++))
+      }
+    }
     return map
-  }, [workplaces])
-
-  const workplaceColorByStoreId = useMemo(() => {
-    const map = new Map<number, string>()
-    workplaces.forEach((wp, idx) => {
-      if (wp.storeId != null) map.set(wp.storeId, colorFromIndex(idx))
-    })
-    return map
-  }, [workplaces])
+  }, [monthScheduleGroups])
 
   // ─── 캘린더 마커 데이터 ───────────────────────────────────
   const calendarData: CalendarData = useMemo(() => {
@@ -101,7 +123,7 @@ export function useMainCalendarData() {
     if (showCommute) {
       for (const group of monthScheduleGroups) {
         const groupName = getGroupName(group)
-        const color = workplaceColorByName.get(groupName) ?? colorFromIndex(0)
+        const color = groupColorMap.get(getGroupKey(group)) ?? colorFromIndex(0)
         for (const schedule of group.schedules) {
           if (!schedule.hasWork || schedule.isDeleted) continue
           if (!result[schedule.date]) result[schedule.date] = { schedules: [] }
@@ -119,7 +141,7 @@ export function useMainCalendarData() {
             const alreadyHas = result[dateStr]?.schedules?.some((s) => s.id === `${dateStr}-${org.storeName}`)
             if (alreadyHas) continue
           }
-          const color = workplaceColorByStoreId.get(org.storeId) ?? colorFromIndex(0)
+          const color = groupColorMap.get(getGroupKey(org)) ?? colorFromIndex(0)
           if (!result[dateStr]) result[dateStr] = { schedules: [] }
           result[dateStr].schedules?.push({ id: `todo-${dateStr}-${org.headOfficeId}-${org.franchiseId}-${org.storeId}`, label: '●', color })
         }
@@ -134,7 +156,7 @@ export function useMainCalendarData() {
       })
     }
     return result
-  }, [activeTab, monthScheduleGroups, workplaceColorByName, todoCalendarDays, workplaceColorByStoreId, calYear, mm])
+  }, [activeTab, monthScheduleGroups, groupColorMap, todoCalendarDays, calYear, mm])
 
   // ─── 출퇴근 맵 ───────────────────────────────────────────
   const attendanceMap = useMemo(() => {
@@ -242,6 +264,8 @@ export function useMainCalendarData() {
     selectedDayTodoData,
     attendanceMap,
     isLoading, showEmpty,
+    // 색상
+    groupColorMap,
   }
 }
 
