@@ -3,24 +3,23 @@
  * 추후 src/styles 공통 스타일 확인 후 이관 또는 삭제 예정입니다.
  */
 
-.todo-diary-wrap {
-  padding: 0 24px;
-  --whale-calendar-primary: #0168ff;
-  --whale-calendar-text: #1a1a1a;
-  --whale-calendar-border: #ededed;
-  --whale-calendar-bg: #ffffff;
+.todo-calendar-wrap {
+  position: relative;
+}
+
+.todo-calendar-controls {
+  position: absolute;
+  top: 1rem;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .todo-list-wrap .todo-date {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.todo-date-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
 }
 
 .todo-calendar-toggle {
@@ -32,29 +31,6 @@
   background: none;
   border: none;
   cursor: pointer;
-}
-
-/* 달력 schedule 뱃지를 todo SVG 아이콘으로 표시 */
-.todo-diary-wrap .whale-calendar__schedule-badge {
-  background: transparent !important;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  margin: 2px auto 0;
-  min-height: auto;
-  border-radius: 0;
-  background-repeat: no-repeat !important;
-  background-position: center center !important;
-  background-size: contain !important;
-}
-.todo-diary-wrap .whale-calendar__schedule-badge[style*="rgb(255, 77, 79)"] {
-  background-image: url(/assets/images/contents/data_todo_icon_red.svg) !important;
-}
-.todo-diary-wrap .whale-calendar__schedule-badge[style*="rgb(82, 196, 26)"] {
-  background-image: url(/assets/images/contents/data_todo_icon_green.svg) !important;
-}
-.todo-diary-wrap .whale-calendar__schedule-badge-text {
-  display: none;
 }
 
 .todo-empty {

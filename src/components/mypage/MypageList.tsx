@@ -50,17 +50,17 @@ export default function MypageList() {
             </div>
           </div>
         </button>
-        <button className="data-item" onClick={() => router.push('/mypage/document')}>
-          <div className="mypage-item-inner">
-            <div className="mypage-item-info">
-              <div className="mypage-item-info-name">서류관리</div>
-              <div className="mypage-item-info-desc">근로 관련 서류를 등록하고 제출 상태를 관리합니다.</div>
-            </div>
-            <div className="mypage-item-arr">
-              <div className="data-list-arr"></div>
-            </div>
-          </div>
-        </button>
+        {/*<button className="data-item" onClick={() => router.push('/mypage/document')}>*/}
+        {/*  <div className="mypage-item-inner">*/}
+        {/*    <div className="mypage-item-info">*/}
+        {/*      <div className="mypage-item-info-name">서류관리</div>*/}
+        {/*      <div className="mypage-item-info-desc">근로 관련 서류를 등록하고 제출 상태를 관리합니다.</div>*/}
+        {/*    </div>*/}
+        {/*    <div className="mypage-item-arr">*/}
+        {/*      <div className="data-list-arr"></div>*/}
+        {/*    </div>*/}
+        {/*  </div>*/}
+        {/*</button>*/}
         <button className="data-item" onClick={() => router.push('/mypage/withdrawal')}>
           <div className="mypage-item-inner">
             <div className="mypage-item-info red">

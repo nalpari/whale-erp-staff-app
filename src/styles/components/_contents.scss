@@ -1064,27 +1064,27 @@
 .date-calendar-wrap {
   background: #fff;
 
+  .calendar-today-btn {
+    padding: 0 14px;
+    height: 28px;
+    border-radius: 14px;
+    border: 1px solid #36886a;
+    background: #fff;
+    @include fontDefinition(13px, 600, 22px);
+    color: #36886a;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:active {
+      background: #ebf6f2;
+    }
+  }
+
   // 캘린더 상단 헤더 행 (오늘 버튼 + 탭 버튼)
   .calendar-header-row {
     display: flex;
     align-items: center;
     padding: 16px 16px 0;
-
-    .calendar-today-btn {
-      padding: 0 14px;
-      height: 28px;
-      border-radius: 14px;
-      border: 1px solid #36886a;
-      background: #fff;
-      @include fontDefinition(13px, 600, 22px);
-      color: #36886a;
-      cursor: pointer;
-      flex-shrink: 0;
-
-      &:active {
-        background: #ebf6f2;
-      }
-    }
 
     .calendar-tab-group {
       margin-left: auto;
