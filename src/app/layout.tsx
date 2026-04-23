@@ -6,6 +6,7 @@ import BottomSheetController from '@/components/ui/BottomSheetController'
 import PopupController from '@/components/ui/PopupController'
 import Footer from '@/components/ui/Footer'
 import Header from '@/components/ui/Header'
+import InAppBrowserRedirect from '@/components/ui/InAppBrowserRedirect'
 import AuthGuard from '@/components/auth/AuthGuard'
 import QueryProvider from '@/providers/query-provider'
 
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryProvider>
+          <InAppBrowserRedirect />
           <AuthGuard>
             <div className="wrap">
               <Header />
