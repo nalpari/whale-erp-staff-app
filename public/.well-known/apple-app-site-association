@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["66XBCM8K4C.kr.co.whaleerp.staff"],
+        "components": [
+          {
+            "/": "/*",
+            "comment": "모든 경로를 앱이 처리"
+          }
+        ]
+      }
+    ]
+  }
+}
