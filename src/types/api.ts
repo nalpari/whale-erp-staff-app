@@ -88,6 +88,8 @@ export interface SignupRequest {
   bankName?: string
   accountNumber?: string
   accountHolder?: string
+  birthDate?: string
+  ssnGender?: string
 }
 
 export interface SignupResponse {
