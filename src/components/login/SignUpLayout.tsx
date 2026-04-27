@@ -264,12 +264,31 @@ export default function SignUpLayout() {
       alert('이름을 입력해주세요.')
       return
     }
-    if (ssnFront.length !== 6) {
-      alert('생년월일 6자리를 입력해주세요.')
+    if (!/^\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/.test(ssnFront)) {
+      alert('주민등록번호 앞자리(생년월일 6자리)를 정확히 입력해주세요.')
       return
     }
-    if (ssnGender.length !== 1) {
-      alert('주민등록번호 뒷자리 첫 자리를 입력해주세요.')
+    if (!/^[1-8]$/.test(ssnGender)) {
+      alert('주민등록번호 뒷자리 첫 자리는 1~8 사이여야 합니다.')
+      return
+    }
+    const yy = Number(ssnFront.slice(0, 2))
+    const mm = Number(ssnFront.slice(2, 4))
+    const dd = Number(ssnFront.slice(4, 6))
+    const fullYear = ['3', '4', '7', '8'].includes(ssnGender) ? 2000 + yy : 1900 + yy
+    const birth = new Date(fullYear, mm - 1, dd)
+    if (
+      birth.getFullYear() !== fullYear ||
+      birth.getMonth() !== mm - 1 ||
+      birth.getDate() !== dd
+    ) {
+      alert('실제로 존재하지 않는 날짜입니다. 생년월일을 다시 확인해주세요.')
+      return
+    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (birth.getTime() > today.getTime()) {
+      alert('미래 날짜는 입력할 수 없습니다.')
       return
     }
     if (inviteCode && !inviteCodeVerified) {
