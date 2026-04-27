@@ -264,6 +264,14 @@ export default function SignUpLayout() {
       alert('이름을 입력해주세요.')
       return
     }
+    if (ssnFront.length !== 6) {
+      alert('생년월일 6자리를 입력해주세요.')
+      return
+    }
+    if (ssnGender.length !== 1) {
+      alert('주민등록번호 뒷자리 첫 자리를 입력해주세요.')
+      return
+    }
     if (inviteCode && !inviteCodeVerified) {
       alert('초대코드의 확인 버튼을 눌러주세요.')
       return
@@ -275,6 +283,8 @@ export default function SignUpLayout() {
 
     setSubmitting(true)
     try {
+      const birthDate = ssnFront
+
       const signupData = {
         loginId,
         password: pw,
@@ -290,6 +300,8 @@ export default function SignUpLayout() {
         bankName: bankName || undefined,
         accountNumber: accountNumber || undefined,
         accountHolder: accountHolder || undefined,
+        birthDate,
+        ssnGender,
       }
       await authApi.signup(signupData)
       alert('환영합니다! 회원가입이 완료되었습니다.')
