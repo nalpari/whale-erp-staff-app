@@ -92,9 +92,18 @@ export function useMainCalendarData() {
   // monthScheduleGroups와 todoCalendarDays.organizations에서 발견된
   // 추가 사업장에도 다음 인덱스의 색상을 부여한다.
   // 백엔드 colorIndex가 모두 고유한 경우에만 그대로 사용, 아니면 배열 순서로 부여.
+  // name 추출 우선순위는 workplaces/schedule/todo 어느 출처든 동일하게 통일.
   const groupColorMap = useMemo(() => {
     const map = new Map<string, string>()
     let nextIdx = 0
+
+    const nameOf = (g: {
+      storeName?: string | null
+      workplaceName?: string | null
+      franchiseName?: string | null
+      headOfficeName?: string | null
+    }): string | null =>
+      g.storeName ?? g.franchiseName ?? g.workplaceName ?? g.headOfficeName ?? null
 
     const indices = workplaces.map((wp) => wp.colorIndex)
     const uniqueIndices = new Set(indices)
@@ -106,28 +115,30 @@ export function useMainCalendarData() {
       if (wp.storeId != null && !map.has(`store-${wp.storeId}`)) {
         map.set(`store-${wp.storeId}`, color)
       }
-      const name = wp.storeName ?? wp.workplaceName
+      const name = nameOf(wp)
       if (name && !map.has(`name-${name}`)) {
         map.set(`name-${name}`, color)
       }
       nextIdx = Math.max(nextIdx, colorIdx + 1)
     })
 
-    const seen = new Set<string>()
     const trackGroup = (group: {
       storeId?: number | null
       storeName?: string | null
       franchiseName?: string | null
-      headOfficeName?: string
+      headOfficeName?: string | null
     }) => {
       const storeKey = group.storeId != null ? `store-${group.storeId}` : null
-      const name = group.storeName ?? group.franchiseName ?? group.headOfficeName ?? null
+      const name = nameOf(group)
       const nameKey = name ? `name-${name}` : null
+      // storeId가 이미 매핑되어 있으면 종료 (이름 변경 케이스 보호)
       if (storeKey && map.has(storeKey)) return
-      if (nameKey && map.has(nameKey)) return
-      const identity = storeKey ?? nameKey
-      if (!identity || seen.has(identity)) return
-      seen.add(identity)
+      // 이름은 같지만 storeId가 다른 매장: 기존 색을 storeId 키에 재사용 후 종료
+      if (nameKey && map.has(nameKey)) {
+        if (storeKey) map.set(storeKey, map.get(nameKey)!)
+        return
+      }
+      if (!storeKey && !nameKey) return
       const color = colorFromIndex(nextIdx++)
       if (storeKey) map.set(storeKey, color)
       if (nameKey) map.set(nameKey, color)
@@ -143,9 +154,27 @@ export function useMainCalendarData() {
       return aS - bS
     })
     for (const g of sortedSchedules) trackGroup(g)
-    for (const day of todoCalendarDays) {
-      for (const org of day.organizations) trackGroup(org)
-    }
+
+    // todo 측도 동일 키(headOfficeId-franchiseId-storeId) 기준으로 dedup·정렬해
+    // API 응답·일자 순서에 무관하게 색상 안정성을 보장.
+    const todoOrgs = todoCalendarDays.flatMap((d) => d.organizations)
+    const dedupedTodoOrgs = Array.from(
+      new Map(
+        todoOrgs.map((o) => [
+          `${o.headOfficeId}-${o.franchiseId ?? -1}-${o.storeId ?? -1}`,
+          o,
+        ]),
+      ).values(),
+    ).sort((a, b) => {
+      if (a.headOfficeId !== b.headOfficeId) return a.headOfficeId - b.headOfficeId
+      const aF = a.franchiseId ?? -1
+      const bF = b.franchiseId ?? -1
+      if (aF !== bF) return aF - bF
+      const aS = a.storeId ?? -1
+      const bS = b.storeId ?? -1
+      return aS - bS
+    })
+    for (const org of dedupedTodoOrgs) trackGroup(org)
 
     return map
   }, [workplaces, monthScheduleGroups, todoCalendarDays])
@@ -153,14 +182,15 @@ export function useMainCalendarData() {
   const resolveGroupColor = useCallback((group: {
     storeId?: number | null
     storeName?: string | null
+    workplaceName?: string | null
     franchiseName?: string | null
-    headOfficeName?: string
+    headOfficeName?: string | null
   }): string => {
     if (group.storeId != null) {
       const c = groupColorMap.get(`store-${group.storeId}`)
       if (c) return c
     }
-    const name = group.storeName ?? group.franchiseName ?? group.headOfficeName
+    const name = group.storeName ?? group.franchiseName ?? group.workplaceName ?? group.headOfficeName
     if (name) {
       const c = groupColorMap.get(`name-${name}`)
       if (c) return c
