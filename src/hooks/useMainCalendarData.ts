@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import type { CalendarData } from 'whale-calendar'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useWorkplaceStore } from '@/store/useWorkplaceStore'
@@ -8,7 +8,7 @@ import { useScheduleByOrg } from '@/hooks/queries/use-schedule-queries'
 import { useTodoCalendar } from '@/hooks/queries/use-todo-queries'
 import type { CalendarDayData } from '@/types/todo'
 import { formatDate } from '@/lib/date-utils'
-import { getGroupName, getGroupKey } from '@/lib/schedule-utils'
+import { getGroupName } from '@/lib/schedule-utils'
 import { isSameTodoOrgIdentity } from '@/lib/todo-org-route'
 
 // ─── 색상 상수 ──────────────────────────────────────────────
@@ -87,14 +87,64 @@ export function useMainCalendarData() {
   )
   const isLoading = isAttendanceLoading || isHistoryLoading
 
-  // ─── 색상 맵: monthScheduleGroups 기준으로 직접 구성 ─────
-  // workplaces 스토어와 이름/storeId 매칭이 불안정하므로,
-  // 캘린더에 실제 표시되는 그룹 자체에서 색상을 할당한다.
+  // ─── 색상 맵: workplaces 우선 + schedule/todo 사업장으로 확장 ───
+  // 계약 종료된 과거 사업장은 workplaces에서 빠져 색상 매핑이 누락되므로,
+  // monthScheduleGroups와 todoCalendarDays.organizations에서 발견된
+  // 추가 사업장에도 다음 인덱스의 색상을 부여한다.
+  // 백엔드 colorIndex가 모두 고유한 경우에만 그대로 사용, 아니면 배열 순서로 부여.
+  // name 추출 우선순위는 workplaces/schedule/todo 어느 출처든 동일하게 통일.
   const groupColorMap = useMemo(() => {
     const map = new Map<string, string>()
-    const seen = new Set<string>()
-    // headOfficeId → franchiseId → storeId 기준으로 정렬해 색상 순서 고정
-    const sorted = [...monthScheduleGroups].sort((a, b) => {
+    let nextIdx = 0
+
+    const nameOf = (g: {
+      storeName?: string | null
+      workplaceName?: string | null
+      franchiseName?: string | null
+      headOfficeName?: string | null
+    }): string | null =>
+      g.storeName ?? g.franchiseName ?? g.workplaceName ?? g.headOfficeName ?? null
+
+    const indices = workplaces.map((wp) => wp.colorIndex)
+    const uniqueIndices = new Set(indices)
+    const useBackendIndex = uniqueIndices.size === workplaces.length && workplaces.length > 0
+
+    workplaces.forEach((wp, idx) => {
+      const colorIdx = useBackendIndex ? wp.colorIndex : idx
+      const color = colorFromIndex(colorIdx)
+      if (wp.storeId != null && !map.has(`store-${wp.storeId}`)) {
+        map.set(`store-${wp.storeId}`, color)
+      }
+      const name = nameOf(wp)
+      if (name && !map.has(`name-${name}`)) {
+        map.set(`name-${name}`, color)
+      }
+      nextIdx = Math.max(nextIdx, colorIdx + 1)
+    })
+
+    const trackGroup = (group: {
+      storeId?: number | null
+      storeName?: string | null
+      franchiseName?: string | null
+      headOfficeName?: string | null
+    }) => {
+      const storeKey = group.storeId != null ? `store-${group.storeId}` : null
+      const name = nameOf(group)
+      const nameKey = name ? `name-${name}` : null
+      // storeId가 이미 매핑되어 있으면 종료 (이름 변경 케이스 보호)
+      if (storeKey && map.has(storeKey)) return
+      // 이름은 같지만 storeId가 다른 매장: 기존 색을 storeId 키에 재사용 후 종료
+      if (nameKey && map.has(nameKey)) {
+        if (storeKey) map.set(storeKey, map.get(nameKey)!)
+        return
+      }
+      if (!storeKey && !nameKey) return
+      const color = colorFromIndex(nextIdx++)
+      if (storeKey) map.set(storeKey, color)
+      if (nameKey) map.set(nameKey, color)
+    }
+
+    const sortedSchedules = [...monthScheduleGroups].sort((a, b) => {
       if (a.headOfficeId !== b.headOfficeId) return a.headOfficeId - b.headOfficeId
       const aF = a.franchiseId ?? -1
       const bF = b.franchiseId ?? -1
@@ -103,16 +153,50 @@ export function useMainCalendarData() {
       const bS = b.storeId ?? -1
       return aS - bS
     })
-    let idx = 0
-    for (const g of sorted) {
-      const key = getGroupKey(g)
-      if (!seen.has(key)) {
-        seen.add(key)
-        map.set(key, colorFromIndex(idx++))
-      }
-    }
+    for (const g of sortedSchedules) trackGroup(g)
+
+    // todo 측도 동일 키(headOfficeId-franchiseId-storeId) 기준으로 dedup·정렬해
+    // API 응답·일자 순서에 무관하게 색상 안정성을 보장.
+    const todoOrgs = todoCalendarDays.flatMap((d) => d.organizations)
+    const dedupedTodoOrgs = Array.from(
+      new Map(
+        todoOrgs.map((o) => [
+          `${o.headOfficeId}-${o.franchiseId ?? -1}-${o.storeId ?? -1}`,
+          o,
+        ]),
+      ).values(),
+    ).sort((a, b) => {
+      if (a.headOfficeId !== b.headOfficeId) return a.headOfficeId - b.headOfficeId
+      const aF = a.franchiseId ?? -1
+      const bF = b.franchiseId ?? -1
+      if (aF !== bF) return aF - bF
+      const aS = a.storeId ?? -1
+      const bS = b.storeId ?? -1
+      return aS - bS
+    })
+    for (const org of dedupedTodoOrgs) trackGroup(org)
+
     return map
-  }, [monthScheduleGroups])
+  }, [workplaces, monthScheduleGroups, todoCalendarDays])
+
+  const resolveGroupColor = useCallback((group: {
+    storeId?: number | null
+    storeName?: string | null
+    workplaceName?: string | null
+    franchiseName?: string | null
+    headOfficeName?: string | null
+  }): string => {
+    if (group.storeId != null) {
+      const c = groupColorMap.get(`store-${group.storeId}`)
+      if (c) return c
+    }
+    const name = group.storeName ?? group.franchiseName ?? group.workplaceName ?? group.headOfficeName
+    if (name) {
+      const c = groupColorMap.get(`name-${name}`)
+      if (c) return c
+    }
+    return colorFromIndex(0)
+  }, [groupColorMap])
 
   // ─── 캘린더 마커 데이터 ───────────────────────────────────
   const calendarData: CalendarData = useMemo(() => {
@@ -123,7 +207,7 @@ export function useMainCalendarData() {
     if (showCommute) {
       for (const group of monthScheduleGroups) {
         const groupName = getGroupName(group)
-        const color = groupColorMap.get(getGroupKey(group)) ?? colorFromIndex(0)
+        const color = resolveGroupColor(group)
         for (const schedule of group.schedules) {
           if (!schedule.hasWork || schedule.isDeleted) continue
           if (!result[schedule.date]) result[schedule.date] = { schedules: [] }
@@ -141,7 +225,7 @@ export function useMainCalendarData() {
             const alreadyHas = result[dateStr]?.schedules?.some((s) => s.id === `${dateStr}-${org.storeName}`)
             if (alreadyHas) continue
           }
-          const color = groupColorMap.get(getGroupKey(org)) ?? colorFromIndex(0)
+          const color = resolveGroupColor(org)
           if (!result[dateStr]) result[dateStr] = { schedules: [] }
           result[dateStr].schedules?.push({ id: `todo-${dateStr}-${org.headOfficeId}-${org.franchiseId}-${org.storeId}`, label: '●', color })
         }
@@ -156,7 +240,7 @@ export function useMainCalendarData() {
       })
     }
     return result
-  }, [activeTab, monthScheduleGroups, groupColorMap, todoCalendarDays, calYear, mm])
+  }, [activeTab, monthScheduleGroups, resolveGroupColor, todoCalendarDays, calYear, mm])
 
   // ─── 출퇴근 맵 ───────────────────────────────────────────
   const attendanceMap = useMemo(() => {
@@ -265,7 +349,7 @@ export function useMainCalendarData() {
     attendanceMap,
     isLoading, showEmpty,
     // 색상
-    groupColorMap,
+    resolveGroupColor,
   }
 }
 
