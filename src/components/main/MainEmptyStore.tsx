@@ -20,7 +20,7 @@ export default function MainEmptyStore() {
             <p>근로계약서를 확인 할 수 있습니다.</p>
           </div>
         </div>
-        <div className="empty-store-btn">
+        <div className="empty-store-btn" hidden>
           <button className="btn-form login block" onClick={() => setWorkPlaceAddSheet(true)}>
             근무지 추가
           </button>

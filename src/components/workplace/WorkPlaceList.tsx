@@ -18,7 +18,7 @@ export default function WorkPlaceList() {
   if (loading) {
     return (
       <div className="data-wrap">
-        <div className="data-tit">근무처/급여계좌 설정</div>
+        <div className="data-tit">근무처 급여계좌설정</div>
         <div className="data-list">
           <div className="data-item">
             <div className="workplace-empty">불러오는 중...</div>
@@ -30,7 +30,7 @@ export default function WorkPlaceList() {
 
   return (
     <div className="data-wrap">
-      <div className="data-tit">근무처/급여계좌 설정</div>
+      <div className="data-tit">근무처 급여계좌설정</div>
       <div className="data-list">
         {workplaces.length === 0 ? (
           <div className="data-item">
@@ -65,7 +65,7 @@ export default function WorkPlaceList() {
           })
         )}
       </div>
-      <div className="data-btn-wrap">
+      <div className="data-btn-wrap" hidden>
         <button className="btn-form login block" onClick={() => setWorkPlaceAddSheet(true)}>
           근무처 추가
         </button>
