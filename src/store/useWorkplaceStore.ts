@@ -26,8 +26,6 @@ interface WorkplaceState {
   setSelectedWorkplace: (id: number | null) => void
   /** 사업장 목록 조회. STALE_TIME_MS 이내 재호출은 무시 (concurrent 방지 포함) */
   fetchWorkplaces: () => Promise<void>
-  /** 강제 재조회 (계약 연결 등 즉시 갱신이 필요한 경우 사용) */
-  refreshWorkplaces: () => Promise<void>
   reset: () => void
 }
 
@@ -62,13 +60,5 @@ export const useWorkplaceStore = create<WorkplaceState>((set, get) => ({
       console.error('[WorkplaceStore] 사업장 목록 로드 실패:', err)
       set({ error: message, isLoading: false })
     }
-  },
-
-  refreshWorkplaces: async () => {
-    const { isLoading } = get()
-    if (isLoading) return
-    // stale time 무시하고 즉시 재조회
-    set({ lastFetchedAt: null })
-    await get().fetchWorkplaces()
   },
 }))

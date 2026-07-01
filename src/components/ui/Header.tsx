@@ -164,7 +164,7 @@ export default function Header() {
               </li>
               <li className="side-nav-body-item">
                 <Link href="/workplace" onClick={() => setIsSideNavOpen(false)}>
-                  근무처/급여계좌 설정
+                  근무처 급여계좌설정
                 </Link>
               </li>
             </ul>

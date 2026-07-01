@@ -8,7 +8,7 @@ export const SubMenuData = [
     path: '/signup',
   },
   {
-    title: '근무처/급여계좌 설정',
+    title: '근무처 급여계좌설정',
     path: '/workplace/[id]',
   },
   {
