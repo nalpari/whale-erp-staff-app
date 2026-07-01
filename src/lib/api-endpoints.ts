@@ -28,10 +28,6 @@ import type {
   WorkplaceResponse,
   WorkplaceDetailResponse,
   AddWorkplaceRequest,
-  ValidateEmployeeRequest,
-  ValidateEmployeeResponse,
-  LinkEmployeeRequest,
-  LinkEmployeeResponse,
   // Salary Account
   SalaryAccountResponse,
   CreateSalaryAccountRequest,
@@ -193,26 +189,6 @@ export const workplaceApi = {
     apiClient<ApiResponse<null>>(`/api/v1/mobile/employee/workplaces/${id}/salary-account`, {
       method: 'PUT',
       body: JSON.stringify({ salaryAccountId }),
-    }),
-
-  /**
-   * 직원 코드 유효성 검사
-   * - employeeNumber에 해당하는 직원의 전화번호가 현재 로그인한 유저의 전화번호와 일치하는지 확인
-   */
-  validateEmployeeNumber: (data: ValidateEmployeeRequest) =>
-    apiClient<ApiResponse<ValidateEmployeeResponse>>('/api/v1/mobile/employee/validate-employee', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  /**
-   * 사원번호로 직원 정보 연결
-   * - employeeNumber에 해당하는 employeeInfo의 memberId를 현재 로그인한 유저의 memberId로 업데이트
-   */
-  linkEmployeeByNumber: (data: LinkEmployeeRequest) =>
-    apiClient<ApiResponse<LinkEmployeeResponse>>('/api/v1/mobile/employee/link-member', {
-      method: 'PUT',
-      body: JSON.stringify(data),
     }),
 }
 

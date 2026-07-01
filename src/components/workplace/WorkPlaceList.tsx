@@ -1,5 +1,4 @@
 'use client'
-import { useBottomSheetController } from '@/store/useBottomSheetController'
 import { useRouter } from 'next/navigation'
 import { useWorkplaceList } from '@/hooks/queries/use-workplace-queries'
 
@@ -11,7 +10,6 @@ const STATUS_BADGE: Record<string, { className: string; label: string }> = {
 
 export default function WorkPlaceList() {
   const router = useRouter()
-  const setWorkPlaceAddSheet = useBottomSheetController((state) => state.setWorkPlaceAddSheet)
   const { data, isPending: loading } = useWorkplaceList()
   const workplaces = data?.data ?? []
 
@@ -64,11 +62,6 @@ export default function WorkPlaceList() {
             )
           })
         )}
-      </div>
-      <div className="data-btn-wrap" hidden>
-        <button className="btn-form login block" onClick={() => setWorkPlaceAddSheet(true)}>
-          근무처 추가
-        </button>
       </div>
     </div>
   )
